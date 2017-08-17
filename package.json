@@ -1,0 +1,36 @@
+{
+  "name": "fastify-static",
+  "version": "0.1.0",
+  "description": "Plugin for serving static file as fast as possible Edit",
+  "main": "index.js",
+  "scripts": {
+    "lint": "standard | snazzy",
+    "unit": "tap test",
+    "test": "npm run lint && npm run unit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fastify/fastify-static.git"
+  },
+  "keywords": [
+    "fastify"
+  ],
+  "author": "Tommaso Allevi - @allevo",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/fastify/fastify-static/issues"
+  },
+  "homepage": "https://github.com/fastify/fastify-static",
+  "dependencies": {
+    "fastify-plugin": "^0.1.0",
+    "mime-types": "^2.1.16"
+  },
+  "devDependencies": {
+    "fastify": "^0.26.1",
+    "pre-commit": "^1.2.2",
+    "request": "^2.81.0",
+    "snazzy": "^7.0.0",
+    "standard": "^10.0.3",
+    "tap": "^10.7.2"
+  }
+}
