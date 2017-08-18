@@ -13,12 +13,15 @@ const indexContent = fs.readFileSync('./test/static/index.html').toString('utf8'
 const deepContent = fs.readFileSync('./test/static/deep/path/for/test/purpose/foo.html').toString('utf8')
 
 t.test('register', t => {
-  t.plan(7)
+  t.plan(8)
 
   const pluginOptions = {
+    sendOptions: {
+      root: path.join(__dirname, '/static')
+    },
     prefix: '/static',
-    directory: path.join(__dirname, '/static'),
     redirectionLink404: '/404.html',
+    redirectionLink403: '/403.html',
     redirectionLink500: '/500.html'
   }
   fastify.register(fastifyStatic, pluginOptions)
@@ -36,7 +39,7 @@ t.test('register', t => {
       }, (err, response, body) => {
         t.error(err)
         t.strictEqual(response.statusCode, 200)
-        t.strictEqual(response.headers['content-type'], 'text/html')
+        t.ok(/text\/html/.test(response.headers['content-type']))
         t.strictEqual(body, indexContent)
       })
     })
@@ -49,7 +52,7 @@ t.test('register', t => {
       }, (err, response, body) => {
         t.error(err)
         t.strictEqual(response.statusCode, 200)
-        t.strictEqual(response.headers['content-type'], 'text/css')
+        t.ok(/text\/css/.test(response.headers['content-type']))
       })
     })
 
@@ -61,7 +64,7 @@ t.test('register', t => {
       }, (err, response, body) => {
         t.error(err)
         t.strictEqual(response.statusCode, 200)
-        t.strictEqual(response.headers['content-type'], 'text/html')
+        t.ok(/text\/html/.test(response.headers['content-type']))
         t.strictEqual(body, indexContent)
       })
     })
@@ -74,7 +77,7 @@ t.test('register', t => {
       }, (err, response, body) => {
         t.error(err)
         t.strictEqual(response.statusCode, 200)
-        t.strictEqual(response.headers['content-type'], 'text/html')
+        t.ok(/text\/html/.test(response.headers['content-type']))
         t.strictEqual(body, indexContent)
       })
     })
@@ -87,8 +90,21 @@ t.test('register', t => {
       }, (err, response, body) => {
         t.error(err)
         t.strictEqual(response.statusCode, 200)
-        t.strictEqual(response.headers['content-type'], 'text/html')
+        t.ok(/text\/html/.test(response.headers['content-type']))
         t.strictEqual(body, deepContent)
+      })
+    })
+
+    t.test('/static/this/path/doesnt/exist.html', t => {
+      t.plan(3)
+      request.get({
+        method: 'GET',
+        uri: 'http://localhost:' + fastify.server.address().port + '/static/this/path/doesnt/exist.html',
+        followRedirect: false
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 302)
+        t.strictEqual(response.headers.location, '/404.html')
       })
     })
 
@@ -97,12 +113,11 @@ t.test('register', t => {
       request.get({
         method: 'GET',
         uri: 'http://localhost:' + fastify.server.address().port + '/static/../index.js',
-        followRedirect: false,
-        followRedirects: false
+        followRedirect: false
       }, (err, response, body) => {
         t.error(err)
         t.strictEqual(response.statusCode, 302)
-        t.strictEqual(response.headers.location, '/404.html')
+        t.strictEqual(response.headers.location, '/403.html')
       })
     })
   })

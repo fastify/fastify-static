@@ -6,7 +6,8 @@
   "scripts": {
     "lint": "standard | snazzy",
     "unit": "tap test",
-    "test": "npm run lint && npm run unit"
+    "test": "npm run lint && npm run unit",
+    "coverage": "tap --cov --coverage-report=html test"
   },
   "repository": {
     "type": "git",
@@ -23,7 +24,7 @@
   "homepage": "https://github.com/fastify/fastify-static",
   "dependencies": {
     "fastify-plugin": "^0.1.0",
-    "mime-types": "^2.1.16"
+    "send": "^0.15.4"
   },
   "devDependencies": {
     "fastify": "^0.26.1",
