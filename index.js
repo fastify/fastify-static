@@ -1,47 +1,47 @@
 'use strict'
 
 const path = require('path')
+const statSync = require('fs').statSync
 
 const send = require('send')
 
 const fp = require('fastify-plugin')
 
+const DEFAULT_500_PAGE = path.join(__dirname, 'static', '500.html')
+const DEFAULT_403_PAGE = path.join(__dirname, 'static', '403.html')
+const DEFAULT_404_PAGE = path.join(__dirname, 'static', '404.html')
+
 function fastifyStatic (fastify, opts, next) {
-  if (typeof opts.sendOptions !== 'object') {
-    return next(new Error('"sendOptions" option is required'))
-  }
-  if (typeof opts.sendOptions.root !== 'string') {
-    return next(new Error('"sendOptions.root" option is required'))
-  }
-  if (!path.isAbsolute(opts.sendOptions.root)) {
-    return next(new Error('"directory" option must be an absolute path'))
-  }
-  if (typeof opts.redirectionLink404 !== 'string') {
-    return next(new Error('"redirectionLink404" option is required'))
-  }
-  if (typeof opts.redirectionLink403 !== 'string') {
-    return next(new Error('"redirectionLink403" option is required'))
-  }
-  if (typeof opts.redirectionLink500 !== 'string') {
-    return next(new Error('"redirectionLink500" option is required'))
+  const error = checkOptions(opts)
+  if (error instanceof Error) return next(error)
+
+  const root = opts.root
+  const page500 = opts.page500Path || DEFAULT_500_PAGE
+  const page403 = opts.page403Path || DEFAULT_403_PAGE
+  const page404 = opts.page404Path || DEFAULT_404_PAGE
+
+  function overwriteStatusCode (res, statusCode) {
+    return function () { res.statusCode = statusCode }
   }
 
-  const root = opts.sendOptions.root
-  const redirectionLink404 = opts.redirectionLink404
-  const redirectionLink403 = opts.redirectionLink403
-  const redirectionLink500 = opts.redirectionLink500
+  function servePathWithStatusCodeWrapper (page, statusCode) {
+    return function servePage (req, res) {
+      send(req, page)
+        .on('stream', overwriteStatusCode(res, statusCode))
+        .pipe(res)
+    }
+  }
+  const serve404 = servePathWithStatusCodeWrapper(page404, 404)
+  const serve403 = servePathWithStatusCodeWrapper(page403, 403)
+  const serve500 = servePathWithStatusCodeWrapper(page500, 500)
 
   function pumpSendToReply (req, reply, pathname) {
     const sendStream = send(req, pathname, {root})
 
     sendStream.on('error', function (err) {
-      if (err.code === 'ENOENT') {
-        return reply.redirect(redirectionLink404)
-      }
-      if (err.message === 'Forbidden') {
-        return reply.redirect(redirectionLink403)
-      }
-      reply.redirect(redirectionLink500)
+      if (err.statusCode === 404) return serve404(req, reply.res)
+      if (err.statusCode === 403) return serve403(req, reply.res)
+      serve500(req, reply.res)
     })
 
     sendStream.pipe(reply.res)
@@ -60,6 +60,24 @@ function fastifyStatic (fastify, opts, next) {
   })
 
   next()
+}
+
+function checkOptions (opts) {
+  if (typeof opts.root !== 'string') {
+    return new Error('"root" option is required')
+  }
+  if (!path.isAbsolute(opts.root)) {
+    return new Error('"root" option must be an absolute path')
+  }
+  let rootStat
+  try {
+    rootStat = statSync(opts.root)
+  } catch (e) {
+    return e
+  }
+  if (!rootStat.isDirectory()) {
+    return new Error('"root" option must be an absolute path')
+  }
 }
 
 module.exports = fp(fastifyStatic)
