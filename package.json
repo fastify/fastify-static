@@ -7,14 +7,16 @@
     "lint": "standard | snazzy",
     "unit": "tap test",
     "test": "npm run lint && npm run unit",
-    "coverage": "tap --cov --coverage-report=html test"
+    "coverage": "tap --cov --coverage-report=html test",
+    "coveralls": "tap test/*test.js  test/*/*.test.js --cov",
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/fastify/fastify-static.git"
   },
   "keywords": [
-    "fastify"
+    "fastify",
+    "static"
   ],
   "author": "Tommaso Allevi - @allevo",
   "license": "MIT",
@@ -28,6 +30,7 @@
   },
   "devDependencies": {
     "fastify": "^0.26.1",
+    "coveralls": "^2.13.1",
     "pre-commit": "^1.2.2",
     "request": "^2.81.0",
     "snazzy": "^7.0.0",
