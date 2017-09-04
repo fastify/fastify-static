@@ -8,7 +8,7 @@
     "unit": "tap test",
     "test": "npm run lint && npm run unit",
     "coverage": "tap --cov --coverage-report=html test",
-    "coveralls": "tap test/*test.js  test/*/*.test.js --cov",
+    "coveralls": "tap test/*test.js  test/*/*.test.js --cov"
   },
   "repository": {
     "type": "git",
