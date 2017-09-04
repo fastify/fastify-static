@@ -47,16 +47,17 @@ function fastifyStatic (fastify, opts, next) {
     sendStream.pipe(reply.res)
   }
 
-  fastify.get(opts.prefix + '/*', function (req, reply) {
+  const prefix = opts.prefix[opts.prefix.length - 1] === '/' ? opts.prefix : (opts.prefix + '/')
+  fastify.get(prefix + '*', function (req, reply) {
     pumpSendToReply(req.req, reply, '/' + req.params['*'])
   })
 
-  fastify.get(opts.prefix + '/', function (req, reply) {
+  fastify.get(prefix, function (req, reply) {
     pumpSendToReply(req.req, reply, '/')
   })
 
-  fastify.get(opts.prefix, function (req, reply) {
-    pumpSendToReply(req.req, reply, '/')
+  fastify.decorateReply('serveStaticFile', function (filePath) {
+    pumpSendToReply(this._req, this, filePath)
   })
 
   next()
