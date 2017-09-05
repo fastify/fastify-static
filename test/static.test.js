@@ -275,7 +275,7 @@ t.test('send', t => {
   fastify.register(fastifyStatic, pluginOptions)
 
   fastify.get('/foo/bar', function (req, reply) {
-    reply.serveStaticFile('/index.html')
+    reply.sendFile('/index.html')
   })
 
   fastify.listen(0, err => {

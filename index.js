@@ -56,7 +56,7 @@ function fastifyStatic (fastify, opts, next) {
     pumpSendToReply(req.req, reply, '/')
   })
 
-  fastify.decorateReply('serveStaticFile', function (filePath) {
+  fastify.decorateReply('sendFile', function (filePath) {
     pumpSendToReply(this._req, this, filePath)
   })
 
