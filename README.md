@@ -1,4 +1,6 @@
 # fastify-static
+
+[![Greenkeeper badge](https://badges.greenkeeper.io/fastify/fastify-static.svg)](https://greenkeeper.io/)
 Plugin for serving static file
 
 ## Install
