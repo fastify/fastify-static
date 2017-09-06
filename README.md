@@ -1,4 +1,5 @@
-# fastify-static
+# fastify-static [![Build Status](https://travis-ci.org/fastify/fastify-static.svg?branch=master)](https://travis-ci.org/fastify/fastify-static)
+
 Plugin for serving static file
 
 ## Install
