@@ -29,7 +29,7 @@
     "send": "^0.15.4"
   },
   "devDependencies": {
-    "fastify": "^0.26.1",
+    "fastify": "^0.27.0",
     "coveralls": "^2.13.1",
     "pre-commit": "^1.2.2",
     "request": "^2.81.0",
