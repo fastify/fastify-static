@@ -26,7 +26,7 @@
   "homepage": "https://github.com/fastify/fastify-static",
   "dependencies": {
     "fastify-plugin": "^0.1.0",
-    "send": "^0.15.4"
+    "send": "^0.16.0"
   },
   "devDependencies": {
     "fastify": "^0.29.0",
