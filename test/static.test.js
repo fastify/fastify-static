@@ -298,3 +298,10 @@ t.test('send', t => {
     })
   })
 })
+
+t.test('prefix default', t => {
+  t.plan(1)
+  const pluginOptions = {root: path.join(__dirname, 'static')}
+  const fastify = require('fastify')({logger: false})
+  t.doesNotThrow(() => fastify.register(fastifyStatic, pluginOptions))
+})
