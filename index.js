@@ -47,6 +47,7 @@ function fastifyStatic (fastify, opts, next) {
     sendStream.pipe(reply.res)
   }
 
+  if (!opts.prefix) opts.prefix = '/'
   const prefix = opts.prefix[opts.prefix.length - 1] === '/' ? opts.prefix : (opts.prefix + '/')
   fastify.get(prefix + '*', function (req, reply) {
     pumpSendToReply(req.req, reply, '/' + req.params['*'])
