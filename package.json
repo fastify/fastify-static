@@ -1,7 +1,7 @@
 {
   "name": "fastify-static",
   "version": "0.2.1",
-  "description": "Plugin for serving static file as fast as possible Edit",
+  "description": "Plugin for serving static files as fast as possible.",
   "main": "index.js",
   "scripts": {
     "lint": "standard | snazzy",
