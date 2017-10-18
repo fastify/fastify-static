@@ -36,7 +36,7 @@ function fastifyStatic (fastify, opts, next) {
   const serve500 = servePathWithStatusCodeWrapper(page500, 500)
 
   function pumpSendToReply (req, reply, pathname) {
-    const sendStream = send(req, pathname, {root})
+    const sendStream = send(req, pathname, { root })
 
     sendStream.on('error', function (err) {
       if (err.statusCode === 404) return serve404(req, reply.res)
@@ -49,6 +49,7 @@ function fastifyStatic (fastify, opts, next) {
 
   if (opts.prefix === undefined) opts.prefix = '/'
   const prefix = opts.prefix[opts.prefix.length - 1] === '/' ? opts.prefix : (opts.prefix + '/')
+
   fastify.get(prefix + '*', function (req, reply) {
     pumpSendToReply(req.req, reply, '/' + req.params['*'])
   })
@@ -82,7 +83,7 @@ function checkRootPath (rootPath) {
   }
 
   if (rootStat.isDirectory() === false) {
-    return new Error('"root" option must be an absolute path')
+    return new Error('"root" option must point to a directory')
   }
 }
 
