@@ -73,32 +73,27 @@ function fastifyStatic (fastify, opts, next) {
 function checkPathsForErrors (paths) {
   if (paths.root === undefined) return new Error('"root" option is required')
 
-  for (const p in paths) {
-    if (paths[p] !== undefined) {
-      if (typeof paths[p] !== 'string') {
-        return new Error(`"${p}" option must be a string`)
-      }
+  checkPath(paths.root, 'root', 'isDirectory')
+  if (paths.page500Path !== undefined) checkPath(paths.page500Path, 'page500Path', 'isFile')
+  if (paths.page403Path !== undefined) checkPath(paths.page403Path, 'page403Path', 'isFile')
+  if (paths.page404Path !== undefined) checkPath(paths.page404Path, 'page404Path', 'isFile')
+}
 
-      if (path.isAbsolute(paths[p]) === false) {
-        return new Error(`"${p}" option must be an absolute path`)
-      }
+function checkPath (p, pathName, statMethod) {
+  if (typeof p !== 'string') return new Error(`"${pathName}" option must be a string`)
 
-      let pathStat
+  if (path.isAbsolute(p) === false) return new Error(`"${pathName}" option must be an absolute path`)
 
-      try {
-        pathStat = statSync(paths[p])
-      } catch (e) {
-        return e
-      }
+  let pathStat
 
-      if (p === 'root' && pathStat.isDirectory() === false) {
-        return new Error('"root" option must point to a directory')
-      }
+  try {
+    pathStat = statSync(p)
+  } catch (e) {
+    return e
+  }
 
-      if (p !== 'root' && pathStat.isFile() === false) {
-        return new Error(`"${p}" option must point to a file`)
-      }
-    }
+  if (pathStat[statMethod]() === false) {
+    return new Error(`${pathName} option must point to a ${statMethod.slice(2).toLowerCase()}`)
   }
 }
 
