@@ -73,10 +73,11 @@ function fastifyStatic (fastify, opts, next) {
 function checkPathsForErrors (paths) {
   if (paths.root === undefined) return new Error('"root" option is required')
 
-  checkPath(paths.root, 'root', 'isDirectory')
-  if (paths.page500Path !== undefined) checkPath(paths.page500Path, 'page500Path', 'isFile')
-  if (paths.page403Path !== undefined) checkPath(paths.page403Path, 'page403Path', 'isFile')
-  if (paths.page404Path !== undefined) checkPath(paths.page404Path, 'page404Path', 'isFile')
+  var err = checkPath(paths.root, 'root', 'isDirectory')
+  if (!err && paths.page500Path !== undefined) err = checkPath(paths.page500Path, 'page500Path', 'isFile')
+  if (!err && paths.page403Path !== undefined) err = checkPath(paths.page403Path, 'page403Path', 'isFile')
+  if (!err && paths.page404Path !== undefined) err = checkPath(paths.page404Path, 'page404Path', 'isFile')
+  return err
 }
 
 function checkPath (p, pathName, statMethod) {

@@ -305,3 +305,106 @@ t.test('prefix default', t => {
   const fastify = require('fastify')({logger: false})
   t.doesNotThrow(() => fastify.register(fastifyStatic, pluginOptions))
 })
+
+t.test('errors', t => {
+  t.plan(11)
+
+  t.test('no root', t => {
+    t.plan(1)
+    const pluginOptions = {}
+    const fastify = require('fastify')({logger: false})
+    fastify.register(fastifyStatic, pluginOptions, err => {
+      t.equal(err.constructor, Error)
+    })
+  })
+
+  t.test('root is not a string', t => {
+    t.plan(1)
+    const pluginOptions = { root: 42 }
+    const fastify = require('fastify')({logger: false})
+    fastify.register(fastifyStatic, pluginOptions, err => {
+      t.equal(err.constructor, Error)
+    })
+  })
+
+  t.test('root is not an absolute path', t => {
+    t.plan(1)
+    const pluginOptions = { root: './my/path' }
+    const fastify = require('fastify')({logger: false})
+    fastify.register(fastifyStatic, pluginOptions, err => {
+      t.equal(err.constructor, Error)
+    })
+  })
+
+  t.test('root doesn\'t exist', t => {
+    t.plan(1)
+    const pluginOptions = { root: path.join(__dirname, 'foo', 'bar') }
+    const fastify = require('fastify')({logger: false})
+    fastify.register(fastifyStatic, pluginOptions, err => {
+      t.equal(err.constructor, Error)
+    })
+  })
+
+  t.test('root is not a directory', t => {
+    t.plan(1)
+    const pluginOptions = { root: __filename }
+    const fastify = require('fastify')({logger: false})
+    fastify.register(fastifyStatic, pluginOptions, err => {
+      t.equal(err.constructor, Error)
+    })
+  })
+
+  t.test('page500Path is not a string', t => {
+    t.plan(1)
+    const pluginOptions = { root: __dirname, page500Path: 42 }
+    const fastify = require('fastify')({logger: false})
+    fastify.register(fastifyStatic, pluginOptions, err => {
+      t.equal(err.constructor, Error)
+    })
+  })
+
+  t.test('page500Path is not a file', t => {
+    t.plan(1)
+    const pluginOptions = { root: __dirname, page500Path: __dirname }
+    const fastify = require('fastify')({logger: false})
+    fastify.register(fastifyStatic, pluginOptions, err => {
+      t.equal(err.constructor, Error)
+    })
+  })
+
+  t.test('page404Path is not a string', t => {
+    t.plan(1)
+    const pluginOptions = { root: __dirname, page404Path: 42 }
+    const fastify = require('fastify')({logger: false})
+    fastify.register(fastifyStatic, pluginOptions, err => {
+      t.equal(err.constructor, Error)
+    })
+  })
+
+  t.test('page404Path is not a file', t => {
+    t.plan(1)
+    const pluginOptions = { root: __dirname, page404Path: __dirname }
+    const fastify = require('fastify')({logger: false})
+    fastify.register(fastifyStatic, pluginOptions, err => {
+      t.equal(err.constructor, Error)
+    })
+  })
+
+  t.test('page403Path is not a string', t => {
+    t.plan(1)
+    const pluginOptions = { root: __dirname, page403Path: 42 }
+    const fastify = require('fastify')({logger: false})
+    fastify.register(fastifyStatic, pluginOptions, err => {
+      t.equal(err.constructor, Error)
+    })
+  })
+
+  t.test('page403Path is not a file', t => {
+    t.plan(1)
+    const pluginOptions = { root: __dirname, page403Path: __dirname }
+    const fastify = require('fastify')({logger: false})
+    fastify.register(fastifyStatic, pluginOptions, err => {
+      t.equal(err.constructor, Error)
+    })
+  })
+})
