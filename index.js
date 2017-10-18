@@ -47,7 +47,7 @@ function fastifyStatic (fastify, opts, next) {
     sendStream.pipe(reply.res)
   }
 
-  if (!opts.prefix) opts.prefix = '/'
+  if (opts.prefix === undefined) opts.prefix = '/'
   const prefix = opts.prefix[opts.prefix.length - 1] === '/' ? opts.prefix : (opts.prefix + '/')
   fastify.get(prefix + '*', function (req, reply) {
     pumpSendToReply(req.req, reply, '/' + req.params['*'])
@@ -68,7 +68,7 @@ function checkOptions (opts) {
   if (typeof opts.root !== 'string') {
     return new Error('"root" option is required')
   }
-  if (!path.isAbsolute(opts.root)) {
+  if (path.isAbsolute(opts.root) === false) {
     return new Error('"root" option must be an absolute path')
   }
   let rootStat
@@ -77,7 +77,7 @@ function checkOptions (opts) {
   } catch (e) {
     return e
   }
-  if (!rootStat.isDirectory()) {
+  if (rootStat.isDirectory() === false) {
     return new Error('"root" option must be an absolute path')
   }
 }
