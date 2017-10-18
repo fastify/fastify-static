@@ -12,8 +12,13 @@ const DEFAULT_403_PAGE = path.join(__dirname, 'static', '403.html')
 const DEFAULT_404_PAGE = path.join(__dirname, 'static', '404.html')
 
 function fastifyStatic (fastify, opts, next) {
-  const error = checkOptions(opts)
-  if (error instanceof Error) return next(error)
+  const error = checkPathsForErrors({
+    root: opts.root,
+    page500Path: opts.page500Path,
+    page403Path: opts.page403Path,
+    page404Path: opts.page404Path
+  })
+  if (error !== undefined) return next(error)
 
   const root = opts.root
   const page500 = opts.page500Path || DEFAULT_500_PAGE
@@ -36,7 +41,7 @@ function fastifyStatic (fastify, opts, next) {
   const serve500 = servePathWithStatusCodeWrapper(page500, 500)
 
   function pumpSendToReply (req, reply, pathname) {
-    const sendStream = send(req, pathname, {root})
+    const sendStream = send(req, pathname, { root })
 
     sendStream.on('error', function (err) {
       if (err.statusCode === 404) return serve404(req, reply.res)
@@ -47,8 +52,9 @@ function fastifyStatic (fastify, opts, next) {
     sendStream.pipe(reply.res)
   }
 
-  if (!opts.prefix) opts.prefix = '/'
+  if (opts.prefix === undefined) opts.prefix = '/'
   const prefix = opts.prefix[opts.prefix.length - 1] === '/' ? opts.prefix : (opts.prefix + '/')
+
   fastify.get(prefix + '*', function (req, reply) {
     pumpSendToReply(req.req, reply, '/' + req.params['*'])
   })
@@ -64,21 +70,30 @@ function fastifyStatic (fastify, opts, next) {
   next()
 }
 
-function checkOptions (opts) {
-  if (typeof opts.root !== 'string') {
-    return new Error('"root" option is required')
-  }
-  if (!path.isAbsolute(opts.root)) {
-    return new Error('"root" option must be an absolute path')
-  }
-  let rootStat
+function checkPathsForErrors (paths) {
+  if (paths.root === undefined) return new Error('"root" option is required')
+
+  checkPath(paths.root, 'root', 'isDirectory')
+  if (paths.page500Path !== undefined) checkPath(paths.page500Path, 'page500Path', 'isFile')
+  if (paths.page403Path !== undefined) checkPath(paths.page403Path, 'page403Path', 'isFile')
+  if (paths.page404Path !== undefined) checkPath(paths.page404Path, 'page404Path', 'isFile')
+}
+
+function checkPath (p, pathName, statMethod) {
+  if (typeof p !== 'string') return new Error(`"${pathName}" option must be a string`)
+
+  if (path.isAbsolute(p) === false) return new Error(`"${pathName}" option must be an absolute path`)
+
+  let pathStat
+
   try {
-    rootStat = statSync(opts.root)
+    pathStat = statSync(p)
   } catch (e) {
     return e
   }
-  if (!rootStat.isDirectory()) {
-    return new Error('"root" option must be an absolute path')
+
+  if (pathStat[statMethod]() === false) {
+    return new Error(`${pathName} option must point to a ${statMethod.slice(2).toLowerCase()}`)
   }
 }
 
