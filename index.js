@@ -12,7 +12,7 @@ const DEFAULT_403_PAGE = path.join(__dirname, 'static', '403.html')
 const DEFAULT_404_PAGE = path.join(__dirname, 'static', '404.html')
 
 function fastifyStatic (fastify, opts, next) {
-  const error = checkOptions(opts)
+  const error = checkRootPath(opts.root)
   if (error instanceof Error) return next(error)
 
   const root = opts.root
@@ -64,19 +64,23 @@ function fastifyStatic (fastify, opts, next) {
   next()
 }
 
-function checkOptions (opts) {
-  if (typeof opts.root !== 'string') {
+function checkRootPath (rootPath) {
+  if (typeof rootPath !== 'string') {
     return new Error('"root" option is required')
   }
-  if (path.isAbsolute(opts.root) === false) {
+
+  if (path.isAbsolute(rootPath) === false) {
     return new Error('"root" option must be an absolute path')
   }
+
   let rootStat
+
   try {
-    rootStat = statSync(opts.root)
+    rootStat = statSync(rootPath)
   } catch (e) {
     return e
   }
+
   if (rootStat.isDirectory() === false) {
     return new Error('"root" option must be an absolute path')
   }
