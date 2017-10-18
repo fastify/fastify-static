@@ -12,7 +12,12 @@ const DEFAULT_403_PAGE = path.join(__dirname, 'static', '403.html')
 const DEFAULT_404_PAGE = path.join(__dirname, 'static', '404.html')
 
 function fastifyStatic (fastify, opts, next) {
-  const error = checkRootPathForErrors(opts.root)
+  const error = checkPathsForErrors({
+    root: opts.root,
+    page500Path: opts.page500Path,
+    page403Path: opts.page403Path,
+    page404Path: opts.page404Path
+  })
   if (error !== undefined) return next(error)
 
   const root = opts.root
@@ -65,25 +70,35 @@ function fastifyStatic (fastify, opts, next) {
   next()
 }
 
-function checkRootPathForErrors (rootPath) {
-  if (typeof rootPath !== 'string') {
-    return new Error('"root" option is required')
-  }
+function checkPathsForErrors (paths) {
+  if (paths.root === undefined) return new Error('"root" option is required')
 
-  if (path.isAbsolute(rootPath) === false) {
-    return new Error('"root" option must be an absolute path')
-  }
+  for (const p in paths) {
+    if (paths[p] !== undefined) {
+      if (typeof paths[p] !== 'string') {
+        return new Error(`"${p}" option must be a string`)
+      }
 
-  let rootStat
+      if (path.isAbsolute(paths[p]) === false) {
+        return new Error(`"${p}" option must be an absolute path`)
+      }
 
-  try {
-    rootStat = statSync(rootPath)
-  } catch (e) {
-    return e
-  }
+      let pathStat
 
-  if (rootStat.isDirectory() === false) {
-    return new Error('"root" option must point to a directory')
+      try {
+        pathStat = statSync(paths[p])
+      } catch (e) {
+        return e
+      }
+
+      if (p === 'root' && pathStat.isDirectory() === false) {
+        return new Error('"root" option must point to a directory')
+      }
+
+      if (p !== 'root' && pathStat.isFile() === false) {
+        return new Error(`"${p}" option must point to a file`)
+      }
+    }
   }
 }
 
