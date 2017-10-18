@@ -12,8 +12,8 @@ const DEFAULT_403_PAGE = path.join(__dirname, 'static', '403.html')
 const DEFAULT_404_PAGE = path.join(__dirname, 'static', '404.html')
 
 function fastifyStatic (fastify, opts, next) {
-  const error = checkRootPath(opts.root)
-  if (error instanceof Error) return next(error)
+  const error = checkRootPathForErrors(opts.root)
+  if (error !== undefined) return next(error)
 
   const root = opts.root
   const page500 = opts.page500Path || DEFAULT_500_PAGE
@@ -65,7 +65,7 @@ function fastifyStatic (fastify, opts, next) {
   next()
 }
 
-function checkRootPath (rootPath) {
+function checkRootPathForErrors (rootPath) {
   if (typeof rootPath !== 'string') {
     return new Error('"root" option is required')
   }
