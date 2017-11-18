@@ -64,7 +64,7 @@ function fastifyStatic (fastify, opts, next) {
   })
 
   fastify.decorateReply('sendFile', function (filePath) {
-    pumpSendToReply(this._req, this, filePath)
+    pumpSendToReply(this.request.req, this, filePath)
   })
 
   next()
@@ -98,4 +98,4 @@ function checkPath (p, pathName, statMethod) {
   }
 }
 
-module.exports = fp(fastifyStatic)
+module.exports = fp(fastifyStatic, '>= 0.35.0')
