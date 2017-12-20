@@ -20,7 +20,24 @@ function fastifyStatic (fastify, opts, next) {
   })
   if (error !== undefined) return next(error)
 
-  const root = opts.root
+  const setHeaders = opts.setHeaders
+
+  if (setHeaders !== undefined && typeof setHeaders !== 'function') {
+    return next(new TypeError('The `setHeaders` option must be a function'))
+  }
+
+  const sendOptions = {
+    root: opts.root,
+    acceptRanges: opts.acceptRanges,
+    cacheControl: opts.cacheControl,
+    dotfiles: opts.dotfiles,
+    etag: opts.etag,
+    extensions: opts.extensions,
+    immutable: opts.immutable,
+    index: opts.index,
+    lastModified: opts.lastModified,
+    maxAge: opts.maxAge
+  }
   const page500 = opts.page500Path || DEFAULT_500_PAGE
   const page403 = opts.page403Path || DEFAULT_403_PAGE
   const page404 = opts.page404Path || DEFAULT_404_PAGE
@@ -41,7 +58,11 @@ function fastifyStatic (fastify, opts, next) {
   const serve500 = servePathWithStatusCodeWrapper(page500, 500)
 
   function pumpSendToReply (req, reply, pathname) {
-    const sendStream = send(req, pathname, { root })
+    const sendStream = send(req, pathname, sendOptions)
+
+    if (setHeaders !== undefined) {
+      sendStream.on('headers', setHeaders)
+    }
 
     sendStream.on('error', function (err) {
       if (err.statusCode === 404) return serve404(req, reply.res)

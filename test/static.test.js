@@ -264,7 +264,7 @@ t.test('register /static/', t => {
   })
 })
 
-t.test('send', t => {
+t.test('sendFile', t => {
   t.plan(2)
 
   const pluginOptions = {
@@ -283,7 +283,7 @@ t.test('send', t => {
 
     fastify.server.unref()
 
-    t.test('reply.send()', t => {
+    t.test('reply.sendFile()', t => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
       request.get({
         method: 'GET',
@@ -306,8 +306,75 @@ t.test('prefix default', t => {
   t.doesNotThrow(() => fastify.register(fastifyStatic, pluginOptions))
 })
 
-t.test('errors', t => {
+t.test('send options', t => {
   t.plan(11)
+  const pluginOptions = {
+    root: path.join(__dirname, '/static'),
+    acceptRanges: 'acceptRanges',
+    cacheControl: 'cacheControl',
+    dotfiles: 'dotfiles',
+    etag: 'etag',
+    extensions: 'extensions',
+    immutable: 'immutable',
+    index: 'index',
+    lastModified: 'lastModified',
+    maxAge: 'maxAge'
+  }
+  const fastify = require('fastify')({logger: false})
+  const fastifyStatic = require('proxyquire')('../', {
+    send: function sendStub (req, pathName, options) {
+      t.strictEqual(pathName, '/index.html')
+      t.strictEqual(options.root, path.join(__dirname, '/static'))
+      t.strictEqual(options.acceptRanges, 'acceptRanges')
+      t.strictEqual(options.cacheControl, 'cacheControl')
+      t.strictEqual(options.dotfiles, 'dotfiles')
+      t.strictEqual(options.etag, 'etag')
+      t.strictEqual(options.extensions, 'extensions')
+      t.strictEqual(options.immutable, 'immutable')
+      t.strictEqual(options.index, 'index')
+      t.strictEqual(options.lastModified, 'lastModified')
+      t.strictEqual(options.maxAge, 'maxAge')
+      return { on: () => {}, pipe: () => {} }
+    }
+  })
+  fastify.register(fastifyStatic, pluginOptions)
+  fastify.inject({url: '/index.html'})
+})
+
+t.test('setHeaders option', t => {
+  t.plan(6 + GENERIC_RESPONSE_CHECK_COUNT)
+
+  const pluginOptions = {
+    root: path.join(__dirname, 'static'),
+    setHeaders: function (res, pathName) {
+      t.strictEqual(pathName, path.join(__dirname, 'static/index.html'))
+      res.setHeader('X-Test-Header', 'test')
+    }
+  }
+  const fastify = require('fastify')()
+  fastify.register(fastifyStatic, pluginOptions)
+
+  fastify.listen(0, err => {
+    t.error(err)
+
+    fastify.server.unref()
+
+    request.get({
+      method: 'GET',
+      uri: 'http://localhost:' + fastify.server.address().port + '/index.html',
+      followRedirect: false
+    }, (err, response, body) => {
+      t.error(err)
+      t.strictEqual(response.statusCode, 200)
+      t.strictEqual(response.headers['x-test-header'], 'test')
+      t.strictEqual(body, indexContent)
+      genericResponseChecks(t, response)
+    })
+  })
+})
+
+t.test('errors', t => {
+  t.plan(12)
 
   t.test('no root', t => {
     t.plan(1)
@@ -405,6 +472,15 @@ t.test('errors', t => {
     const fastify = require('fastify')({logger: false})
     fastify.register(fastifyStatic, pluginOptions, err => {
       t.equal(err.constructor, Error)
+    })
+  })
+
+  t.test('setHeaders is not a function', t => {
+    t.plan(1)
+    const pluginOptions = { root: __dirname, setHeaders: 'headers' }
+    const fastify = require('fastify')({logger: false})
+    fastify.register(fastifyStatic, pluginOptions, err => {
+      t.equal(err.constructor, TypeError)
     })
   })
 })

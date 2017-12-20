@@ -27,6 +27,52 @@ fastify.get('/another/path', function (req, reply) {
 
 ```
 
+### Options
+
+#### `root` (required)
+
+The absolute path of the directory that contains the files to serve.
+The file to serve will be determined by combining `req.url` with the
+provided root directory.
+
+#### `prefix`
+
+Default: `'/'`
+
+A URL path prefix used to create a virtual mount path for the static directory.
+
+#### `page404Path`, `page403Path`, `page500Path`
+
+The absolute path to an HTML file to send as a response for the corresponding
+error status code. A generic error page is sent by default.
+
+#### `setHeaders`
+
+Default: `undefined`
+
+A function to set custom headers on the response. Alterations to the headers
+must be done synchronously. The function is called as `fn(res, path, stat)`,
+where the arguments are:
+
+- `res` The response object.
+- `path` The path of the file that is being sent.
+- `stat` The stat object of the file that is being sent.
+
+#### `send` Options
+
+The following options are also supported and will be passed directly to the
+[`send`](https://www.npmjs.com/package/send) module:
+
+- [`acceptRanges`](https://www.npmjs.com/package/send#acceptranges)
+- [`cacheControl`](https://www.npmjs.com/package/send#cachecontrol)
+- [`dotfiles`](https://www.npmjs.com/package/send#dotfiles)
+- [`etag`](https://www.npmjs.com/package/send#etag)
+- [`extensions`](https://www.npmjs.com/package/send#extensions)
+- [`immutable`](https://www.npmjs.com/package/send#immutable)
+- [`index`](https://www.npmjs.com/package/send#index)
+- [`lastModified`](https://www.npmjs.com/package/send#lastmodified)
+- [`maxAge`](https://www.npmjs.com/package/send#maxage)
+
 ## License
 
 Licensed under [MIT](./LICENSE)
