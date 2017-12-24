@@ -16,9 +16,6 @@ const path = require('path')
 fastify.register(require('fastify-static'), {
   root: path.join(__dirname, 'public'),
   prefix: '/public/', // optional: default '/'
-  page404Path: path.join(__dirname, 'public', '404.html'), // optional
-  page403Path: path.join(__dirname, 'public', '403.html'), // optional
-  page500Path: path.join(__dirname, 'public', '500.html')  // optional
 })
 
 fastify.get('/another/path', function (req, reply) {
@@ -26,6 +23,10 @@ fastify.get('/another/path', function (req, reply) {
 })
 
 ```
+
+Any errors that occur (including `404` errors) will be passed to
+Fastify's error handler. You can set a custom error handler with
+[`fastify.setErrorHandler()`](https://www.fastify.io/docs/latest/Server-Methods/#seterrorhandler).
 
 ### Options
 
@@ -40,11 +41,6 @@ provided root directory.
 Default: `'/'`
 
 A URL path prefix used to create a virtual mount path for the static directory.
-
-#### `page404Path`, `page403Path`, `page500Path`
-
-The absolute path to an HTML file to send as a response for the corresponding
-error status code. A generic error page is sent by default.
 
 #### `setHeaders`
 

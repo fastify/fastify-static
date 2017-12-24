@@ -12,9 +12,6 @@ const indexContent = fs.readFileSync('./test/static/index.html').toString('utf8'
 const deepContent = fs.readFileSync('./test/static/deep/path/for/test/purpose/foo.html').toString('utf8')
 const innerIndex = fs.readFileSync('./test/static/deep/path/for/test/index.html').toString('utf8')
 
-const body403 = fs.readFileSync('./static/403.html').toString('utf8')
-const body404 = fs.readFileSync('./static/404.html').toString('utf8')
-
 const GENERIC_RESPONSE_CHECK_COUNT = 5
 function genericResponseChecks (t, response) {
   t.ok(/text\/(html|css)/.test(response.headers['content-type']))
@@ -22,6 +19,12 @@ function genericResponseChecks (t, response) {
   t.ok(response.headers['last-modified'])
   t.ok(response.headers.date)
   t.ok(response.headers['cache-control'])
+}
+
+const GENERIC_ERROR_RESPONSE_CHECK_COUNT = 2
+function genericErrorResponseChecks (t, response) {
+  t.strictEqual(response.headers['content-type'], 'application/json')
+  t.ok(response.headers.date)
 }
 
 t.test('register /static', t => {
@@ -115,7 +118,7 @@ t.test('register /static', t => {
     })
 
     t.test('/static/this/path/doesnt/exist.html', t => {
-      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+      t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
       request.get({
         method: 'GET',
         uri: 'http://localhost:' + fastify.server.address().port + '/static/this/path/doesnt/exist.html',
@@ -123,13 +126,12 @@ t.test('register /static', t => {
       }, (err, response, body) => {
         t.error(err)
         t.strictEqual(response.statusCode, 404)
-        t.strictEqual(body, body404)
-        genericResponseChecks(t, response)
+        genericErrorResponseChecks(t, response)
       })
     })
 
     t.test('/static/../index.js', t => {
-      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+      t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
       request.get({
         method: 'GET',
         uri: 'http://localhost:' + fastify.server.address().port + '/static/../index.js',
@@ -137,8 +139,7 @@ t.test('register /static', t => {
       }, (err, response, body) => {
         t.error(err)
         t.strictEqual(response.statusCode, 403)
-        t.strictEqual(body, body403)
-        genericResponseChecks(t, response)
+        genericErrorResponseChecks(t, response)
       })
     })
   })
@@ -235,7 +236,7 @@ t.test('register /static/', t => {
     })
 
     t.test('/static/this/path/doesnt/exist.html', t => {
-      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+      t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
       request.get({
         method: 'GET',
         uri: 'http://localhost:' + fastify.server.address().port + '/static/this/path/doesnt/exist.html',
@@ -243,13 +244,12 @@ t.test('register /static/', t => {
       }, (err, response, body) => {
         t.error(err)
         t.strictEqual(response.statusCode, 404)
-        t.strictEqual(body, body404)
-        genericResponseChecks(t, response)
+        genericErrorResponseChecks(t, response)
       })
     })
 
     t.test('/static/../index.js', t => {
-      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+      t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
       request.get({
         method: 'GET',
         uri: 'http://localhost:' + fastify.server.address().port + '/static/../index.js',
@@ -257,8 +257,58 @@ t.test('register /static/', t => {
       }, (err, response, body) => {
         t.error(err)
         t.strictEqual(response.statusCode, 403)
-        t.strictEqual(body, body403)
-        genericResponseChecks(t, response)
+        genericErrorResponseChecks(t, response)
+      })
+    })
+  })
+})
+
+t.test('error responses can be customized with fastify.setErrorHandler()', t => {
+  t.plan(3)
+
+  const pluginOptions = {
+    root: path.join(__dirname, '/static')
+  }
+  const fastify = require('fastify')()
+
+  fastify.setErrorHandler(function errorHandler (err, reply) {
+    reply.send(err.status + ' Custom error message')
+  })
+
+  fastify.register(fastifyStatic, pluginOptions)
+
+  fastify.listen(0, err => {
+    t.error(err)
+
+    fastify.server.unref()
+
+    t.test('/this/path/doesnt/exist.html', t => {
+      t.plan(4)
+
+      request.get({
+        method: 'GET',
+        uri: 'http://localhost:' + fastify.server.address().port + '/this/path/doesnt/exist.html',
+        followRedirect: false
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 404)
+        t.strictEqual(response.headers['content-type'], 'text/plain')
+        t.strictEqual(body, '404 Custom error message')
+      })
+    })
+
+    t.test('/../index.js', t => {
+      t.plan(4)
+
+      request.get({
+        method: 'GET',
+        uri: 'http://localhost:' + fastify.server.address().port + '/../index.js',
+        followRedirect: false
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 403)
+        t.strictEqual(response.headers['content-type'], 'text/plain')
+        t.strictEqual(body, '403 Custom error message')
       })
     })
   })
@@ -374,7 +424,7 @@ t.test('setHeaders option', t => {
 })
 
 t.test('errors', t => {
-  t.plan(12)
+  t.plan(6)
 
   t.test('no root', t => {
     t.plan(1)
@@ -419,66 +469,6 @@ t.test('errors', t => {
   t.test('root is not a directory', t => {
     t.plan(1)
     const pluginOptions = { root: __filename }
-    const fastify = require('fastify')({logger: false})
-    fastify.register(fastifyStatic, pluginOptions)
-      .ready(err => {
-        t.equal(err.constructor, Error)
-      })
-  })
-
-  t.test('page500Path is not a string', t => {
-    t.plan(1)
-    const pluginOptions = { root: __dirname, page500Path: 42 }
-    const fastify = require('fastify')({logger: false})
-    fastify.register(fastifyStatic, pluginOptions)
-      .ready(err => {
-        t.equal(err.constructor, Error)
-      })
-  })
-
-  t.test('page500Path is not a file', t => {
-    t.plan(1)
-    const pluginOptions = { root: __dirname, page500Path: __dirname }
-    const fastify = require('fastify')({logger: false})
-    fastify.register(fastifyStatic, pluginOptions)
-      .ready(err => {
-        t.equal(err.constructor, Error)
-      })
-  })
-
-  t.test('page404Path is not a string', t => {
-    t.plan(1)
-    const pluginOptions = { root: __dirname, page404Path: 42 }
-    const fastify = require('fastify')({logger: false})
-    fastify.register(fastifyStatic, pluginOptions)
-      .ready(err => {
-        t.equal(err.constructor, Error)
-      })
-  })
-
-  t.test('page404Path is not a file', t => {
-    t.plan(1)
-    const pluginOptions = { root: __dirname, page404Path: __dirname }
-    const fastify = require('fastify')({logger: false})
-    fastify.register(fastifyStatic, pluginOptions)
-      .ready(err => {
-        t.equal(err.constructor, Error)
-      })
-  })
-
-  t.test('page403Path is not a string', t => {
-    t.plan(1)
-    const pluginOptions = { root: __dirname, page403Path: 42 }
-    const fastify = require('fastify')({logger: false})
-    fastify.register(fastifyStatic, pluginOptions)
-      .ready(err => {
-        t.equal(err.constructor, Error)
-      })
-  })
-
-  t.test('page403Path is not a file', t => {
-    t.plan(1)
-    const pluginOptions = { root: __dirname, page403Path: __dirname }
     const fastify = require('fastify')({logger: false})
     fastify.register(fastifyStatic, pluginOptions)
       .ready(err => {

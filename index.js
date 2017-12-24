@@ -7,17 +7,8 @@ const send = require('send')
 
 const fp = require('fastify-plugin')
 
-const DEFAULT_500_PAGE = path.join(__dirname, 'static', '500.html')
-const DEFAULT_403_PAGE = path.join(__dirname, 'static', '403.html')
-const DEFAULT_404_PAGE = path.join(__dirname, 'static', '404.html')
-
 function fastifyStatic (fastify, opts, next) {
-  const error = checkPathsForErrors({
-    root: opts.root,
-    page500Path: opts.page500Path,
-    page403Path: opts.page403Path,
-    page404Path: opts.page404Path
-  })
+  const error = checkRootPathForErrors(opts.root)
   if (error !== undefined) return next(error)
 
   const setHeaders = opts.setHeaders
@@ -38,24 +29,6 @@ function fastifyStatic (fastify, opts, next) {
     lastModified: opts.lastModified,
     maxAge: opts.maxAge
   }
-  const page500 = opts.page500Path || DEFAULT_500_PAGE
-  const page403 = opts.page403Path || DEFAULT_403_PAGE
-  const page404 = opts.page404Path || DEFAULT_404_PAGE
-
-  function overwriteStatusCode (res, statusCode) {
-    return function () { res.statusCode = statusCode }
-  }
-
-  function servePathWithStatusCodeWrapper (page, statusCode) {
-    return function servePage (req, res) {
-      send(req, page)
-        .on('stream', overwriteStatusCode(res, statusCode))
-        .pipe(res)
-    }
-  }
-  const serve404 = servePathWithStatusCodeWrapper(page404, 404)
-  const serve403 = servePathWithStatusCodeWrapper(page403, 403)
-  const serve500 = servePathWithStatusCodeWrapper(page500, 500)
 
   function pumpSendToReply (req, reply, pathname) {
     const sendStream = send(req, pathname, sendOptions)
@@ -65,9 +38,7 @@ function fastifyStatic (fastify, opts, next) {
     }
 
     sendStream.on('error', function (err) {
-      if (err.statusCode === 404) return serve404(req, reply.res)
-      if (err.statusCode === 403) return serve403(req, reply.res)
-      serve500(req, reply.res)
+      reply.send(err)
     })
 
     sendStream.pipe(reply.res)
@@ -91,31 +62,27 @@ function fastifyStatic (fastify, opts, next) {
   next()
 }
 
-function checkPathsForErrors (paths) {
-  if (paths.root === undefined) return new Error('"root" option is required')
-
-  var err = checkPath(paths.root, 'root', 'isDirectory')
-  if (!err && paths.page500Path !== undefined) err = checkPath(paths.page500Path, 'page500Path', 'isFile')
-  if (!err && paths.page403Path !== undefined) err = checkPath(paths.page403Path, 'page403Path', 'isFile')
-  if (!err && paths.page404Path !== undefined) err = checkPath(paths.page404Path, 'page404Path', 'isFile')
-  return err
-}
-
-function checkPath (p, pathName, statMethod) {
-  if (typeof p !== 'string') return new Error(`"${pathName}" option must be a string`)
-
-  if (path.isAbsolute(p) === false) return new Error(`"${pathName}" option must be an absolute path`)
+function checkRootPathForErrors (rootPath) {
+  if (rootPath === undefined) {
+    return new Error('"root" option is required')
+  }
+  if (typeof rootPath !== 'string') {
+    return new Error('"root" option must be a string')
+  }
+  if (path.isAbsolute(rootPath) === false) {
+    return new Error('"root" option must be an absolute path')
+  }
 
   let pathStat
 
   try {
-    pathStat = statSync(p)
+    pathStat = statSync(rootPath)
   } catch (e) {
     return e
   }
 
-  if (pathStat[statMethod]() === false) {
-    return new Error(`${pathName} option must point to a ${statMethod.slice(2).toLowerCase()}`)
+  if (pathStat.isDirectory() === false) {
+    return new Error('"root" option must point to a directory')
   }
 }
 
