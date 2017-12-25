@@ -24,10 +24,6 @@ fastify.get('/another/path', function (req, reply) {
 
 ```
 
-Any errors that occur (including `404` errors) will be passed to
-Fastify's error handler. You can set a custom error handler with
-[`fastify.setErrorHandler()`](https://www.fastify.io/docs/latest/Server-Methods/#seterrorhandler).
-
 ### Options
 
 #### `root` (required)
@@ -68,6 +64,15 @@ The following options are also supported and will be passed directly to the
 - [`index`](https://www.npmjs.com/package/send#index)
 - [`lastModified`](https://www.npmjs.com/package/send#lastmodified)
 - [`maxAge`](https://www.npmjs.com/package/send#maxage)
+
+### Handling Errors
+
+If an error occurs while trying to send a file, the error will be passed
+to Fastify's error handler. You can set a custom error handler with
+[`fastify.setErrorHandler()`](https://www.fastify.io/docs/latest/Server-Methods/#seterrorhandler).
+
+If a request matches the URL `prefix` but a file cannot be found for the request,
+a `404 Not Found` error will be created and passed to Fastify's error handler.
 
 ## License
 
