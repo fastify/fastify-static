@@ -65,14 +65,17 @@ The following options are also supported and will be passed directly to the
 - [`lastModified`](https://www.npmjs.com/package/send#lastmodified)
 - [`maxAge`](https://www.npmjs.com/package/send#maxage)
 
+#### Handling 404s
+
+If a request matches the URL `prefix` but a file cannot be found for the
+request, Fastify's 404 handler will be called. You can set a custom 404
+handler with [`fastify.setNotFoundHandler()`](https://www.fastify.io/docs/latest/Server-Methods/#setnotfoundhandler).
+
 ### Handling Errors
 
 If an error occurs while trying to send a file, the error will be passed
 to Fastify's error handler. You can set a custom error handler with
 [`fastify.setErrorHandler()`](https://www.fastify.io/docs/latest/Server-Methods/#seterrorhandler).
-
-If a request matches the URL `prefix` but a file cannot be found for the request,
-a `404 Not Found` error will be created and passed to Fastify's error handler.
 
 ## License
 

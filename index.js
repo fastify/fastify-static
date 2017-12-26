@@ -30,15 +30,19 @@ function fastifyStatic (fastify, opts, next) {
     maxAge: opts.maxAge
   }
 
-  function pumpSendToReply (req, reply, pathname) {
-    const sendStream = send(req, pathname, sendOptions)
+  function pumpSendToReply (request, reply, pathname) {
+    const sendStream = send(request.req, pathname, sendOptions)
 
     if (setHeaders !== undefined) {
       sendStream.on('headers', setHeaders)
     }
 
     sendStream.on('error', function (err) {
-      reply.send(err)
+      if (err.status === 404) {
+        fastify._404Context.handler(request, reply)
+      } else {
+        reply.send(err)
+      }
     })
 
     sendStream.pipe(reply.res)
@@ -48,15 +52,15 @@ function fastifyStatic (fastify, opts, next) {
   const prefix = opts.prefix[opts.prefix.length - 1] === '/' ? opts.prefix : (opts.prefix + '/')
 
   fastify.get(prefix + '*', function (req, reply) {
-    pumpSendToReply(req.req, reply, '/' + req.params['*'])
+    pumpSendToReply(req, reply, '/' + req.params['*'])
   })
 
   fastify.get(prefix, function (req, reply) {
-    pumpSendToReply(req.req, reply, '/')
+    pumpSendToReply(req, reply, '/')
   })
 
   fastify.decorateReply('sendFile', function (filePath) {
-    pumpSendToReply(this.request.req, this, filePath)
+    pumpSendToReply(this.request, this, filePath)
   })
 
   next()

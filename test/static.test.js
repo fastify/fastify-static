@@ -264,7 +264,7 @@ t.test('register /static/', t => {
 })
 
 t.test('error responses can be customized with fastify.setErrorHandler()', t => {
-  t.plan(3)
+  t.plan(2)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static')
@@ -282,21 +282,6 @@ t.test('error responses can be customized with fastify.setErrorHandler()', t => 
 
     fastify.server.unref()
 
-    t.test('/this/path/doesnt/exist.html', t => {
-      t.plan(4)
-
-      request.get({
-        method: 'GET',
-        uri: 'http://localhost:' + fastify.server.address().port + '/this/path/doesnt/exist.html',
-        followRedirect: false
-      }, (err, response, body) => {
-        t.error(err)
-        t.strictEqual(response.statusCode, 404)
-        t.strictEqual(response.headers['content-type'], 'text/plain')
-        t.strictEqual(body, '404 Custom error message')
-      })
-    })
-
     t.test('/../index.js', t => {
       t.plan(4)
 
@@ -309,6 +294,42 @@ t.test('error responses can be customized with fastify.setErrorHandler()', t => 
         t.strictEqual(response.statusCode, 403)
         t.strictEqual(response.headers['content-type'], 'text/plain')
         t.strictEqual(body, '403 Custom error message')
+      })
+    })
+  })
+})
+
+t.test('not found responses can be customized with fastify.setNotFoundHandler()', t => {
+  t.plan(2)
+
+  const pluginOptions = {
+    root: path.join(__dirname, '/static')
+  }
+  const fastify = require('fastify')()
+
+  fastify.setNotFoundHandler(function notFoundHandler (request, reply) {
+    reply.code(404).send(request.req.url + ' Not Found')
+  })
+
+  fastify.register(fastifyStatic, pluginOptions)
+
+  fastify.listen(0, err => {
+    t.error(err)
+
+    fastify.server.unref()
+
+    t.test('/path/does/not/exist.html', t => {
+      t.plan(4)
+
+      request.get({
+        method: 'GET',
+        uri: 'http://localhost:' + fastify.server.address().port + '/path/does/not/exist.html',
+        followRedirect: false
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 404)
+        t.strictEqual(response.headers['content-type'], 'text/plain')
+        t.strictEqual(body, '/path/does/not/exist.html Not Found')
       })
     })
   })
