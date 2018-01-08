@@ -39,7 +39,7 @@ function fastifyStatic (fastify, opts, next) {
 
     sendStream.on('error', function (err) {
       if (err.status === 404) {
-        fastify._404Context.handler(request, reply)
+        reply.notFound()
       } else {
         reply.send(err)
       }
@@ -90,4 +90,4 @@ function checkRootPathForErrors (rootPath) {
   }
 }
 
-module.exports = fp(fastifyStatic, '>= 0.35.0')
+module.exports = fp(fastifyStatic, '>= 0.38.0')

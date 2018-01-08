@@ -30,12 +30,12 @@
   },
   "devDependencies": {
     "coveralls": "^3.0.0",
-    "fastify": "^0.37.0",
+    "fastify": "^0.38.0",
     "pre-commit": "^1.2.2",
     "proxyquire": "^1.8.0",
     "request": "^2.81.0",
     "snazzy": "^7.0.0",
     "standard": "^10.0.3",
-    "tap": "^11.0.0"
+    "tap": "^11.0.1"
   }
 }
