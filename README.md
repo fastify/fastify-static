@@ -16,9 +16,6 @@ const path = require('path')
 fastify.register(require('fastify-static'), {
   root: path.join(__dirname, 'public'),
   prefix: '/public/', // optional: default '/'
-  page404Path: path.join(__dirname, 'public', '404.html'), // optional
-  page403Path: path.join(__dirname, 'public', '403.html'), // optional
-  page500Path: path.join(__dirname, 'public', '500.html')  // optional
 })
 
 fastify.get('/another/path', function (req, reply) {
@@ -40,11 +37,6 @@ provided root directory.
 Default: `'/'`
 
 A URL path prefix used to create a virtual mount path for the static directory.
-
-#### `page404Path`, `page403Path`, `page500Path`
-
-The absolute path to an HTML file to send as a response for the corresponding
-error status code. A generic error page is sent by default.
 
 #### `setHeaders`
 
@@ -72,6 +64,18 @@ The following options are also supported and will be passed directly to the
 - [`index`](https://www.npmjs.com/package/send#index)
 - [`lastModified`](https://www.npmjs.com/package/send#lastmodified)
 - [`maxAge`](https://www.npmjs.com/package/send#maxage)
+
+#### Handling 404s
+
+If a request matches the URL `prefix` but a file cannot be found for the
+request, Fastify's 404 handler will be called. You can set a custom 404
+handler with [`fastify.setNotFoundHandler()`](https://www.fastify.io/docs/latest/Server-Methods/#setnotfoundhandler).
+
+### Handling Errors
+
+If an error occurs while trying to send a file, the error will be passed
+to Fastify's error handler. You can set a custom error handler with
+[`fastify.setErrorHandler()`](https://www.fastify.io/docs/latest/Server-Methods/#seterrorhandler).
 
 ## License
 
