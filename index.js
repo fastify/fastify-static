@@ -90,4 +90,7 @@ function checkRootPathForErrors (rootPath) {
   }
 }
 
-module.exports = fp(fastifyStatic, '>= 0.38.0')
+module.exports = fp(fastifyStatic, {
+  fastify: '>= 0.39.1',
+  name: 'fastify-static'
+})
