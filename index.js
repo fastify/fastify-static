@@ -31,21 +31,17 @@ function fastifyStatic (fastify, opts, next) {
   }
 
   function pumpSendToReply (request, reply, pathname) {
-    const sendStream = send(request.req, pathname, sendOptions)
+    const stream = send(request.req, pathname, sendOptions)
+
+    // this is needed because fastify automatically
+    // set the type to application/octet-stream
+    stream.on('headers', removeType)
 
     if (setHeaders !== undefined) {
-      sendStream.on('headers', setHeaders)
+      stream.on('headers', setHeaders)
     }
 
-    sendStream.on('error', function (err) {
-      if (err.status === 404) {
-        reply.notFound()
-      } else {
-        reply.send(err)
-      }
-    })
-
-    sendStream.pipe(reply.res)
+    reply.send(stream)
   }
 
   if (opts.prefix === undefined) opts.prefix = '/'
@@ -90,7 +86,11 @@ function checkRootPathForErrors (rootPath) {
   }
 }
 
+function removeType (res) {
+  res.setHeader('Content-Type', '')
+}
+
 module.exports = fp(fastifyStatic, {
-  fastify: '>= 0.39.1',
+  fastify: '>= 0.42.0',
   name: 'fastify-static'
 })
