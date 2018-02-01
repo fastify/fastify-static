@@ -272,7 +272,7 @@ t.test('error responses can be customized with fastify.setErrorHandler()', t => 
   const fastify = require('fastify')()
 
   fastify.setErrorHandler(function errorHandler (err, reply) {
-    reply.send(err.status + ' Custom error message')
+    reply.type('text/plain').send(err.status + ' Custom error message')
   })
 
   fastify.register(fastifyStatic, pluginOptions)
@@ -308,7 +308,7 @@ t.test('not found responses can be customized with fastify.setNotFoundHandler()'
   const fastify = require('fastify')()
 
   fastify.setNotFoundHandler(function notFoundHandler (request, reply) {
-    reply.code(404).send(request.req.url + ' Not Found')
+    reply.code(404).type('text/plain').send(request.req.url + ' Not Found')
   })
 
   fastify.register(fastifyStatic, pluginOptions)
