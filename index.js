@@ -91,6 +91,6 @@ function removeType (res) {
 }
 
 module.exports = fp(fastifyStatic, {
-  fastify: '>= 0.41.0',
+  fastify: '>= 0.42.0',
   name: 'fastify-static'
 })
