@@ -7,6 +7,7 @@
     "lint": "standard | snazzy",
     "unit": "tap test",
     "test": "npm run lint && npm run unit",
+    "example": "node example/server.js",
     "coverage": "tap --cov --coverage-report=html test",
     "coveralls": "tap test/*test.js  test/*/*.test.js --cov"
   },
@@ -30,7 +31,7 @@
   },
   "devDependencies": {
     "coveralls": "^3.0.0",
-    "fastify": "^0.42.0",
+    "fastify": "^0.43.0",
     "pre-commit": "^1.2.2",
     "proxyquire": "^1.8.0",
     "request": "^2.81.0",

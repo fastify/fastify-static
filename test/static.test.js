@@ -271,7 +271,7 @@ t.test('error responses can be customized with fastify.setErrorHandler()', t => 
   }
   const fastify = require('fastify')()
 
-  fastify.setErrorHandler(function errorHandler (err, reply) {
+  fastify.setErrorHandler(function errorHandler (err, request, reply) {
     reply.type('text/plain').send(err.status + ' Custom error message')
   })
 
