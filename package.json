@@ -34,7 +34,7 @@
     "fastify": "^0.43.0",
     "pre-commit": "^1.2.2",
     "proxyquire": "^2.0.0",
-    "request": "^2.81.0",
+    "request": "2.83.0",
     "snazzy": "^7.0.0",
     "standard": "^11.0.0",
     "tap": "^11.0.1"
