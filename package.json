@@ -31,7 +31,7 @@
   },
   "devDependencies": {
     "coveralls": "^3.0.0",
-    "fastify": "^0.43.0",
+    "fastify": "^1.1.1",
     "pre-commit": "^1.2.2",
     "proxyquire": "^2.0.0",
     "request": "2.83.0",
