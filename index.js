@@ -51,10 +51,6 @@ function fastifyStatic (fastify, opts, next) {
     pumpSendToReply(req, reply, '/' + req.params['*'])
   })
 
-  fastify.get(prefix, function (req, reply) {
-    pumpSendToReply(req, reply, '/')
-  })
-
   fastify.decorateReply('sendFile', function (filePath) {
     pumpSendToReply(this.request, this, filePath)
   })
