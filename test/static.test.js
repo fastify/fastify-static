@@ -28,7 +28,7 @@ function genericErrorResponseChecks (t, response) {
 }
 
 t.test('register /static', t => {
-  t.plan(9)
+  t.plan(10)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -142,6 +142,18 @@ t.test('register /static', t => {
         t.error(err)
         t.strictEqual(response.statusCode, 403)
         genericErrorResponseChecks(t, response)
+      })
+    })
+
+    t.test('file not exposed outside of the plugin', t => {
+      t.plan(2)
+      request.get({
+        method: 'GET',
+        // foobar is in static
+        uri: 'http://localhost:' + fastify.server.address().port + '/foobar.html'
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 404)
       })
     })
   })
