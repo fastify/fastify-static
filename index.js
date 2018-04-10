@@ -2,6 +2,7 @@
 
 const path = require('path')
 const statSync = require('fs').statSync
+const { PassThrough } = require('readable-stream')
 
 const send = require('send')
 
@@ -31,17 +32,46 @@ function fastifyStatic (fastify, opts, next) {
   }
 
   function pumpSendToReply (request, reply, pathname) {
-    const stream = send(request.req, pathname, sendOptions)
+    const stream = send(request.raw, pathname, sendOptions)
 
-    // this is needed because fastify automatically
-    // set the type to application/octet-stream
-    stream.on('headers', removeType)
+    const wrap = new PassThrough({
+      flush (cb) {
+        this.finished = true
+        cb()
+      }
+    })
+
+    wrap.getHeader = reply.getHeader.bind(reply)
+    wrap.setHeader = reply.header.bind(reply)
+    wrap.socket = request.raw.socket
+    wrap.finished = false
+
+    Object.defineProperty(wrap, 'statusCode', {
+      get () {
+        return reply.res.statusCode
+      },
+      set (code) {
+        reply.code(code)
+      }
+    })
+
+    wrap.on('pipe', function () {
+      reply.send(wrap)
+    })
 
     if (setHeaders !== undefined) {
       stream.on('headers', setHeaders)
     }
 
-    reply.send(stream)
+    stream.on('error', function (err) {
+      if (err) {
+        reply.send(err)
+      }
+    })
+
+    // we cannot use pump, because send error
+    // handling is not compatible
+    stream.pipe(wrap)
   }
 
   if (opts.prefix === undefined) opts.prefix = '/'
@@ -82,11 +112,7 @@ function checkRootPathForErrors (rootPath) {
   }
 }
 
-function removeType (res) {
-  res.setHeader('Content-Type', '')
-}
-
 module.exports = fp(fastifyStatic, {
-  fastify: '>= 0.42.0',
+  fastify: '>= 1.2.0',
   name: 'fastify-static'
 })
