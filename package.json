@@ -27,14 +27,16 @@
   "homepage": "https://github.com/fastify/fastify-static",
   "dependencies": {
     "fastify-plugin": "^0.2.1",
+    "readable-stream": "^2.3.6",
     "send": "^0.16.0"
   },
   "devDependencies": {
     "coveralls": "^3.0.0",
     "fastify": "^1.1.1",
+    "fastify-compress": "^0.5.1",
     "pre-commit": "^1.2.2",
     "proxyquire": "^2.0.0",
-    "request": "2.83.0",
+    "simple-get": "^2.7.0",
     "snazzy": "^7.0.0",
     "standard": "^11.0.0",
     "tap": "^11.0.1"

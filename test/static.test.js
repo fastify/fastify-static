@@ -4,7 +4,9 @@ const path = require('path')
 const fs = require('fs')
 
 const t = require('tap')
-const request = require('request')
+const simple = require('simple-get')
+const Fastify = require('fastify')
+const compress = require('fastify-compress')
 
 const fastifyStatic = require('../')
 
@@ -34,7 +36,7 @@ t.test('register /static', t => {
     root: path.join(__dirname, '/static'),
     prefix: '/static'
   }
-  const fastify = require('fastify')()
+  const fastify = Fastify()
   fastify.register(fastifyStatic, pluginOptions)
 
   t.tearDown(fastify.close.bind(fastify))
@@ -46,22 +48,22 @@ t.test('register /static', t => {
 
     t.test('/static/index.html', t => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
-      request.get({
+      simple.concat({
         method: 'GET',
-        uri: 'http://localhost:' + fastify.server.address().port + '/static/index.html'
+        url: 'http://localhost:' + fastify.server.address().port + '/static/index.html'
       }, (err, response, body) => {
         t.error(err)
         t.strictEqual(response.statusCode, 200)
-        t.strictEqual(body, indexContent)
+        t.strictEqual(body.toString(), indexContent)
         genericResponseChecks(t, response)
       })
     })
 
     t.test('/static/index.css', t => {
       t.plan(2 + GENERIC_RESPONSE_CHECK_COUNT)
-      request.get({
+      simple.concat({
         method: 'GET',
-        uri: 'http://localhost:' + fastify.server.address().port + '/static/index.css'
+        url: 'http://localhost:' + fastify.server.address().port + '/static/index.css'
       }, (err, response, body) => {
         t.error(err)
         t.strictEqual(response.statusCode, 200)
@@ -71,22 +73,22 @@ t.test('register /static', t => {
 
     t.test('/static/', t => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
-      request.get({
+      simple.concat({
         method: 'GET',
-        uri: 'http://localhost:' + fastify.server.address().port + '/static/'
+        url: 'http://localhost:' + fastify.server.address().port + '/static/'
       }, (err, response, body) => {
         t.error(err)
         t.strictEqual(response.statusCode, 200)
-        t.strictEqual(body, indexContent)
+        t.strictEqual(body.toString(), indexContent)
         genericResponseChecks(t, response)
       })
     })
 
     t.test('/static', t => {
       t.plan(2)
-      request.get({
+      simple.concat({
         method: 'GET',
-        uri: 'http://localhost:' + fastify.server.address().port + '/static'
+        url: 'http://localhost:' + fastify.server.address().port + '/static'
       }, (err, response, body) => {
         t.error(err)
         t.strictEqual(response.statusCode, 404)
@@ -95,35 +97,35 @@ t.test('register /static', t => {
 
     t.test('/static/deep/path/for/test/purpose/foo.html', t => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
-      request.get({
+      simple.concat({
         method: 'GET',
-        uri: 'http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test/purpose/foo.html'
+        url: 'http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test/purpose/foo.html'
       }, (err, response, body) => {
         t.error(err)
         t.strictEqual(response.statusCode, 200)
-        t.strictEqual(body, deepContent)
+        t.strictEqual(body.toString(), deepContent)
         genericResponseChecks(t, response)
       })
     })
 
     t.test('/static/deep/path/for/test/', t => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
-      request.get({
+      simple.concat({
         method: 'GET',
-        uri: 'http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test/'
+        url: 'http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test/'
       }, (err, response, body) => {
         t.error(err)
         t.strictEqual(response.statusCode, 200)
-        t.strictEqual(body, innerIndex)
+        t.strictEqual(body.toString(), innerIndex)
         genericResponseChecks(t, response)
       })
     })
 
     t.test('/static/this/path/doesnt/exist.html', t => {
       t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
-      request.get({
+      simple.concat({
         method: 'GET',
-        uri: 'http://localhost:' + fastify.server.address().port + '/static/this/path/doesnt/exist.html',
+        url: 'http://localhost:' + fastify.server.address().port + '/static/this/path/doesnt/exist.html',
         followRedirect: false
       }, (err, response, body) => {
         t.error(err)
@@ -134,9 +136,9 @@ t.test('register /static', t => {
 
     t.test('/static/../index.js', t => {
       t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
-      request.get({
+      simple.concat({
         method: 'GET',
-        uri: 'http://localhost:' + fastify.server.address().port + '/static/../index.js',
+        url: 'http://localhost:' + fastify.server.address().port + '/static/../index.js',
         followRedirect: false
       }, (err, response, body) => {
         t.error(err)
@@ -147,10 +149,10 @@ t.test('register /static', t => {
 
     t.test('file not exposed outside of the plugin', t => {
       t.plan(2)
-      request.get({
+      simple.concat({
         method: 'GET',
         // foobar is in static
-        uri: 'http://localhost:' + fastify.server.address().port + '/foobar.html'
+        url: 'http://localhost:' + fastify.server.address().port + '/foobar.html'
       }, (err, response, body) => {
         t.error(err)
         t.strictEqual(response.statusCode, 404)
@@ -166,7 +168,7 @@ t.test('register /static/', t => {
     root: path.join(__dirname, '/static'),
     prefix: '/static/'
   }
-  const fastify = require('fastify')()
+  const fastify = Fastify()
   fastify.register(fastifyStatic, pluginOptions)
 
   t.tearDown(fastify.close.bind(fastify))
@@ -178,22 +180,22 @@ t.test('register /static/', t => {
 
     t.test('/static/index.html', t => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
-      request.get({
+      simple.concat({
         method: 'GET',
-        uri: 'http://localhost:' + fastify.server.address().port + '/static/index.html'
+        url: 'http://localhost:' + fastify.server.address().port + '/static/index.html'
       }, (err, response, body) => {
         t.error(err)
         t.strictEqual(response.statusCode, 200)
-        t.strictEqual(body, indexContent)
+        t.strictEqual(body.toString(), indexContent)
         genericResponseChecks(t, response)
       })
     })
 
     t.test('/static/index.css', t => {
       t.plan(2 + GENERIC_RESPONSE_CHECK_COUNT)
-      request.get({
+      simple.concat({
         method: 'GET',
-        uri: 'http://localhost:' + fastify.server.address().port + '/static/index.css'
+        url: 'http://localhost:' + fastify.server.address().port + '/static/index.css'
       }, (err, response, body) => {
         t.error(err)
         t.strictEqual(response.statusCode, 200)
@@ -203,22 +205,22 @@ t.test('register /static/', t => {
 
     t.test('/static/', t => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
-      request.get({
+      simple.concat({
         method: 'GET',
-        uri: 'http://localhost:' + fastify.server.address().port + '/static/'
+        url: 'http://localhost:' + fastify.server.address().port + '/static/'
       }, (err, response, body) => {
         t.error(err)
         t.strictEqual(response.statusCode, 200)
-        t.strictEqual(body, indexContent)
+        t.strictEqual(body.toString(), indexContent)
         genericResponseChecks(t, response)
       })
     })
 
     t.test('/static', t => {
       t.plan(2)
-      request.get({
+      simple.concat({
         method: 'GET',
-        uri: 'http://localhost:' + fastify.server.address().port + '/static'
+        url: 'http://localhost:' + fastify.server.address().port + '/static'
       }, (err, response, body) => {
         t.error(err)
         t.strictEqual(response.statusCode, 404)
@@ -227,35 +229,35 @@ t.test('register /static/', t => {
 
     t.test('/static/deep/path/for/test/purpose/foo.html', t => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
-      request.get({
+      simple.concat({
         method: 'GET',
-        uri: 'http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test/purpose/foo.html'
+        url: 'http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test/purpose/foo.html'
       }, (err, response, body) => {
         t.error(err)
         t.strictEqual(response.statusCode, 200)
-        t.strictEqual(body, deepContent)
+        t.strictEqual(body.toString(), deepContent)
         genericResponseChecks(t, response)
       })
     })
 
     t.test('/static/deep/path/for/test/', t => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
-      request.get({
+      simple.concat({
         method: 'GET',
-        uri: 'http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test/'
+        url: 'http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test/'
       }, (err, response, body) => {
         t.error(err)
         t.strictEqual(response.statusCode, 200)
-        t.strictEqual(body, innerIndex)
+        t.strictEqual(body.toString(), innerIndex)
         genericResponseChecks(t, response)
       })
     })
 
     t.test('/static/this/path/doesnt/exist.html', t => {
       t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
-      request.get({
+      simple.concat({
         method: 'GET',
-        uri: 'http://localhost:' + fastify.server.address().port + '/static/this/path/doesnt/exist.html',
+        url: 'http://localhost:' + fastify.server.address().port + '/static/this/path/doesnt/exist.html',
         followRedirect: false
       }, (err, response, body) => {
         t.error(err)
@@ -266,9 +268,9 @@ t.test('register /static/', t => {
 
     t.test('/static/../index.js', t => {
       t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
-      request.get({
+      simple.concat({
         method: 'GET',
-        uri: 'http://localhost:' + fastify.server.address().port + '/static/../index.js',
+        url: 'http://localhost:' + fastify.server.address().port + '/static/../index.js',
         followRedirect: false
       }, (err, response, body) => {
         t.error(err)
@@ -285,7 +287,7 @@ t.test('error responses can be customized with fastify.setErrorHandler()', t => 
   const pluginOptions = {
     root: path.join(__dirname, '/static')
   }
-  const fastify = require('fastify')()
+  const fastify = Fastify()
 
   fastify.setErrorHandler(function errorHandler (err, request, reply) {
     reply.type('text/plain').send(err.status + ' Custom error message')
@@ -303,15 +305,15 @@ t.test('error responses can be customized with fastify.setErrorHandler()', t => 
     t.test('/../index.js', t => {
       t.plan(4)
 
-      request.get({
+      simple.concat({
         method: 'GET',
-        uri: 'http://localhost:' + fastify.server.address().port + '/../index.js',
+        url: 'http://localhost:' + fastify.server.address().port + '/../index.js',
         followRedirect: false
       }, (err, response, body) => {
         t.error(err)
         t.strictEqual(response.statusCode, 403)
         t.strictEqual(response.headers['content-type'], 'text/plain')
-        t.strictEqual(body, '403 Custom error message')
+        t.strictEqual(body.toString(), '403 Custom error message')
       })
     })
   })
@@ -323,7 +325,7 @@ t.test('not found responses can be customized with fastify.setNotFoundHandler()'
   const pluginOptions = {
     root: path.join(__dirname, '/static')
   }
-  const fastify = require('fastify')()
+  const fastify = Fastify()
 
   fastify.setNotFoundHandler(function notFoundHandler (request, reply) {
     reply.code(404).type('text/plain').send(request.req.url + ' Not Found')
@@ -341,15 +343,15 @@ t.test('not found responses can be customized with fastify.setNotFoundHandler()'
     t.test('/path/does/not/exist.html', t => {
       t.plan(4)
 
-      request.get({
+      simple.concat({
         method: 'GET',
-        uri: 'http://localhost:' + fastify.server.address().port + '/path/does/not/exist.html',
+        url: 'http://localhost:' + fastify.server.address().port + '/path/does/not/exist.html',
         followRedirect: false
       }, (err, response, body) => {
         t.error(err)
         t.strictEqual(response.statusCode, 404)
         t.strictEqual(response.headers['content-type'], 'text/plain')
-        t.strictEqual(body, '/path/does/not/exist.html Not Found')
+        t.strictEqual(body.toString(), '/path/does/not/exist.html Not Found')
       })
     })
   })
@@ -362,7 +364,7 @@ t.test('sendFile', t => {
     root: path.join(__dirname, '/static'),
     prefix: '/static'
   }
-  const fastify = require('fastify')()
+  const fastify = Fastify()
   fastify.register(fastifyStatic, pluginOptions)
 
   fastify.get('/foo/bar', function (req, reply) {
@@ -376,14 +378,14 @@ t.test('sendFile', t => {
 
     t.test('reply.sendFile()', t => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
-      request.get({
+      simple.concat({
         method: 'GET',
-        uri: 'http://localhost:' + fastify.server.address().port + '/foo/bar',
+        url: 'http://localhost:' + fastify.server.address().port + '/foo/bar',
         followRedirect: false
       }, (err, response, body) => {
         t.error(err)
         t.strictEqual(response.statusCode, 200)
-        t.strictEqual(body, indexContent)
+        t.strictEqual(body.toString(), indexContent)
         genericResponseChecks(t, response)
       })
     })
@@ -393,7 +395,7 @@ t.test('sendFile', t => {
 t.test('prefix default', t => {
   t.plan(1)
   const pluginOptions = {root: path.join(__dirname, 'static')}
-  const fastify = require('fastify')({logger: false})
+  const fastify = Fastify({logger: false})
   t.doesNotThrow(() => fastify.register(fastifyStatic, pluginOptions))
 })
 
@@ -411,7 +413,7 @@ t.test('send options', t => {
     lastModified: 'lastModified',
     maxAge: 'maxAge'
   }
-  const fastify = require('fastify')({logger: false})
+  const fastify = Fastify({logger: false})
   const fastifyStatic = require('proxyquire')('../', {
     send: function sendStub (req, pathName, options) {
       t.strictEqual(pathName, '/index.html')
@@ -442,7 +444,7 @@ t.test('setHeaders option', t => {
       res.setHeader('X-Test-Header', 'test')
     }
   }
-  const fastify = require('fastify')()
+  const fastify = Fastify()
   fastify.register(fastifyStatic, pluginOptions)
 
   t.tearDown(fastify.close.bind(fastify))
@@ -452,15 +454,15 @@ t.test('setHeaders option', t => {
 
     fastify.server.unref()
 
-    request.get({
+    simple.concat({
       method: 'GET',
-      uri: 'http://localhost:' + fastify.server.address().port + '/index.html',
+      url: 'http://localhost:' + fastify.server.address().port + '/index.html',
       followRedirect: false
     }, (err, response, body) => {
       t.error(err)
       t.strictEqual(response.statusCode, 200)
       t.strictEqual(response.headers['x-test-header'], 'test')
-      t.strictEqual(body, indexContent)
+      t.strictEqual(body.toString(), indexContent)
       genericResponseChecks(t, response)
     })
   })
@@ -472,7 +474,7 @@ t.test('errors', t => {
   t.test('no root', t => {
     t.plan(1)
     const pluginOptions = {}
-    const fastify = require('fastify')({logger: false})
+    const fastify = Fastify({logger: false})
     fastify.register(fastifyStatic, pluginOptions)
       .ready(err => {
         t.equal(err.constructor, Error)
@@ -482,7 +484,7 @@ t.test('errors', t => {
   t.test('root is not a string', t => {
     t.plan(1)
     const pluginOptions = { root: 42 }
-    const fastify = require('fastify')({logger: false})
+    const fastify = Fastify({logger: false})
     fastify.register(fastifyStatic, pluginOptions)
       .ready(err => {
         t.equal(err.constructor, Error)
@@ -492,7 +494,7 @@ t.test('errors', t => {
   t.test('root is not an absolute path', t => {
     t.plan(1)
     const pluginOptions = { root: './my/path' }
-    const fastify = require('fastify')({logger: false})
+    const fastify = Fastify({logger: false})
     fastify.register(fastifyStatic, pluginOptions)
       .ready(err => {
         t.equal(err.constructor, Error)
@@ -502,7 +504,7 @@ t.test('errors', t => {
   t.test('root doesn\'t exist', t => {
     t.plan(1)
     const pluginOptions = { root: path.join(__dirname, 'foo', 'bar') }
-    const fastify = require('fastify')({logger: false})
+    const fastify = Fastify({logger: false})
     fastify.register(fastifyStatic, pluginOptions)
       .ready(err => {
         t.equal(err.constructor, Error)
@@ -512,7 +514,7 @@ t.test('errors', t => {
   t.test('root is not a directory', t => {
     t.plan(1)
     const pluginOptions = { root: __filename }
-    const fastify = require('fastify')({logger: false})
+    const fastify = Fastify({logger: false})
     fastify.register(fastifyStatic, pluginOptions)
       .ready(err => {
         t.equal(err.constructor, Error)
@@ -522,7 +524,7 @@ t.test('errors', t => {
   t.test('setHeaders is not a function', t => {
     t.plan(1)
     const pluginOptions = { root: __dirname, setHeaders: 'headers' }
-    const fastify = require('fastify')({logger: false})
+    const fastify = Fastify({logger: false})
     fastify.register(fastifyStatic, pluginOptions)
       .ready(err => {
         t.equal(err.constructor, TypeError)
@@ -536,7 +538,7 @@ t.test('register no prefix', t => {
   const pluginOptions = {
     root: path.join(__dirname, '/static')
   }
-  const fastify = require('fastify')()
+  const fastify = Fastify()
   fastify.register(fastifyStatic, pluginOptions)
 
   fastify.get('/', (request, reply) => {
@@ -552,22 +554,22 @@ t.test('register no prefix', t => {
 
     t.test('/index.html', t => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
-      request.get({
+      simple.concat({
         method: 'GET',
-        uri: 'http://localhost:' + fastify.server.address().port + '/index.html'
+        url: 'http://localhost:' + fastify.server.address().port + '/index.html'
       }, (err, response, body) => {
         t.error(err)
         t.strictEqual(response.statusCode, 200)
-        t.strictEqual(body, indexContent)
+        t.strictEqual(body.toString(), indexContent)
         genericResponseChecks(t, response)
       })
     })
 
     t.test('/index.css', t => {
       t.plan(2 + GENERIC_RESPONSE_CHECK_COUNT)
-      request.get({
+      simple.concat({
         method: 'GET',
-        uri: 'http://localhost:' + fastify.server.address().port + '/index.css'
+        url: 'http://localhost:' + fastify.server.address().port + '/index.css'
       }, (err, response, body) => {
         t.error(err)
         t.strictEqual(response.statusCode, 200)
@@ -577,9 +579,9 @@ t.test('register no prefix', t => {
 
     t.test('/', t => {
       t.plan(3)
-      request.get({
+      simple.concat({
         method: 'GET',
-        uri: 'http://localhost:' + fastify.server.address().port
+        url: 'http://localhost:' + fastify.server.address().port
       }, (err, response, body) => {
         t.error(err)
         t.strictEqual(response.statusCode, 200)
@@ -589,35 +591,35 @@ t.test('register no prefix', t => {
 
     t.test('/deep/path/for/test/purpose/foo.html', t => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
-      request.get({
+      simple.concat({
         method: 'GET',
-        uri: 'http://localhost:' + fastify.server.address().port + '/deep/path/for/test/purpose/foo.html'
+        url: 'http://localhost:' + fastify.server.address().port + '/deep/path/for/test/purpose/foo.html'
       }, (err, response, body) => {
         t.error(err)
         t.strictEqual(response.statusCode, 200)
-        t.strictEqual(body, deepContent)
+        t.strictEqual(body.toString(), deepContent)
         genericResponseChecks(t, response)
       })
     })
 
     t.test('/deep/path/for/test/', t => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
-      request.get({
+      simple.concat({
         method: 'GET',
-        uri: 'http://localhost:' + fastify.server.address().port + '/deep/path/for/test/'
+        url: 'http://localhost:' + fastify.server.address().port + '/deep/path/for/test/'
       }, (err, response, body) => {
         t.error(err)
         t.strictEqual(response.statusCode, 200)
-        t.strictEqual(body, innerIndex)
+        t.strictEqual(body.toString(), innerIndex)
         genericResponseChecks(t, response)
       })
     })
 
     t.test('/this/path/doesnt/exist.html', t => {
       t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
-      request.get({
+      simple.concat({
         method: 'GET',
-        uri: 'http://localhost:' + fastify.server.address().port + '/this/path/doesnt/exist.html',
+        url: 'http://localhost:' + fastify.server.address().port + '/this/path/doesnt/exist.html',
         followRedirect: false
       }, (err, response, body) => {
         t.error(err)
@@ -628,14 +630,62 @@ t.test('register no prefix', t => {
 
     t.test('/../index.js', t => {
       t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
-      request.get({
+      simple.concat({
         method: 'GET',
-        uri: 'http://localhost:' + fastify.server.address().port + '/../index.js',
+        url: 'http://localhost:' + fastify.server.address().port + '/../index.js',
         followRedirect: false
       }, (err, response, body) => {
         t.error(err)
         t.strictEqual(response.statusCode, 403)
         genericErrorResponseChecks(t, response)
+      })
+    })
+  })
+})
+
+t.test('with fastify-compress', t => {
+  t.plan(3)
+
+  const pluginOptions = {
+    root: path.join(__dirname, '/static')
+  }
+  const fastify = Fastify()
+  fastify.register(compress, { threshold: 0 })
+  fastify.register(fastifyStatic, pluginOptions)
+
+  t.tearDown(fastify.close.bind(fastify))
+
+  fastify.listen(0, err => {
+    t.error(err)
+
+    t.test('deflate', function (t) {
+      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/index.html',
+        headers: {
+          'accept-encoding': ['deflate']
+        }
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(response.headers['content-encoding'], 'deflate')
+        genericResponseChecks(t, response)
+      })
+    })
+
+    t.test('gzip', function (t) {
+      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/index.html'
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(response.headers['content-encoding'], 'gzip')
+        genericResponseChecks(t, response)
       })
     })
   })
