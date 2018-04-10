@@ -650,7 +650,7 @@ t.test('with fastify-compress', t => {
     root: path.join(__dirname, '/static')
   }
   const fastify = Fastify()
-  fastify.register(compress, { global: true, threshold: 0 })
+  fastify.register(compress, { threshold: 0 })
   fastify.register(fastifyStatic, pluginOptions)
 
   t.tearDown(fastify.close.bind(fastify))
