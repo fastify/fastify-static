@@ -37,6 +37,9 @@ function fastifyStatic (fastify, opts, next) {
     const wrap = new PassThrough({
       flush (cb) {
         this.finished = true
+        if (reply.res.statusCode === 304) {
+          reply.send('')
+        }
         cb()
       }
     })
