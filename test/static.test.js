@@ -162,7 +162,7 @@ t.test('register /static', t => {
 })
 
 t.test('register /static/', t => {
-  t.plan(9)
+  t.plan(10)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -276,6 +276,31 @@ t.test('register /static/', t => {
         t.error(err)
         t.strictEqual(response.statusCode, 403)
         genericErrorResponseChecks(t, response)
+      })
+    })
+
+    t.test('304', t => {
+      t.plan(5 + GENERIC_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/static/index.html'
+      }, (err, response, body) => {
+        t.error(err)
+        const etag = response.headers.etag
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(body.toString(), indexContent)
+        genericResponseChecks(t, response)
+
+        simple.concat({
+          method: 'GET',
+          url: 'http://localhost:' + fastify.server.address().port + '/static/index.html',
+          headers: {
+            'if-none-match': etag
+          }
+        }, (err, response, body) => {
+          t.error(err)
+          t.strictEqual(response.statusCode, 304)
+        })
       })
     })
   })
