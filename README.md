@@ -38,6 +38,12 @@ Default: `'/'`
 
 A URL path prefix used to create a virtual mount path for the static directory.
 
+#### `schema`
+
+Default: `{}`
+
+An object that spececify the fastify schema route for all routes.
+
 #### `setHeaders`
 
 Default: `undefined`
