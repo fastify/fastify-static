@@ -726,11 +726,12 @@ t.test('register /static/ with schemaHide true', t => {
   }
 
   const fastify = Fastify()
-  fastify.register(fastifyStatic, pluginOptions)
 
   fastify.addHook('onRoute', function (routeOptions) {
     t.deepEqual(routeOptions.schema, { hide: true })
   })
+
+  fastify.register(fastifyStatic, pluginOptions)
 
   t.tearDown(fastify.close.bind(fastify))
 
@@ -765,11 +766,12 @@ t.test('register /static/ with schemaHide false', t => {
   }
 
   const fastify = Fastify()
-  fastify.register(fastifyStatic, pluginOptions)
 
   fastify.addHook('onRoute', function (routeOptions) {
     t.deepEqual(routeOptions.schema, { hide: false })
   })
+
+  fastify.register(fastifyStatic, pluginOptions)
 
   t.tearDown(fastify.close.bind(fastify))
 
@@ -803,11 +805,12 @@ t.test('register /static/ without schemaHide', t => {
   }
 
   const fastify = Fastify()
-  fastify.register(fastifyStatic, pluginOptions)
 
   fastify.addHook('onRoute', function (routeOptions) {
     t.deepEqual(routeOptions.schema, { hide: true })
   })
+
+  fastify.register(fastifyStatic, pluginOptions)
 
   t.tearDown(fastify.close.bind(fastify))
 
