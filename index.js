@@ -79,8 +79,10 @@ function fastifyStatic (fastify, opts, next) {
 
   if (opts.prefix === undefined) opts.prefix = '/'
   const prefix = opts.prefix[opts.prefix.length - 1] === '/' ? opts.prefix : (opts.prefix + '/')
+  // Set the schema hide property if defined in opts or true by default
+  const schema = { schema: { hide: typeof opts.schemaHide !== 'undefined' ? opts.schemaHide : true } }
 
-  fastify.get(prefix + '*', function (req, reply) {
+  fastify.get(prefix + '*', schema, function (req, reply) {
     pumpSendToReply(req, reply, '/' + req.params['*'])
   })
 
