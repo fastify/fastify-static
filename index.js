@@ -33,6 +33,10 @@ function fastifyStatic (fastify, opts, next) {
 
   function pumpSendToReply (request, reply, pathname) {
     const stream = send(request.raw, pathname, sendOptions)
+    var resolvedFilename
+    stream.on('file', function (file) {
+      resolvedFilename = file
+    })
 
     const wrap = new PassThrough({
       flush (cb) {
@@ -49,6 +53,11 @@ function fastifyStatic (fastify, opts, next) {
     wrap.socket = request.raw.socket
     wrap.finished = false
 
+    Object.defineProperty(wrap, 'filename', {
+      get () {
+        return resolvedFilename
+      }
+    })
     Object.defineProperty(wrap, 'statusCode', {
       get () {
         return reply.res.statusCode
@@ -104,7 +113,7 @@ function checkRootPathForErrors (rootPath) {
     return new Error('"root" option must be an absolute path')
   }
 
-  let pathStat
+  var pathStat
 
   try {
     pathStat = statSync(rootPath)
