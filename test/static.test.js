@@ -417,6 +417,45 @@ t.test('sendFile', t => {
   })
 })
 
+t.test('sendFile disabled', t => {
+  t.plan(2)
+
+  const pluginOptions = {
+    root: path.join(__dirname, '/static'),
+    prefix: '/static',
+    decorateReply: false
+  }
+  const fastify = Fastify()
+  fastify.register(fastifyStatic, pluginOptions)
+
+  fastify.get('/foo/bar', function (req, reply) {
+    if (typeof reply.sendFile === 'undefined') {
+      reply.send('pass')
+    } else {
+      reply.send('fail')
+    }
+  })
+
+  fastify.listen(0, err => {
+    t.error(err)
+
+    fastify.server.unref()
+
+    t.test('reply.sendFile undefined', t => {
+      t.plan(3)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/foo/bar',
+        followRedirect: false
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(body.toString(), 'pass')
+      })
+    })
+  })
+})
+
 t.test('prefix default', t => {
   t.plan(1)
   const pluginOptions = {root: path.join(__dirname, 'static')}
