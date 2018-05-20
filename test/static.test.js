@@ -306,6 +306,59 @@ t.test('register /static/', t => {
   })
 })
 
+t.test('payload.filename is set', t => {
+  t.plan(3)
+
+  const pluginOptions = {
+    root: path.join(__dirname, '/static'),
+    prefix: '/static/'
+  }
+  const fastify = Fastify()
+  var gotFilename
+  fastify.register(fastifyStatic, pluginOptions)
+  fastify.addHook('onSend', function (req, reply, payload, next) {
+    gotFilename = payload.filename
+    next()
+  })
+
+  t.tearDown(fastify.close.bind(fastify))
+
+  fastify.listen(0, err => {
+    t.error(err)
+
+    fastify.server.unref()
+
+    t.test('/static/index.html', t => {
+      t.plan(5 + GENERIC_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/static/index.html'
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(body.toString(), indexContent)
+        t.is(typeof gotFilename, 'string')
+        t.strictEqual(gotFilename, path.join(pluginOptions.root, 'index.html'))
+        genericResponseChecks(t, response)
+      })
+    })
+
+    t.test('/static/this/path/doesnt/exist.html', t => {
+      t.plan(3 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/static/this/path/doesnt/exist.html',
+        followRedirect: false
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 404)
+        t.is(typeof gotFilename, 'undefined')
+        genericErrorResponseChecks(t, response)
+      })
+    })
+  })
+})
+
 t.test('error responses can be customized with fastify.setErrorHandler()', t => {
   t.plan(2)
 
