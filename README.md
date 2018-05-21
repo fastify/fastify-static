@@ -71,6 +71,13 @@ The following options are also supported and will be passed directly to the
 - [`lastModified`](https://www.npmjs.com/package/send#lastmodified)
 - [`maxAge`](https://www.npmjs.com/package/send#maxage)
 
+#### Disabling reply decorator
+
+The reply object is decorated with a `sendFile` function by default.  If you want to
+disable this, pass the option `{ decorateReply: false }`.  If fastify-static is
+registers to multiple prefixes in the same route only one can initialize reply
+decorators.
+
 #### Handling 404s
 
 If a request matches the URL `prefix` but a file cannot be found for the
