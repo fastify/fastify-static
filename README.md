@@ -71,6 +71,10 @@ The following options are also supported and will be passed directly to the
 - [`lastModified`](https://www.npmjs.com/package/send#lastmodified)
 - [`maxAge`](https://www.npmjs.com/package/send#maxage)
 
+#### Disable serving
+
+If you'd just like to use the reply decorator and not serve whole directories automatically, you can simply pass the option `{ serve: false }`. This will prevent the plugin from serving everything under `root`.
+
 #### Disabling reply decorator
 
 The reply object is decorated with a `sendFile` function by default.  If you want to

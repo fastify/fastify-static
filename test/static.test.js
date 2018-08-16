@@ -435,6 +435,54 @@ t.test('not found responses can be customized with fastify.setNotFoundHandler()'
   })
 })
 
+t.test('serving disabled', t => {
+  t.plan(3)
+
+  const pluginOptions = {
+    root: path.join(__dirname, '/static'),
+    prefix: '/static/',
+    serve: false
+  }
+  const fastify = Fastify()
+  fastify.register(fastifyStatic, pluginOptions)
+
+  fastify.get('/foo/bar', (request, reply) => {
+    reply.sendFile('index.html')
+  })
+
+  t.tearDown(fastify.close.bind(fastify))
+
+  fastify.listen(0, err => {
+    t.error(err)
+
+    fastify.server.unref()
+
+    t.test('/static/index.html not found', t => {
+      t.plan(2)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/static/index.html'
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 404)
+      })
+    })
+
+    t.test('/static/index.html via sendFile found', t => {
+      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/foo/bar'
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(body.toString(), indexContent)
+        genericResponseChecks(t, response)
+      })
+    })
+  })
+})
+
 t.test('sendFile', t => {
   t.plan(2)
 
