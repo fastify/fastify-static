@@ -25,7 +25,7 @@ function genericResponseChecks (t, response) {
 
 const GENERIC_ERROR_RESPONSE_CHECK_COUNT = 2
 function genericErrorResponseChecks (t, response) {
-  t.strictEqual(response.headers['content-type'], 'application/json')
+  t.strictEqual(response.headers['content-type'], 'application/json; charset=utf-8')
   t.ok(response.headers.date)
 }
 
