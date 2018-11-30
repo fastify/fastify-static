@@ -77,6 +77,11 @@ function fastifyStatic (fastify, opts, next) {
 
     stream.on('error', function (err) {
       if (err) {
+        // callNotFound was intoriduced in Fastify v2
+        // check that first for backwards compatibility
+        if (reply.callNotFound !== undefined && err.code === 'ENOENT') {
+          return reply.callNotFound()
+        }
         reply.send(err)
       }
     })
