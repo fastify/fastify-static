@@ -77,9 +77,7 @@ function fastifyStatic (fastify, opts, next) {
 
     stream.on('error', function (err) {
       if (err) {
-        // callNotFound was intoriduced in Fastify v2
-        // check that first for backwards compatibility
-        if (reply.callNotFound !== undefined && err.code === 'ENOENT') {
+        if (err.code === 'ENOENT') {
           return reply.callNotFound()
         }
         reply.send(err)
@@ -136,6 +134,6 @@ function checkRootPathForErrors (rootPath) {
 }
 
 module.exports = fp(fastifyStatic, {
-  fastify: '^1.11.0',
+  fastify: '>=2.0.0',
   name: 'fastify-static'
 })

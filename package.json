@@ -32,7 +32,7 @@
   },
   "devDependencies": {
     "coveralls": "^3.0.2",
-    "fastify": "^1.11.0",
+    "fastify": "2.0.0-rc.1",
     "fastify-compress": "^0.7.0",
     "pre-commit": "^1.2.2",
     "proxyquire": "^2.1.0",
