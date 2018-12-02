@@ -131,6 +131,6 @@ function checkRootPathForErrors (rootPath) {
 }
 
 module.exports = fp(fastifyStatic, {
-  fastify: '>= 1.2.0',
+  fastify: '^1.11.0',
   name: 'fastify-static'
 })
