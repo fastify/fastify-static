@@ -559,8 +559,8 @@ t.test('sendFile disabled', t => {
 
 t.test('prefix default', t => {
   t.plan(1)
-  const pluginOptions = {root: path.join(__dirname, 'static')}
-  const fastify = Fastify({logger: false})
+  const pluginOptions = { root: path.join(__dirname, 'static') }
+  const fastify = Fastify({ logger: false })
   t.doesNotThrow(() => fastify.register(fastifyStatic, pluginOptions))
 })
 
@@ -578,7 +578,7 @@ t.test('send options', t => {
     lastModified: 'lastModified',
     maxAge: 'maxAge'
   }
-  const fastify = Fastify({logger: false})
+  const fastify = Fastify({ logger: false })
   const fastifyStatic = require('proxyquire')('../', {
     send: function sendStub (req, pathName, options) {
       t.strictEqual(pathName, '/index.html')
@@ -596,7 +596,7 @@ t.test('send options', t => {
     }
   })
   fastify.register(fastifyStatic, pluginOptions)
-  fastify.inject({url: '/index.html'})
+  fastify.inject({ url: '/index.html' })
 })
 
 t.test('setHeaders option', t => {
@@ -639,7 +639,7 @@ t.test('errors', t => {
   t.test('no root', t => {
     t.plan(1)
     const pluginOptions = {}
-    const fastify = Fastify({logger: false})
+    const fastify = Fastify({ logger: false })
     fastify.register(fastifyStatic, pluginOptions)
       .ready(err => {
         t.equal(err.constructor, Error)
@@ -649,7 +649,7 @@ t.test('errors', t => {
   t.test('root is not a string', t => {
     t.plan(1)
     const pluginOptions = { root: 42 }
-    const fastify = Fastify({logger: false})
+    const fastify = Fastify({ logger: false })
     fastify.register(fastifyStatic, pluginOptions)
       .ready(err => {
         t.equal(err.constructor, Error)
@@ -659,7 +659,7 @@ t.test('errors', t => {
   t.test('root is not an absolute path', t => {
     t.plan(1)
     const pluginOptions = { root: './my/path' }
-    const fastify = Fastify({logger: false})
+    const fastify = Fastify({ logger: false })
     fastify.register(fastifyStatic, pluginOptions)
       .ready(err => {
         t.equal(err.constructor, Error)
@@ -669,7 +669,7 @@ t.test('errors', t => {
   t.test('root doesn\'t exist', t => {
     t.plan(1)
     const pluginOptions = { root: path.join(__dirname, 'foo', 'bar') }
-    const fastify = Fastify({logger: false})
+    const fastify = Fastify({ logger: false })
     fastify.register(fastifyStatic, pluginOptions)
       .ready(err => {
         t.equal(err.constructor, Error)
@@ -679,7 +679,7 @@ t.test('errors', t => {
   t.test('root is not a directory', t => {
     t.plan(1)
     const pluginOptions = { root: __filename }
-    const fastify = Fastify({logger: false})
+    const fastify = Fastify({ logger: false })
     fastify.register(fastifyStatic, pluginOptions)
       .ready(err => {
         t.equal(err.constructor, Error)
@@ -689,7 +689,7 @@ t.test('errors', t => {
   t.test('setHeaders is not a function', t => {
     t.plan(1)
     const pluginOptions = { root: __dirname, setHeaders: 'headers' }
-    const fastify = Fastify({logger: false})
+    const fastify = Fastify({ logger: false })
     fastify.register(fastifyStatic, pluginOptions)
       .ready(err => {
         t.equal(err.constructor, TypeError)
