@@ -82,6 +82,9 @@ If set to `false`, `fastify-static` globs the filesystem for all defined
 files in the served folder, and just creates the routes needed for
 those.
 
+The default options of https://www.npmjs.com/package/glob are applied
+for getting the file list.
+
 #### Disable serving
 
 If you'd just like to use the reply decorator and not serve whole directories automatically, you can simply pass the option `{ serve: false }`. This will prevent the plugin from serving everything under `root`.
