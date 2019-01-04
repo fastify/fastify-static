@@ -73,6 +73,15 @@ The following options are also supported and will be passed directly to the
 - [`lastModified`](https://www.npmjs.com/package/send#lastmodified)
 - [`maxAge`](https://www.npmjs.com/package/send#maxage)
 
+#### `wildcard`
+
+Default: `true`
+
+If set to `true`, `fastify-static` adds a wildcard route to serve files.
+If set to `false`, `fastify-static` globs the filesystem for all defined
+files in the served folder, and just creates the routes needed for
+those.
+
 #### Disable serving
 
 If you'd just like to use the reply decorator and not serve whole directories automatically, you can simply pass the option `{ serve: false }`. This will prevent the plugin from serving everything under `root`.

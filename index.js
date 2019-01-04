@@ -3,6 +3,7 @@
 const path = require('path')
 const statSync = require('fs').statSync
 const { PassThrough } = require('readable-stream')
+const glob = require('glob')
 
 const send = require('send')
 
@@ -94,16 +95,43 @@ function fastifyStatic (fastify, opts, next) {
   // Set the schema hide property if defined in opts or true by default
   const schema = { schema: { hide: typeof opts.schemaHide !== 'undefined' ? opts.schemaHide : true } }
 
-  if (opts.serve !== false) {
-    fastify.get(prefix + '*', schema, function (req, reply) {
-      pumpSendToReply(req, reply, '/' + req.params['*'])
-    })
-  }
-
   if (opts.decorateReply !== false) {
     fastify.decorateReply('sendFile', function (filePath) {
       pumpSendToReply(this.request, this, filePath)
     })
+  }
+
+  if (opts.serve !== false) {
+    if (opts.wildcard === undefined || opts.wildcard === true) {
+      fastify.get(prefix + '*', schema, function (req, reply) {
+        pumpSendToReply(req, reply, '/' + req.params['*'])
+      })
+    } else {
+      glob(path.join(sendOptions.root, '**/*'), function (err, files) {
+        if (err) {
+          return next(err)
+        }
+        for (let file of files) {
+          file = file.replace(sendOptions.root, '')
+          const route = (prefix + file).replace(/^\/\//, '/').replace(/\\/, '/')
+          fastify.get(route, schema, function (req, reply) {
+            pumpSendToReply(req, reply, '/' + file)
+          })
+
+          if (file.match(/index\.html$/)) {
+            const route2 = route.replace(/index\.html$/, '')
+            console.log('index route', route2)
+            fastify.get(route2, schema, function (req, reply) {
+              pumpSendToReply(req, reply, '/' + file)
+            })
+          }
+        }
+        next()
+      })
+
+      // return early to avoid calling next afterwards
+      return
+    }
   }
 
   next()
