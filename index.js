@@ -120,7 +120,6 @@ function fastifyStatic (fastify, opts, next) {
 
           if (file.match(/index\.html$/)) {
             const route2 = route.replace(/index\.html$/, '')
-            console.log('index route', route2)
             fastify.get(route2, schema, function (req, reply) {
               pumpSendToReply(req, reply, '/' + file)
             })
