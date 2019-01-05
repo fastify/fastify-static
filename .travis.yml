@@ -5,6 +5,10 @@ node_js:
   - "6"
   - "10"
 
+os:
+  - linux
+  - windows
+
 script:
   - npm run coveralls
 
