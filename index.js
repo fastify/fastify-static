@@ -112,7 +112,7 @@ function fastifyStatic (fastify, opts, next) {
           return next(err)
         }
         for (let file of files) {
-          file = file.replace(sendOptions.root, '')
+          file = file.replace(sendOptions.root.replace(/\\/g, '/'), '')
           const route = (prefix + file).replace(/^\/\//, '/')
           fastify.get(route, schema, function (req, reply) {
             pumpSendToReply(req, reply, '/' + file)
