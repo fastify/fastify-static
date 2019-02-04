@@ -22,3 +22,7 @@ app.register(fastifyStatic, {
     res.setHeader('test', pathName)
   }
 })
+
+app.get('/file', (request, reply) => {
+  reply.sendFile('some-file-name')
+})
