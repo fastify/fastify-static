@@ -1,3 +1,6 @@
+// Definitions by: Jannik <https://github.com/jannikkeye>
+//                 Leo <https://github.com/leomelzer>
+
 import fastify = require("fastify");
 
 import { Server, IncomingMessage, ServerResponse } from "http";
