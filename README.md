@@ -100,7 +100,7 @@ decorators.
 
 If a request matches the URL `prefix` but a file cannot be found for the
 request, Fastify's 404 handler will be called. You can set a custom 404
-handler with [`fastify.setNotFoundHandler()`](https://www.fastify.io/docs/latest/Server-Methods/#setnotfoundhandler).
+handler with [`fastify.setNotFoundHandler()`](https://www.fastify.io/docs/latest/Server/#setnotfoundhandler).
 
 ### Handling Errors
 
