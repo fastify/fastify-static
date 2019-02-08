@@ -2,6 +2,8 @@
 
 const path = require('path')
 const fs = require('fs')
+const url = require('url')
+const http = require('http')
 
 const t = require('tap')
 const simple = require('simple-get')
@@ -30,7 +32,7 @@ function genericErrorResponseChecks (t, response) {
 }
 
 t.test('register /static', t => {
-  t.plan(10)
+  t.plan(11)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -121,6 +123,19 @@ t.test('register /static', t => {
       })
     })
 
+    t.test('/static/this/path/for/test', t => {
+      t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/static/this/path/for/test',
+        followRedirect: false
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 404)
+        genericErrorResponseChecks(t, response)
+      })
+    })
+
     t.test('/static/this/path/doesnt/exist.html', t => {
       t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
       simple.concat({
@@ -162,7 +177,7 @@ t.test('register /static', t => {
 })
 
 t.test('register /static/', t => {
-  t.plan(10)
+  t.plan(11)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -250,6 +265,19 @@ t.test('register /static/', t => {
         t.strictEqual(response.statusCode, 200)
         t.strictEqual(body.toString(), innerIndex)
         genericResponseChecks(t, response)
+      })
+    })
+
+    t.test('/static/this/path/for/test', t => {
+      t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/static/this/path/for/test',
+        followRedirect: false
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 404)
+        genericErrorResponseChecks(t, response)
       })
     })
 
@@ -1082,6 +1110,117 @@ t.test('register with wildcard false', t => {
         t.error(err)
         t.strictEqual(response.statusCode, 200)
         t.deepEqual(JSON.parse(body), { hello: 'world' })
+      })
+    })
+  })
+})
+
+t.test('register /static with redirect true', t => {
+  t.plan(6)
+
+  const pluginOptions = {
+    root: path.join(__dirname, '/static'),
+    prefix: '/static',
+    redirect: true,
+    index: 'index.html'
+  }
+
+  const fastify = Fastify()
+
+  fastify.register(fastifyStatic, pluginOptions)
+
+  t.tearDown(fastify.close.bind(fastify))
+
+  fastify.listen(3001, err => {
+    t.error(err)
+
+    fastify.server.unref()
+
+    t.test('/static', t => {
+      t.plan(5 + GENERIC_RESPONSE_CHECK_COUNT)
+
+      // simple-get doesn't tell us about redirects so use http.request directly
+      const testurl = 'http://localhost:' + fastify.server.address().port + '/static'
+      const req = http.request(url.parse(testurl), res => {
+        t.strictEqual(res.statusCode, 301)
+        t.strictEqual(res.headers['location'], '/static/')
+      })
+      req.on('error', err => console.error(err))
+      req.end()
+
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/static'
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(body.toString(), indexContent)
+        genericResponseChecks(t, response)
+      })
+    })
+
+    t.test('/static/', t => {
+      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/static/'
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(body.toString(), indexContent)
+        genericResponseChecks(t, response)
+      })
+    })
+
+    t.test('/static/deep', t => {
+      t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
+
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/static/deep'
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 404)
+        genericErrorResponseChecks(t, response)
+      })
+    })
+
+    t.test('/static/deep/path/for/test?a=b', t => {
+      t.plan(5 + GENERIC_RESPONSE_CHECK_COUNT)
+
+      // simple-get doesn't tell us about redirects so use http.request directly
+      const testurl = 'http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test?a=b'
+      const req = http.request(url.parse(testurl), res => {
+        t.strictEqual(res.statusCode, 301)
+        t.strictEqual(res.headers['location'], '/static/deep/path/for/test/?a=b')
+      })
+      req.on('error', err => console.error(err))
+      req.end()
+
+      // verify the redirect with query parameters works
+      simple.concat({
+        method: 'GET',
+        url: testurl
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(body.toString(), innerIndex)
+        genericResponseChecks(t, response)
+      })
+    })
+
+    t.test('/static/deep/path/for/test', t => {
+      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test'
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(body.toString(), innerIndex)
+        genericResponseChecks(t, response)
       })
     })
   })

@@ -1,6 +1,7 @@
 'use strict'
 
 const path = require('path')
+const url = require('url')
 const statSync = require('fs').statSync
 const { PassThrough } = require('readable-stream')
 const glob = require('glob')
@@ -76,6 +77,13 @@ function fastifyStatic (fastify, opts, next) {
       stream.on('headers', setHeaders)
     }
 
+    if (opts.redirect === true) {
+      stream.on('directory', function (res, path) {
+        const parsed = url.parse(request.raw.url)
+        reply.redirect(301, parsed.pathname + '/' + (parsed.search || ''))
+      })
+    }
+
     stream.on('error', function (err) {
       if (err) {
         if (err.code === 'ENOENT') {
@@ -106,6 +114,11 @@ function fastifyStatic (fastify, opts, next) {
       fastify.get(prefix + '*', schema, function (req, reply) {
         pumpSendToReply(req, reply, '/' + req.params['*'])
       })
+      if (prefix !== opts.prefix && opts.redirect === true) {
+        fastify.get(opts.prefix, schema, function (req, reply) {
+          reply.redirect(301, opts.prefix + '/')
+        })
+      }
     } else {
       glob(path.join(sendOptions.root, '**/*'), function (err, files) {
         if (err) {

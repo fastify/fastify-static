@@ -73,6 +73,14 @@ The following options are also supported and will be passed directly to the
 - [`lastModified`](https://www.npmjs.com/package/send#lastmodified)
 - [`maxAge`](https://www.npmjs.com/package/send#maxage)
 
+#### `redirect`
+
+Default: `false`
+
+If set to `true`, `fastify-static` redirects to the directory with a trailing slash.
+
+This option is ineffective if `wildcard` is set to `false`.
+
 #### `wildcard`
 
 Default: `true`
