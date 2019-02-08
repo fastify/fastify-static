@@ -116,7 +116,8 @@ function fastifyStatic (fastify, opts, next) {
       })
       if (opts.redirect === true && prefix !== opts.prefix) {
         fastify.get(opts.prefix, schema, function (req, reply) {
-          reply.redirect(301, prefix)
+          const parsed = url.parse(req.raw.url)
+          reply.redirect(301, parsed.pathname + '/' + (parsed.search || ''))
         })
       }
     } else {

@@ -1384,21 +1384,21 @@ t.test('register /static with redirect true', t => {
 
     fastify.server.unref()
 
-    t.test('/static', t => {
+    t.test('/static?a=b', t => {
       t.plan(5 + GENERIC_RESPONSE_CHECK_COUNT)
 
       // simple-get doesn't tell us about redirects so use http.request directly
-      const testurl = 'http://localhost:' + fastify.server.address().port + '/static'
+      const testurl = 'http://localhost:' + fastify.server.address().port + '/static?a=b'
       const req = http.request(url.parse(testurl), res => {
         t.strictEqual(res.statusCode, 301)
-        t.strictEqual(res.headers['location'], '/static/')
+        t.strictEqual(res.headers['location'], '/static/?a=b')
       })
       req.on('error', err => console.error(err))
       req.end()
 
       simple.concat({
         method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/static'
+        url: 'http://localhost:' + fastify.server.address().port + '/static?a=b'
       }, (err, response, body) => {
         t.error(err)
         t.strictEqual(response.statusCode, 200)
