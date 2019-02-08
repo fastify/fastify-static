@@ -79,8 +79,6 @@ Default: `false`
 
 If set to `true`, `fastify-static` redirects to the directory with a trailing slash.
 
-This option is ineffective if `wildcard` is set to `false`.
-
 #### `wildcard`
 
 Default: `true`
