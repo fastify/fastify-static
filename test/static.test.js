@@ -1510,7 +1510,7 @@ t.test('register /static with redirect true and wildcard false', t => {
 
       simple.concat({
         method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/static'
+        url: 'http://localhost:' + fastify.server.address().port + '/static?a=b'
       }, (err, response, body) => {
         t.error(err)
         t.strictEqual(response.statusCode, 200)
