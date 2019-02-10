@@ -73,6 +73,15 @@ The following options are also supported and will be passed directly to the
 - [`lastModified`](https://www.npmjs.com/package/send#lastmodified)
 - [`maxAge`](https://www.npmjs.com/package/send#maxage)
 
+#### `redirect`
+
+Default: `false`
+
+If set to `true`, `fastify-static` redirects to the directory with a trailing slash.
+
+This option cannot be set to `true` with `wildcard` set to `false` on a server
+with `ignoreTrailingSlash` set to `true`.
+
 #### `wildcard`
 
 Default: `true`
@@ -84,6 +93,9 @@ those.
 
 The default options of https://www.npmjs.com/package/glob are applied
 for getting the file list.
+
+This option cannot be set to `false` with `redirect` set to `true` on a server
+with `ignoreTrailingSlash` set to `true`.
 
 #### Disable serving
 
