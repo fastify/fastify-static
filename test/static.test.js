@@ -594,11 +594,12 @@ t.test('prefix default', t => {
 
 t.test('root not found error', t => {
   t.plan(1)
-  const pluginOptions = { root: path.join(__dirname, 'does-not-exist') }
+  const rootPath = path.join(__dirname, 'does-not-exist')
+  const pluginOptions = { root: rootPath }
   const fastify = Fastify({ logger: false })
   fastify.register(fastifyStatic, pluginOptions)
   fastify.listen(0, err => {
-    t.equal(err.message, '"root" should point to an existing directory')
+    t.equal(err.message, `"root" option "${rootPath}" must exist`)
   })
 })
 
