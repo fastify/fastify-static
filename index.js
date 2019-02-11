@@ -179,6 +179,10 @@ function checkRootPathForErrors (rootPath) {
   try {
     pathStat = statSync(rootPath)
   } catch (e) {
+    if (e.code === 'ENOENT') {
+      return new Error('"root" should point to an existing directory')
+    }
+
     return e
   }
 
