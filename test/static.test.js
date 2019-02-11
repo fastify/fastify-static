@@ -599,7 +599,7 @@ t.test('root not found error', t => {
   const fastify = Fastify({ logger: false })
   fastify.register(fastifyStatic, pluginOptions)
   fastify.listen(0, err => {
-    t.equal(err.message, `"root" option "${rootPath}" must exist`)
+    t.equal(err.message, `"root" path "${rootPath}" must exist`)
   })
 })
 

@@ -180,7 +180,7 @@ function checkRootPathForErrors (rootPath) {
     pathStat = statSync(rootPath)
   } catch (e) {
     if (e.code === 'ENOENT') {
-      return new Error(`"root" option "${rootPath}" must exist`)
+      return new Error(`"root" path "${rootPath}" must exist`)
     }
 
     return e
