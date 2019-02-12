@@ -4,7 +4,6 @@ const path = require('path')
 const fs = require('fs')
 const url = require('url')
 const http = require('http')
-
 const t = require('tap')
 const simple = require('simple-get')
 const Fastify = require('fastify')
@@ -591,6 +590,17 @@ t.test('prefix default', t => {
   const pluginOptions = { root: path.join(__dirname, 'static') }
   const fastify = Fastify({ logger: false })
   t.doesNotThrow(() => fastify.register(fastifyStatic, pluginOptions))
+})
+
+t.test('root not found error', t => {
+  t.plan(1)
+  const rootPath = path.join(__dirname, 'does-not-exist')
+  const pluginOptions = { root: rootPath }
+  const fastify = Fastify({ logger: false })
+  fastify.register(fastifyStatic, pluginOptions)
+  fastify.listen(0, err => {
+    t.equal(err.message, `"root" path "${rootPath}" must exist`)
+  })
 })
 
 t.test('send options', t => {

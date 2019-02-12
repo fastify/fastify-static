@@ -179,6 +179,10 @@ function checkRootPathForErrors (rootPath) {
   try {
     pathStat = statSync(rootPath)
   } catch (e) {
+    if (e.code === 'ENOENT') {
+      return new Error(`"root" path "${rootPath}" must exist`)
+    }
+
     return e
   }
 
