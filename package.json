@@ -3,6 +3,7 @@
   "version": "2.3.1",
   "description": "Plugin for serving static files as fast as possible.",
   "main": "index.js",
+  "types": "index.d.ts",
   "scripts": {
     "lint": "npm run lint:standard && npm run lint:typescript",
     "lint:standard": "standard | snazzy",
