@@ -18,6 +18,7 @@ app.register(fastifyStatic, {
   root: '',
   schemaHide: true,
   serve: true,
+  wildcard: true,
   setHeaders: (res: any, pathName: any) => {
     res.setHeader('test', pathName)
   }
