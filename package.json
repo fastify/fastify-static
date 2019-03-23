@@ -37,6 +37,7 @@
   },
   "devDependencies": {
     "@types/node": "^10.12.27",
+    "concat-stream": "^2.0.0",
     "coveralls": "^3.0.3",
     "eslint-plugin-typescript": "^0.14.0",
     "fastify": "^2.0.0",

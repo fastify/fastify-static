@@ -11,7 +11,7 @@ const send = require('send')
 const fp = require('fastify-plugin')
 
 function fastifyStatic (fastify, opts, next) {
-  const error = checkRootPathForErrors(opts.root)
+  const error = checkRootPathForErrors(fastify, opts.root)
   if (error !== undefined) return next(error)
 
   const setHeaders = opts.setHeaders
@@ -163,7 +163,7 @@ function fastifyStatic (fastify, opts, next) {
   next()
 }
 
-function checkRootPathForErrors (rootPath) {
+function checkRootPathForErrors (fastify, rootPath) {
   if (rootPath === undefined) {
     return new Error('"root" option is required')
   }
@@ -180,7 +180,8 @@ function checkRootPathForErrors (rootPath) {
     pathStat = statSync(rootPath)
   } catch (e) {
     if (e.code === 'ENOENT') {
-      return new Error(`"root" path "${rootPath}" must exist`)
+      fastify.log.warn(`"root" path "${rootPath}" must exist`)
+      return
     }
 
     return e

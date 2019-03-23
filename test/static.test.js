@@ -8,6 +8,8 @@ const t = require('tap')
 const simple = require('simple-get')
 const Fastify = require('fastify')
 const compress = require('fastify-compress')
+const concat = require('concat-stream')
+const pino = require('pino')
 
 const fastifyStatic = require('../')
 
@@ -592,14 +594,22 @@ t.test('prefix default', t => {
   t.doesNotThrow(() => fastify.register(fastifyStatic, pluginOptions))
 })
 
-t.test('root not found error', t => {
-  t.plan(1)
+t.test('root not found warning', t => {
+  t.plan(2)
   const rootPath = path.join(__dirname, 'does-not-exist')
   const pluginOptions = { root: rootPath }
-  const fastify = Fastify({ logger: false })
+  const destination = concat(data => {
+    t.equal(JSON.parse(data).msg, `"root" path "${rootPath}" must exist`)
+  })
+  const logger = pino({
+    level: 'warn'
+  }, destination)
+  const fastify = Fastify({ logger: logger })
   fastify.register(fastifyStatic, pluginOptions)
   fastify.listen(0, err => {
-    t.equal(err.message, `"root" path "${rootPath}" must exist`)
+    t.error(err)
+    fastify.server.unref()
+    destination.end()
   })
 })
 
@@ -673,7 +683,7 @@ t.test('setHeaders option', t => {
 })
 
 t.test('errors', t => {
-  t.plan(6)
+  t.plan(5)
 
   t.test('no root', t => {
     t.plan(1)
@@ -698,16 +708,6 @@ t.test('errors', t => {
   t.test('root is not an absolute path', t => {
     t.plan(1)
     const pluginOptions = { root: './my/path' }
-    const fastify = Fastify({ logger: false })
-    fastify.register(fastifyStatic, pluginOptions)
-      .ready(err => {
-        t.equal(err.constructor, Error)
-      })
-  })
-
-  t.test('root doesn\'t exist', t => {
-    t.plan(1)
-    const pluginOptions = { root: path.join(__dirname, 'foo', 'bar') }
     const fastify = Fastify({ logger: false })
     fastify.register(fastifyStatic, pluginOptions)
       .ready(err => {
