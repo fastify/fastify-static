@@ -682,6 +682,37 @@ t.test('setHeaders option', t => {
   })
 })
 
+t.test('maxAge option', t => {
+  t.plan(5 + GENERIC_RESPONSE_CHECK_COUNT)
+
+  const pluginOptions = {
+    root: path.join(__dirname, 'static'),
+    maxAge: 3600000
+  }
+  const fastify = Fastify()
+  fastify.register(fastifyStatic, pluginOptions)
+
+  t.tearDown(fastify.close.bind(fastify))
+
+  fastify.listen(0, err => {
+    t.error(err)
+
+    fastify.server.unref()
+
+    simple.concat({
+      method: 'GET',
+      url: 'http://localhost:' + fastify.server.address().port + '/index.html',
+      followRedirect: false
+    }, (err, response, body) => {
+      t.error(err)
+      t.strictEqual(response.statusCode, 200)
+      t.strictEqual(response.headers['cache-control'], 'public, max-age=3600')
+      t.strictEqual(body.toString(), indexContent)
+      genericResponseChecks(t, response)
+    })
+  })
+})
+
 t.test('errors', t => {
   t.plan(5)
 
