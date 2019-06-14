@@ -88,8 +88,9 @@ Default: `true`
 
 If set to `true`, `fastify-static` adds a wildcard route to serve files.
 If set to `false`, `fastify-static` globs the filesystem for all defined
-files in the served folder, and just creates the routes needed for
+files in the served folder (`${root}/**/*`), and just creates the routes needed for
 those.
+If set to a `string`, `fastify-static` will use the provided string when globing the filesystem (`${root}/${wildcard}`).
 
 The default options of https://www.npmjs.com/package/glob are applied
 for getting the file list.

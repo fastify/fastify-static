@@ -19,7 +19,7 @@ declare const fastifyStatic: fastify.Plugin<Server, IncomingMessage, ServerRespo
     schemaHide?: boolean;
     setHeaders?: (...args: any[]) => void;
     redirect?: boolean;
-    wildcard?: boolean;
+    wildcard?: boolean | string;
 
     // Passed on to `send`
     acceptRanges?: boolean;
