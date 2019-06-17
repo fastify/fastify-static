@@ -121,7 +121,8 @@ function fastifyStatic (fastify, opts, next) {
         })
       }
     } else {
-      glob(path.join(sendOptions.root, '**/*'), { nodir: true }, function (err, files) {
+      const globPattern = typeof opts.wildcard === 'string' ? opts.wildcard : '**/*'
+      glob(path.join(sendOptions.root, globPattern), { nodir: true }, function (err, files) {
         if (err) {
           return next(err)
         }
