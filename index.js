@@ -109,7 +109,7 @@ function fastifyStatic (fastify, opts, next) {
     fastify.decorateReply('sendFile', function (filePath) {
       // only resolve to avoid unhandled rejections
       return new Promise((resolve, reject) => {
-        pumpSendToReply(this.request, this, filePath, resolve)
+        pumpSendToReply(this.request, this, filePath, () => resolve())
       })
     })
   }
