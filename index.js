@@ -33,12 +33,13 @@ function fastifyStatic (fastify, opts, next) {
     maxAge: opts.maxAge
   }
 
-  function pumpSendToReply (request, reply, pathname) {
+  function pumpSendToReply (request, reply, pathname, cb = () => {}) {
     const stream = send(request.raw, pathname, sendOptions)
     var resolvedFilename
     stream.on('file', function (file) {
       resolvedFilename = file
     })
+    stream.on('end', () => cb())
 
     const wrap = new PassThrough({
       flush (cb) {
@@ -90,6 +91,7 @@ function fastifyStatic (fastify, opts, next) {
           return reply.callNotFound()
         }
         reply.send(err)
+        cb(err)
       }
     })
 
@@ -105,7 +107,12 @@ function fastifyStatic (fastify, opts, next) {
 
   if (opts.decorateReply !== false) {
     fastify.decorateReply('sendFile', function (filePath) {
-      pumpSendToReply(this.request, this, filePath)
+      return new Promise((resolve, reject) => {
+        pumpSendToReply(this.request, this, filePath, (err) => {
+          if (err) reject(err)
+          else resolve()
+        })
+      })
     })
   }
 
