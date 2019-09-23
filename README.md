@@ -24,6 +24,10 @@ fastify.get('/another/path', function (req, reply) {
   reply.sendFile('myHtml.html') // serving path.join(__dirname, 'public', 'myHtml.html') directly
 })
 
+fastify.get('/another/path', async function (req, reply) {
+  await reply.sendFile('myHtml.html') // Don't return sendFile returns "undefined"
+})
+
 ```
 
 ### Options
