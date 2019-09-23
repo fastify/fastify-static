@@ -25,7 +25,7 @@ fastify.get('/another/path', function (req, reply) {
 })
 
 fastify.get('/another/path', async function (req, reply) {
-  await reply.sendFile('myHtml.html') // Don't return sendFile returns "undefined"
+  await reply.sendFile('myHtml.html') // Don't return because sendFile returns "undefined"
 })
 
 ```
