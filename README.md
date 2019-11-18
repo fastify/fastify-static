@@ -82,6 +82,9 @@ If set to `true`, `fastify-static` redirects to the directory with a trailing sl
 This option cannot be set to `true` with `wildcard` set to `false` on a server
 with `ignoreTrailingSlash` set to `true`.
 
+If this option is set to `false`, then requesting directories without trailing 
+slash will trigger your app's 404 handler using `reply.callNotFound()`.
+
 #### `wildcard`
 
 Default: `true`
