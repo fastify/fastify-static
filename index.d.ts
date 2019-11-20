@@ -1,7 +1,8 @@
 // Definitions by: Jannik <https://github.com/jannikkeye>
 //                 Leo <https://github.com/leomelzer>
 /// <reference types="node" />
-import fastify, { Plugin } from "fastify";
+import * as fastify from 'fastify';
+import { Plugin } from "fastify";
 import { Server, IncomingMessage, ServerResponse } from "http";
 import { Http2SecureServer, Http2Server, Http2ServerRequest, Http2ServerResponse } from "http2";
 
