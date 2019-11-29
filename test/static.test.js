@@ -1850,3 +1850,78 @@ t.test('register /static with redirect true and wildcard false', t => {
     })
   })
 })
+
+t.test('trailing slash behavior with redirect = false', t => {
+  t.plan(6)
+
+  const fastify = Fastify()
+  fastify.register(fastifyStatic, {
+    root: path.join(__dirname, '/static'),
+    prefix: '/static',
+    redirect: false
+  })
+  fastify.server.unref()
+
+  t.tearDown(fastify.close.bind(fastify))
+
+  fastify.listen(0, err => {
+    t.error(err)
+
+    const host = 'http://localhost:' + fastify.server.address().port
+
+    t.test('prefix with no trailing slash => 404', t => {
+      t.plan(2)
+      simple.concat({
+        method: 'GET',
+        url: host + '/static'
+      }, (err, response) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 404)
+      })
+    })
+
+    t.test('prefix with trailing trailing slash => 200', t => {
+      t.plan(2)
+      simple.concat({
+        method: 'GET',
+        url: host + '/static/'
+      }, (err, response) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+      })
+    })
+
+    t.test('deep path with no index.html or trailing slash => 404', t => {
+      t.plan(2)
+      simple.concat({
+        method: 'GET',
+        url: host + '/static/deep/path'
+      }, (err, response) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 404)
+      })
+    })
+
+    t.test('deep path with index.html but no trailing slash => 404', t => {
+      t.plan(2)
+      simple.concat({
+        method: 'GET',
+        url: host + '/static/deep/path/for/test'
+      }, (err, response) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 404)
+      })
+    })
+
+    t.test('deep path with index.html and trailing slash => 200', t => {
+      t.plan(2)
+      simple.concat({
+        method: 'GET',
+        url: host + '/static/deep/path/for/test/'
+      }, (err, response) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+      })
+    })
+  })
+})

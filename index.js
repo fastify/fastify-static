@@ -77,12 +77,14 @@ function fastifyStatic (fastify, opts, next) {
       stream.on('headers', setHeaders)
     }
 
-    if (opts.redirect === true) {
-      stream.on('directory', function (res, path) {
+    stream.on('directory', function (res, path) {
+      if (opts.redirect === true) {
         const parsed = url.parse(request.raw.url)
         reply.redirect(301, parsed.pathname + '/' + (parsed.search || ''))
-      })
-    }
+      } else {
+        reply.callNotFound()
+      }
+    })
 
     stream.on('error', function (err) {
       if (err) {
