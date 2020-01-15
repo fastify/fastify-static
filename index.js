@@ -33,8 +33,14 @@ function fastifyStatic (fastify, opts, next) {
     maxAge: opts.maxAge
   }
 
-  function pumpSendToReply (request, reply, pathname) {
-    const stream = send(request.raw, pathname, sendOptions)
+  function pumpSendToReply (request, reply, pathname, rootPath) {
+    var options = Object.assign({}, sendOptions)
+
+    if (rootPath) {
+      options.root = rootPath
+    }
+
+    const stream = send(request.raw, pathname, options)
     var resolvedFilename
     stream.on('file', function (file) {
       resolvedFilename = file
@@ -106,8 +112,8 @@ function fastifyStatic (fastify, opts, next) {
   const schema = { schema: { hide: typeof opts.schemaHide !== 'undefined' ? opts.schemaHide : true } }
 
   if (opts.decorateReply !== false) {
-    fastify.decorateReply('sendFile', function (filePath) {
-      pumpSendToReply(this.request, this, filePath)
+    fastify.decorateReply('sendFile', function (filePath, rootPath) {
+      pumpSendToReply(this.request, this, filePath, rootPath)
     })
   }
 

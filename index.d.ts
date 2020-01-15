@@ -13,7 +13,7 @@ type HttpResponse = ServerResponse | Http2ServerResponse;
 
 declare module "fastify" {
   interface FastifyReply<HttpResponse> {
-    sendFile(filename: string): FastifyReply<HttpResponse>;
+    sendFile(filename: string, rootPath?: string): FastifyReply<HttpResponse>;
   }
 }
 
