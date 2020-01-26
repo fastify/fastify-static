@@ -514,7 +514,7 @@ t.test('serving disabled', t => {
 })
 
 t.test('sendFile', t => {
-  t.plan(2)
+  t.plan(4)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -527,12 +527,44 @@ t.test('sendFile', t => {
     reply.sendFile('/index.html')
   })
 
+  fastify.get('/root/path/override/test', (request, reply) => {
+    reply.sendFile('/foo.html', path.join(__dirname, 'static', 'deep', 'path', 'for', 'test', 'purpose'))
+  })
+
   fastify.listen(0, err => {
     t.error(err)
 
     fastify.server.unref()
 
     t.test('reply.sendFile()', t => {
+      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/foo/bar',
+        followRedirect: false
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(body.toString(), indexContent)
+        genericResponseChecks(t, response)
+      })
+    })
+
+    t.test('reply.sendFile() with rootPath', t => {
+      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/root/path/override/test',
+        followRedirect: false
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(body.toString(), deepContent)
+        genericResponseChecks(t, response)
+      })
+    })
+
+    t.test('reply.sendFile() again without root path', t => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
