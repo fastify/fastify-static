@@ -135,7 +135,6 @@ t.test('register /static prefixAvoidTrailingSlash', t => {
         url: 'http://localhost:' + fastify.server.address().port + '/static/this/path/for/test',
         followRedirect: false
       }, (err, response, body) => {
-        console.log('JENNY ERR:', response)
         t.error(err)
         t.strictEqual(response.statusCode, 404)
         genericErrorResponseChecks(t, response)
