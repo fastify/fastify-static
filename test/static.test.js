@@ -38,7 +38,8 @@ t.test('register /static', t => {
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
-    prefix: '/static'
+    prefix: '/static',
+    prefixAvoidTrailingSlash: true
   }
   const fastify = Fastify()
   fastify.register(fastifyStatic, pluginOptions)
@@ -89,13 +90,15 @@ t.test('register /static', t => {
     })
 
     t.test('/static', t => {
-      t.plan(2)
+      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static'
       }, (err, response, body) => {
         t.error(err)
-        t.strictEqual(response.statusCode, 404)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(body.toString(), indexContent)
+        genericResponseChecks(t, response)
       })
     })
 
