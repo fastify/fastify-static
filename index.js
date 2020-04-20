@@ -107,7 +107,12 @@ function fastifyStatic (fastify, opts, next) {
   }
 
   if (opts.prefix === undefined) opts.prefix = '/'
-  const prefix = opts.prefix[opts.prefix.length - 1] === '/' ? opts.prefix : (opts.prefix + '/')
+
+  let prefix = opts.prefix
+
+  if (!opts.prefixAvoidTrailingSlash) {
+    prefix = opts.prefix[opts.prefix.length - 1] === '/' ? opts.prefix : (opts.prefix + '/')
+  }
   // Set the schema hide property if defined in opts or true by default
   const schema = { schema: { hide: typeof opts.schemaHide !== 'undefined' ? opts.schemaHide : true } }
 

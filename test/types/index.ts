@@ -17,6 +17,7 @@ const options = {
   lastModified: true,
   maxAge: '',
   prefix: '',
+  prefixAvoidTrailingSlash: false,
   root: '',
   schemaHide: true,
   serve: true,

@@ -24,6 +24,7 @@ declare function fastifyStatic(): fastify.Plugin<
   {
     root: string;
     prefix?: string;
+    prefixAvoidTrailingSlash?: boolean;
     serve?: boolean;
     decorateReply?: boolean;
     schemaHide?: boolean;

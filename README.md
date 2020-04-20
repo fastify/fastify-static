@@ -44,6 +44,12 @@ Default: `'/'`
 
 A URL path prefix used to create a virtual mount path for the static directory.
 
+### `prefixAvoidTrailingSlash`
+
+Default: `false`
+
+If set to false prefix will get trailing "/" at the end. If set to true, prefix will not append "/" to prefix.
+
 #### `schemaHide`
 
 Default: `true`
