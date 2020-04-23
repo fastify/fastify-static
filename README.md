@@ -30,6 +30,30 @@ fastify.get('/path/with/different/root', function (req, reply) {
 
 ```
 
+### Multiple prefixed roots
+
+```js
+const fastify = require('fastify')()
+const fastifyStatic = require('fastify-static)
+const path = require('path')
+// first plugin
+fastify.register((instance, opts, next) => {
+  instance.register(fastifyStatic, {
+    root: path.join(__dirname, 'public')
+  });
+  next()
+})
+// second plugin
+fastify.register((instance, opts, next) => {
+  instance.register(fastifyStatic, {
+    root: path.join(__dirname, 'node_modules'),
+    prefix: '/node_modules/'
+  })
+  next()
+});
+
+```
+
 ### Options
 
 #### `root` (required)
