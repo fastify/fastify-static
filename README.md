@@ -34,7 +34,7 @@ fastify.get('/path/with/different/root', function (req, reply) {
 
 ```js
 const fastify = require('fastify')()
-const fastifyStatic = require('fastify-static)
+const fastifyStatic = require('fastify-static')
 const path = require('path')
 // first plugin
 fastify.register((instance, opts, next) => {
