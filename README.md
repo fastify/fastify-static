@@ -37,20 +37,16 @@ const fastify = require('fastify')()
 const fastifyStatic = require('fastify-static')
 const path = require('path')
 // first plugin
-fastify.register((instance, opts, next) => {
-  instance.register(fastifyStatic, {
-    root: path.join(__dirname, 'public')
-  });
-  next()
+fastify.register(fastifyStatic, {
+  root: path.join(__dirname, 'public')
 })
+
 // second plugin
-fastify.register((instance, opts, next) => {
-  instance.register(fastifyStatic, {
-    root: path.join(__dirname, 'node_modules'),
-    prefix: '/node_modules/'
-  })
-  next()
-});
+fastify.register(fastifyStatic, {
+  root: path.join(__dirname, 'node_modules'),
+  prefix: '/node_modules/',
+  decorateReply: false // the reply decorator has been added by the first plugin registration
+})
 
 ```
 
