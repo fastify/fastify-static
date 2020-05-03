@@ -49,7 +49,7 @@ function fastifyStatic (fastify, opts, next) {
     const wrap = new PassThrough({
       flush (cb) {
         this.finished = true
-        if (reply.res.statusCode === 304) {
+        if (reply.raw.statusCode === 304) {
           reply.send('')
         }
         cb()
@@ -68,7 +68,7 @@ function fastifyStatic (fastify, opts, next) {
     })
     Object.defineProperty(wrap, 'statusCode', {
       get () {
-        return reply.res.statusCode
+        return reply.raw.statusCode
       },
       set (code) {
         reply.code(code)
