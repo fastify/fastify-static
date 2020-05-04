@@ -1,5 +1,7 @@
 'use strict'
 
+/* eslint node/no-deprecated-api: "off" */
+
 const path = require('path')
 const fs = require('fs')
 const url = require('url')
@@ -1836,7 +1838,7 @@ t.test('register /static with redirect true', t => {
       const testurl = 'http://localhost:' + fastify.server.address().port + '/static?a=b'
       const req = http.request(url.parse(testurl), res => {
         t.strictEqual(res.statusCode, 301)
-        t.strictEqual(res.headers['location'], '/static/?a=b')
+        t.strictEqual(res.headers.location, '/static/?a=b')
       })
       req.on('error', err => console.error(err))
       req.end()
@@ -1886,7 +1888,7 @@ t.test('register /static with redirect true', t => {
       const testurl = 'http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test?a=b'
       const req = http.request(url.parse(testurl), res => {
         t.strictEqual(res.statusCode, 301)
-        t.strictEqual(res.headers['location'], '/static/deep/path/for/test/?a=b')
+        t.strictEqual(res.headers.location, '/static/deep/path/for/test/?a=b')
       })
       req.on('error', err => console.error(err))
       req.end()
@@ -1948,7 +1950,7 @@ t.test('register /static with redirect true and wildcard false', t => {
       const testurl = 'http://localhost:' + fastify.server.address().port + '/static?a=b'
       const req = http.request(url.parse(testurl), res => {
         t.strictEqual(res.statusCode, 301)
-        t.strictEqual(res.headers['location'], '/static/?a=b')
+        t.strictEqual(res.headers.location, '/static/?a=b')
       })
       req.on('error', err => console.error(err))
       req.end()
@@ -1998,7 +2000,7 @@ t.test('register /static with redirect true and wildcard false', t => {
       const testurl = 'http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test?a=b'
       const req = http.request(url.parse(testurl), res => {
         t.strictEqual(res.statusCode, 301)
-        t.strictEqual(res.headers['location'], '/static/deep/path/for/test/?a=b')
+        t.strictEqual(res.headers.location, '/static/deep/path/for/test/?a=b')
       })
       req.on('error', err => console.error(err))
       req.end()

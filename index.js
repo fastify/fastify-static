@@ -85,6 +85,7 @@ function fastifyStatic (fastify, opts, next) {
 
     stream.on('directory', function (res, path) {
       if (opts.redirect === true) {
+        /* eslint node/no-deprecated-api: "off" */
         const parsed = url.parse(request.raw.url)
         reply.redirect(301, parsed.pathname + '/' + (parsed.search || ''))
       } else {
@@ -129,6 +130,7 @@ function fastifyStatic (fastify, opts, next) {
       })
       if (opts.redirect === true && prefix !== opts.prefix) {
         fastify.get(opts.prefix, schema, function (req, reply) {
+          /* eslint node/no-deprecated-api: "off" */
           const parsed = url.parse(req.raw.url)
           reply.redirect(301, parsed.pathname + '/' + (parsed.search || ''))
         })
