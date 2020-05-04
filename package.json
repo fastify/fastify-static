@@ -41,7 +41,7 @@
     "coveralls": "^3.0.4",
     "eslint-plugin-typescript": "^0.14.0",
     "fastify": "^3.0.0-rc.1",
-    "fastify-compress": "github:thomheymann/fastify-compress#v3-upgrade",
+    "fastify-compress": "^3.0.0",
     "pre-commit": "^1.2.2",
     "proxyquire": "^2.1.0",
     "simple-get": "^3.0.3",
