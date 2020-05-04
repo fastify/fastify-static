@@ -207,6 +207,6 @@ function checkRootPathForErrors (fastify, rootPath) {
 }
 
 module.exports = fp(fastifyStatic, {
-  fastify: '>=3',
+  fastify: '>=3.x',
   name: 'fastify-static'
 })
