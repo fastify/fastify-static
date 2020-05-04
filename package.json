@@ -31,7 +31,7 @@
     "fastify-plugin": "^2.0.0",
     "glob": "^7.1.4",
     "readable-stream": "^3.4.0",
-    "send": "^0.16.0"
+    "send": "^0.17.1"
   },
   "devDependencies": {
     "@types/node": "^13.13.4",
