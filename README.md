@@ -1,8 +1,9 @@
 # fastify-static
 ![CI workflow](https://github.com/fastify/fastify-static/workflows/CI%20workflow/badge.svg) [![Known Vulnerabilities](https://snyk.io/test/github/fastify/fastify-static/badge.svg)](https://snyk.io/test/github/fastify/fastify-static)
 
-Plugin for serving static files as fast as possible. Supports Fastify versions `>=2.0.0`. 
+Plugin for serving static files as fast as possible. Supports Fastify version `3.x`.
 
+Please refer to [this branch](https://github.com/fastify/fastify-static/tree/2.x) and related versions for Fastify `^2.0.0` compatibility.
 Please refer to [this branch](https://github.com/fastify/fastify-static/tree/1.x) and related versions for Fastify `^1.11.0` compatibility.
 
 ## Install
