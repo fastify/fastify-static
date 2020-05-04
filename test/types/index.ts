@@ -1,11 +1,8 @@
-import * as fastify from 'fastify'
-import * as http2 from 'http2'
-import * as fastifyStatic from '../..'
-
-console.log(http2.constants.NGHTTP2_NO_ERROR) // fix for http2 is declared but not used
+import fastify from 'fastify'
+import fastifyStatic, { FastifyStaticOptions } from '../..'
 
 const appWithImplicitHttp = fastify()
-const options = {
+const options: FastifyStaticOptions = {
   acceptRanges: true,
   cacheControl: true,
   decorateReply: true,
@@ -35,11 +32,7 @@ appWithImplicitHttp
     })
   })
 
-const appWithHttp2: fastify.FastifyInstance<
-  http2.Http2Server,
-  http2.Http2ServerRequest,
-  http2.Http2ServerResponse
-> = fastify({ http2: true })
+const appWithHttp2 = fastify({ http2: true })
 
 appWithHttp2
   .register(fastifyStatic, options)

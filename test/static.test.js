@@ -584,7 +584,7 @@ t.test('not found responses can be customized with fastify.setNotFoundHandler()'
   const fastify = Fastify()
 
   fastify.setNotFoundHandler(function notFoundHandler (request, reply) {
-    reply.code(404).type('text/plain').send(request.req.url + ' Not Found')
+    reply.code(404).type('text/plain').send(request.raw.url + ' Not Found')
   })
 
   fastify.register(fastifyStatic, pluginOptions)
