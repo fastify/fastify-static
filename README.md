@@ -132,6 +132,10 @@ for getting the file list.
 This option cannot be set to `false` with `redirect` set to `true` on a server
 with `ignoreTrailingSlash` set to `true`.
 
+#### `index`
+
+@todo
+
 #### Disable serving
 
 If you'd just like to use the reply decorator and not serve whole directories automatically, you can simply pass the option `{ serve: false }`. This will prevent the plugin from serving everything under `root`.

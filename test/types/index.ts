@@ -21,7 +21,8 @@ const options: FastifyStaticOptions = {
   wildcard: true,
   setHeaders: (res: any, pathName: any) => {
     res.setHeader('test', pathName)
-  }
+  },
+  // index: '@todo:split options and send.options'
 }
 
 appWithImplicitHttp
