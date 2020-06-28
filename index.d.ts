@@ -11,12 +11,12 @@ declare module "fastify" {
 }
 
 interface ListDir {
-  path: string;
+  href: string;
   name: string;
 }
 
 interface ListFile {
-  path: string;
+  href: string;
   name: string;
 }
 

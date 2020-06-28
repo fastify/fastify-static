@@ -10,6 +10,46 @@ const send = require('send')
 
 const fp = require('fastify-plugin')
 
+/**
+ * @todo doc
+ * @param
+ */
+function sendDirList (reply, dir, options, route) {
+  glob(dir + '/*', { mark: true }, (err, entries) => {
+    if (err) {
+      reply.send(err)
+      return
+    }
+
+    const response = { dirs: [], files: [] }
+    for (let i = 0; i < entries.length; i++) {
+      const entry = entries[i]
+      // glob mark with an ending '/' dirs using mark option
+      const to = entry[entry.length - 1] === '/'
+        ? response.dirs
+        : response.files
+      to.push(path.basename(entry))
+    }
+
+    if (options.format !== 'html') {
+      reply.send(response)
+      return
+    }
+
+    const html = options.render(
+      response.dirs.map(entry => htmlInfo(entry, route)),
+      response.files.map(entry => htmlInfo(entry, route)))
+    reply.send(html)
+  })
+}
+
+/**
+ * @todo doc
+ */
+function htmlInfo (entry, route) {
+  return { href: route + entry, name: entry }
+}
+
 function fastifyStatic (fastify, opts, next) {
   const error = checkRootPathForErrors(fastify, opts.root)
   if (error !== undefined) return next(error)
@@ -19,8 +59,6 @@ function fastifyStatic (fastify, opts, next) {
   if (setHeaders !== undefined && typeof setHeaders !== 'function') {
     return next(new TypeError('The `setHeaders` option must be a function'))
   }
-
-  console.log('opts.list', opts.list)
 
   const sendOptions = {
     root: opts.root,
@@ -34,6 +72,8 @@ function fastifyStatic (fastify, opts, next) {
     lastModified: opts.lastModified,
     maxAge: opts.maxAge
   }
+
+  // @todo validate list options
 
   function pumpSendToReply (request, reply, pathname, rootPath) {
     var options = Object.assign({}, sendOptions)
@@ -85,11 +125,9 @@ function fastifyStatic (fastify, opts, next) {
       stream.on('headers', setHeaders)
     }
 
-    stream.on('directory', function (res, path) {
+    stream.on('directory', function (_, path) {
       if (opts.list) {
-        // @todo
-        reply.send({ dirs: ['empty'], files: ['sample.jpg'] })
-        return
+        return sendDirList(reply, path, opts.list, pathname)
       }
 
       if (opts.redirect === true) {
@@ -134,6 +172,7 @@ function fastifyStatic (fastify, opts, next) {
   if (opts.serve !== false) {
     if (opts.wildcard === undefined || opts.wildcard === true) {
       fastify.get(prefix + '*', schema, function (req, reply) {
+        // @todo append opts.list.names
         pumpSendToReply(req, reply, '/' + req.params['*'])
       })
       if (opts.redirect === true && prefix !== opts.prefix) {

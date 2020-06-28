@@ -23,7 +23,7 @@ const helper = {
   }
 }
 
-t.test('dir index default options', t => {
+t.test('dir list default options', t => {
   t.plan(2)
 
   const options = {
@@ -49,115 +49,103 @@ t.test('dir index default options', t => {
   })
 })
 
-/*
-t.test('dir index, custom options', t => {
-  t.plan(11)
+t.test('dir list, custom options', t => {
+  t.plan(2)
 
   const options = {
     root: path.join(__dirname, '/static'),
     prefix: '/public',
     index: false,
-    ignoreTrailingSlash: true,
     list: true
   }
-  const routes = ['/public', '/public/']
-  const content = { dirs: ['deep', 'shallow'], files: ['foobar.html', 'foo.html', 'index.css', 'index.html'] }
+
+  const route = '/public/'
+  const content = { dirs: ['deep', 'shallow'], files: ['foo.html', 'foobar.html', 'index.css', 'index.html'] }
 
   helper.arrange(t, options, (url) => {
-    for (const route of routes) {
-      t.test(route, t => {
-        t.plan(3)
-        simple.concat({
-          method: 'GET',
-          url: url + route
-        }, (err, response, body) => {
-          t.error(err)
-          t.strictEqual(response.statusCode, 200)
-          t.strictEqual(body.toString(), content)
-        })
+    t.test(route, t => {
+      t.plan(3)
+      simple.concat({
+        method: 'GET',
+        url: url + route
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(body.toString(), JSON.stringify(content))
       })
-    }
+    })
   })
 })
 
-t.test('dir index json format', t => {
-  t.plan(11)
+t.test('dir list html format', t => {
+  t.plan(4)
 
-  const options = {
-    root: path.join(__dirname, '/static'),
-    prefix: '/public',
-    list: {
-      format: 'json',
-      names: ['/index', '/index.json', '/']
-    }
-  }
-  const routes = ['/public', 'public/', '/public/index.json', '/public/index']
-  const content = { dirs: ['deep', 'shallow'], files: ['foobar.html', 'foo.html', 'index.css', 'index.html'] }
-
-  helper.arrange(t, options, (url) => {
-    for (const route of routes) {
-      t.test(route, t => {
-        t.plan(3)
-        simple.concat({
-          method: 'GET',
-          url: url + route
-        }, (err, response, body) => {
-          t.error(err)
-          t.strictEqual(response.statusCode, 200)
-          t.strictEqual(body.toString(), content)
-        })
-      })
-    }
-  })
-})
-
-t.test('dir index html format', t => {
-  t.plan(11)
+  // render html in 2 ways: one with handlebars and one with template string
 
   const Handlebars = require('handlebars')
-
+  const source = `
+<html><body>
+<ul>
+{{#dirs}}
+  <li><a href="{{href}}">{{name}}</a></li>
+{{/dirs}}
+</ul>
+<ul>
+{{#files}}
+  <li><a href="{{href}}" target="_blank">{{name}}</a></li>
+{{/files}}
+</ul>
+</body></html>
+`
+  const handlebarTemplate = Handlebars.compile(source)
   const templates = [
     {
       render: (dirs, files) => {
-        const source = `
+        return handlebarTemplate({ dirs, files })
+      },
+      output: `
 <html><body>
-
 <ul>
-{{#dirs}}
-<li><a href="{{path}}">{{name}}</a></li>
-{{/dirs}}
+  <li><a href="/deep">deep</a></li>
+  <li><a href="/shallow">shallow</a></li>
 </ul>
-
 <ul>
-{{#files}}
-<li><a href="{{path}}" target="_blank">{{name}}</a></li>
-{{/files}}
+  <li><a href="/foo.html" target="_blank">foo.html</a></li>
+  <li><a href="/foobar.html" target="_blank">foobar.html</a></li>
+  <li><a href="/index.css" target="_blank">index.css</a></li>
+  <li><a href="/index.html" target="_blank">index.html</a></li>
 </ul>
-
 </body></html>
 `
-        return Handlebars.compile(source)(dirs, files)
-      },
-      output: '<html>...'
     },
 
     {
       render: (dirs, files) => {
         return `
 <html><body>
-
 <ul>
-${dirs.map(dir => `<li><a href="${dir.path}">${dir.name}</a></li>`)}
+  ${dirs.map(dir => `<li><a href="${dir.href}">${dir.name}</a></li>`).join('\n  ')}
 </ul>
-
 <ul>
-${files.map(file => `<li><a href="${file.path}" target="_blank">${file.name}</a></li>`)}
+  ${files.map(file => `<li><a href="${file.href}" target="_blank">${file.name}</a></li>`).join('\n  ')}
 </ul>
-
 </body></html>
 `
       },
-      output: '<html>...'
+      output: `
+<html><body>
+<ul>
+  <li><a href="/deep">deep</a></li>
+  <li><a href="/shallow">shallow</a></li>
+</ul>
+<ul>
+  <li><a href="/foo.html" target="_blank">foo.html</a></li>
+  <li><a href="/foobar.html" target="_blank">foobar.html</a></li>
+  <li><a href="/index.css" target="_blank">index.css</a></li>
+  <li><a href="/index.html" target="_blank">index.html</a></li>
+</ul>
+</body></html>
+`
     }
 
   ]
@@ -166,13 +154,16 @@ ${files.map(file => `<li><a href="${file.path}" target="_blank">${file.name}</a>
     const options = {
       root: path.join(__dirname, '/static'),
       prefix: '/public',
+      index: false,
       list: {
         format: 'html',
-        names: ['/index', '/index.html', '/index.htm', '/'],
+        names: [''], // @todo ['/index', '/index.html', '/index.htm', '/'],
         render: template.render
       }
     }
-    const routes = ['/public', 'public/', '/public/index.html', '/public/index.htm', '/public/index']
+    const routes = ['/public/'] // @todo 'public', '/public/index.html', '/public/index.htm', '/public/index'
+
+    // check all routes by names
 
     helper.arrange(t, options, (url) => {
       for (const route of routes) {
@@ -190,6 +181,38 @@ ${files.map(file => `<li><a href="${file.path}" target="_blank">${file.name}</a>
       }
     })
   }
+})
+
+/*
+t.test('dir list json format', t => {
+  t.plan(2)
+
+  const options = {
+    root: path.join(__dirname, '/static'),
+    prefix: '/public',
+    list: {
+      format: 'json',
+      names: ['/index', '/index.json', '/']
+    }
+  }
+  const routes = ['/public', 'public/', '/public/index.json', '/public/index']
+  const content = { dirs: ['deep', 'shallow'], files: ['foobar.html', 'foo.html', 'index.css', 'index.html'] }
+
+  helper.arrange(t, options, (url) => {
+    for (const route of routes) {
+      t.test(route, t => {
+t.plan(3)
+simple.concat({
+  method: 'GET',
+  url: url + route
+}, (err, response, body) => {
+  t.error(err)
+  t.strictEqual(response.statusCode, 200)
+  t.strictEqual(body.toString(), content)
+})
+      })
+    }
+  })
 })
 */
 
