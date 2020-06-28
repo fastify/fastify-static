@@ -132,7 +132,7 @@ for getting the file list.
 This option cannot be set to `false` with `redirect` set to `true` on a server
 with `ignoreTrailingSlash` set to `true`.
 
-#### `index`
+#### `list`
 
 @todo
 

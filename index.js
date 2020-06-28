@@ -20,6 +20,8 @@ function fastifyStatic (fastify, opts, next) {
     return next(new TypeError('The `setHeaders` option must be a function'))
   }
 
+  console.log('opts.list', opts.list)
+
   const sendOptions = {
     root: opts.root,
     acceptRanges: opts.acceptRanges,
@@ -84,6 +86,12 @@ function fastifyStatic (fastify, opts, next) {
     }
 
     stream.on('directory', function (res, path) {
+      if (opts.list) {
+        // @todo
+        reply.send({ dirs: ['empty'], files: ['sample.jpg'] })
+        return
+      }
+
       if (opts.redirect === true) {
         /* eslint node/no-deprecated-api: "off" */
         const parsed = url.parse(request.raw.url)
