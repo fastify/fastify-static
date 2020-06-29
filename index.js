@@ -5,50 +5,10 @@ const url = require('url')
 const statSync = require('fs').statSync
 const { PassThrough } = require('readable-stream')
 const glob = require('glob')
-
 const send = require('send')
-
 const fp = require('fastify-plugin')
 
-/**
- * @todo doc
- * @param
- */
-function sendDirList (reply, dir, options, route) {
-  glob(dir + '/*', { mark: true }, (err, entries) => {
-    if (err) {
-      reply.send(err)
-      return
-    }
-
-    const response = { dirs: [], files: [] }
-    for (let i = 0; i < entries.length; i++) {
-      const entry = entries[i]
-      // glob mark with an ending '/' dirs using mark option
-      const to = entry[entry.length - 1] === '/'
-        ? response.dirs
-        : response.files
-      to.push(path.basename(entry))
-    }
-
-    if (options.format !== 'html') {
-      reply.send(response)
-      return
-    }
-
-    const html = options.render(
-      response.dirs.map(entry => htmlInfo(entry, route)),
-      response.files.map(entry => htmlInfo(entry, route)))
-    reply.send(html)
-  })
-}
-
-/**
- * @todo doc
- */
-function htmlInfo (entry, route) {
-  return { href: route + entry, name: entry }
-}
+const dirList = require('./lib/dirList')
 
 function fastifyStatic (fastify, opts, next) {
   const error = checkRootPathForErrors(fastify, opts.root)
@@ -72,8 +32,6 @@ function fastifyStatic (fastify, opts, next) {
     lastModified: opts.lastModified,
     maxAge: opts.maxAge
   }
-
-  // @todo validate list options
 
   function pumpSendToReply (request, reply, pathname, rootPath) {
     var options = Object.assign({}, sendOptions)
@@ -127,7 +85,7 @@ function fastifyStatic (fastify, opts, next) {
 
     stream.on('directory', function (_, path) {
       if (opts.list) {
-        return sendDirList(reply, path, opts.list, pathname)
+        return dirList.send({ reply, dir: path, options: opts.list, route: pathname })
       }
 
       if (opts.redirect === true) {
@@ -142,6 +100,10 @@ function fastifyStatic (fastify, opts, next) {
     stream.on('error', function (err) {
       if (err) {
         if (err.code === 'ENOENT') {
+          // if file exists, send real file, otherwise send dir list if name match
+          if (opts.list && dirList.handle(pathname, opts.list)) {
+            return dirList.send({ reply, dir: dirList.path(opts.root, pathname), options: opts.list, route: pathname })
+          }
           return reply.callNotFound()
         }
         reply.send(err)
@@ -160,6 +122,9 @@ function fastifyStatic (fastify, opts, next) {
   if (!opts.prefixAvoidTrailingSlash) {
     prefix = opts.prefix[opts.prefix.length - 1] === '/' ? opts.prefix : (opts.prefix + '/')
   }
+
+  // @todo validate list options
+
   // Set the schema hide property if defined in opts or true by default
   const schema = { schema: { hide: typeof opts.schemaHide !== 'undefined' ? opts.schemaHide : true } }
 

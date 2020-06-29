@@ -78,7 +78,7 @@ t.test('dir list, custom options', t => {
 })
 
 t.test('dir list html format', t => {
-  t.plan(4)
+  t.plan(6)
 
   // render html in 2 ways: one with handlebars and one with template string
 
@@ -157,11 +157,11 @@ t.test('dir list html format', t => {
       index: false,
       list: {
         format: 'html',
-        names: [''], // @todo ['/index', '/index.html', '/index.htm', '/'],
+        names: ['index', 'index.htm'],
         render: template.render
       }
     }
-    const routes = ['/public/'] // @todo 'public', '/public/index.html', '/public/index.htm', '/public/index'
+    const routes = ['/public/index.htm', '/public/index']
 
     // check all routes by names
 
@@ -183,43 +183,44 @@ t.test('dir list html format', t => {
   }
 })
 
-/*
 t.test('dir list json format', t => {
   t.plan(2)
 
   const options = {
     root: path.join(__dirname, '/static'),
     prefix: '/public',
+    prefixAvoidTrailingSlash: true,
     list: {
       format: 'json',
-      names: ['/index', '/index.json', '/']
+      names: ['index', 'index.json', '/']
     }
   }
-  const routes = ['/public', 'public/', '/public/index.json', '/public/index']
-  const content = { dirs: ['deep', 'shallow'], files: ['foobar.html', 'foo.html', 'index.css', 'index.html'] }
+  // const routes = ['/public/shallow', 'public/shallow/', '/public/shallow/index.json', '/public/shallow/index']
+  const routes = ['/public/shallow/']
+  const content = { dirs: ['empty'], files: ['sample.jpg'] }
 
   helper.arrange(t, options, (url) => {
     for (const route of routes) {
       t.test(route, t => {
-t.plan(3)
-simple.concat({
-  method: 'GET',
-  url: url + route
-}, (err, response, body) => {
-  t.error(err)
-  t.strictEqual(response.statusCode, 200)
-  t.strictEqual(body.toString(), content)
-})
+        t.plan(3)
+        simple.concat({
+          method: 'GET',
+          url: url + route
+        }, (err, response, body) => {
+          t.error(err)
+          t.strictEqual(response.statusCode, 200)
+          t.strictEqual(body.toString(), JSON.stringify(content))
+        })
       })
     }
   })
 })
-*/
 
 // @todo serve empty dir
+
 // @todo if index already exists, serve from fs
+
 // @todo settings consistency check
 //   - format !json !html
 //   - names not an array
 //   - html without template
-// @todo prefixAvoidTrailingSlash true/false
