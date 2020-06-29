@@ -2,6 +2,7 @@
 
 /* eslint node/no-deprecated-api: "off" */
 
+const fs = require('fs')
 const path = require('path')
 const t = require('tap')
 const simple = require('simple-get')
@@ -22,6 +23,10 @@ const helper = {
     return f
   }
 }
+
+try {
+  fs.mkdirSync(path.join(__dirname, 'static/shallow/empty'))
+} catch (error) {}
 
 t.test('dir list wrong options', t => {
   t.plan(3)
