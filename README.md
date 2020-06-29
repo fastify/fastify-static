@@ -134,9 +134,119 @@ with `ignoreTrailingSlash` set to `true`.
 
 #### `list`
 
-@todo
+Default: `undefined`
 
-names: if file exists, send file
+If set, it provide the directory list calling the directory path.
+
+Default response is json.
+
+**Example:**
+
+```js
+fastify.register(require('fastify-static'), {
+  root: path.join(__dirname, 'public'),
+  prefix: '/public/',
+  list: true
+})
+```
+
+Request
+
+```bash
+GET .../public
+```
+
+Response
+
+```json
+{ "dirs": ["dir1", "dir2"], "files": ["file1.png", "file2.txt"] }
+```
+
+#### `list.format`
+
+Default: `json`
+
+Options: `html`, `json`
+
+Directory list can be also in `html` format; in that case, `list.render` function is required.
+
+**Example:**
+
+```js
+fastify.register(require('fastify-static'), {
+  root: path.join(__dirname, 'public'),
+  prefix: '/public/',
+  list: {
+    format: 'html',
+    render: (dirs, files) => {
+      return `
+<html><body>
+<ul>
+  ${dirs.map(dir => `<li><a href="${dir.href}">${dir.name}</a></li>`).join('\n  ')}
+</ul>
+<ul>
+  ${files.map(file => `<li><a href="${file.href}" target="_blank">${file.name}</a></li>`).join('\n  ')}
+</ul>
+</body></html>
+`
+      },
+  }
+})
+```
+
+Request
+
+```bash
+GET .../public
+```
+
+Response
+
+```html
+<html><body>
+<ul>
+  <li><a href="/dir1">dir1</a></li>
+  <li><a href="/dir1">dir2</a></li>
+</ul>
+<ul>
+  <li><a href="/foo.html" target="_blank">foo.html</a></li>
+  <li><a href="/foobar.html" target="_blank">foobar.html</a></li>
+  <li><a href="/index.css" target="_blank">index.css</a></li>
+  <li><a href="/index.html" target="_blank">index.html</a></li>
+</ul>
+</body></html>
+```
+
+#### `list.names`
+
+Default: `['']`
+
+Directory list can respond to different routes, declared in `list.names` options.
+
+Note: if a file with the same name exists, the actual file is sent.
+
+**Example:**
+
+```js
+fastify.register(require('fastify-static'), {
+  root: path.join(__dirname, '/static'),
+  prefix: '/public',
+  prefixAvoidTrailingSlash: true,
+  list: {
+    format: 'json',
+    names: ['index', 'index.json', '/']
+  }
+})
+```
+
+Dir list respond with the same content to
+
+```bash
+GET .../public
+GET .../public/
+GET .../public/index
+GET .../public/index.json
+```
 
 #### Disable serving
 
