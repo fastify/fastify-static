@@ -23,6 +23,51 @@ const helper = {
   }
 }
 
+t.only('dir list wrong options', t => {
+  t.plan(3)
+
+  const cases = [
+    {
+      options: {
+        root: path.join(__dirname, '/static'),
+        prefix: '/public',
+        list: {
+          format: 'no-json,no-html'
+        }
+      },
+      error: new TypeError('The `list.format` option must be json or html')
+    },
+    {
+      options: {
+        root: path.join(__dirname, '/static'),
+        list: {
+          format: 'html'
+        // no render function
+        }
+      },
+      error: new TypeError('The `list.render` option must be a function and is required with html format')
+    },
+    {
+      options: {
+        root: path.join(__dirname, '/static'),
+        list: {
+          names: 'not-an-array'
+        }
+      },
+      error: new TypeError('The `list.names` option must be an array')
+    }
+  ]
+
+  for (const case_ of cases) {
+    const fastify = Fastify()
+    fastify.register(fastifyStatic, case_.options)
+    fastify.listen(0, err => {
+      t.equal(err.message, case_.error.message)
+      fastify.server.unref()
+    })
+  }
+})
+
 t.test('dir list default options', t => {
   t.plan(2)
 
@@ -216,11 +261,120 @@ t.test('dir list json format', t => {
   })
 })
 
-// @todo serve empty dir
+t.test('dir list on empty dir', t => {
+  t.plan(2)
 
-// @todo if index already exists, serve from fs
+  const options = {
+    root: path.join(__dirname, '/static'),
+    prefix: '/public',
+    list: true
+  }
+  const route = '/public/shallow/empty'
+  const content = { dirs: [], files: [] }
 
-// @todo settings consistency check
-//   - format !json !html
-//   - names not an array
-//   - html without template
+  helper.arrange(t, options, (url) => {
+    t.test(route, t => {
+      t.plan(3)
+      simple.concat({
+        method: 'GET',
+        url: url + route
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(body.toString(), JSON.stringify(content))
+      })
+    })
+  })
+})
+
+t.test('dir list serve index.html on index option', t => {
+  t.plan(2)
+
+  const options = {
+    root: path.join(__dirname, '/static'),
+    prefix: '/public',
+    index: false,
+    list: {
+      format: 'html',
+      names: ['index', 'index.html'],
+      render: () => 'dir list index'
+    }
+  }
+
+  helper.arrange(t, options, (url) => {
+    t.test('serve index.html from fs', t => {
+      t.plan(6)
+
+      let route = '/public/index.html'
+
+      simple.concat({
+        method: 'GET',
+        url: url + route
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(body.toString(), '<html>\n  <body>\n    the body\n  </body>\n</html>\n')
+      })
+
+      route = '/public/index'
+      simple.concat({
+        method: 'GET',
+        url: url + route
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(body.toString(), 'dir list index')
+      })
+    })
+  })
+})
+
+t.test('serve a non existent dir and get error', t => {
+  t.plan(2)
+
+  const options = {
+    root: '/none',
+    prefix: '/public',
+    list: true
+  }
+  const route = '/public/'
+
+  helper.arrange(t, options, (url) => {
+    t.test(route, t => {
+      t.plan(2)
+      simple.concat({
+        method: 'GET',
+        url: url + route
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 404)
+      })
+    })
+  })
+})
+
+t.test('serve a non existent dir and get error', t => {
+  t.plan(2)
+
+  const options = {
+    root: path.join(__dirname, '/static'),
+    prefix: '/public',
+    list: {
+      names: ['index']
+    }
+  }
+  const route = '/public/none/index'
+
+  helper.arrange(t, options, (url) => {
+    t.test(route, t => {
+      t.plan(2)
+      simple.concat({
+        method: 'GET',
+        url: url + route
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 404)
+      })
+    })
+  })
+})

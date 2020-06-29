@@ -20,6 +20,11 @@ function fastifyStatic (fastify, opts, next) {
     return next(new TypeError('The `setHeaders` option must be a function'))
   }
 
+  const invalidDirListOpts = dirList.validateOptions(opts.list)
+  if (invalidDirListOpts) {
+    return next(invalidDirListOpts)
+  }
+
   const sendOptions = {
     root: opts.root,
     acceptRanges: opts.acceptRanges,
@@ -123,8 +128,6 @@ function fastifyStatic (fastify, opts, next) {
     prefix = opts.prefix[opts.prefix.length - 1] === '/' ? opts.prefix : (opts.prefix + '/')
   }
 
-  // @todo validate list options
-
   // Set the schema hide property if defined in opts or true by default
   const schema = { schema: { hide: typeof opts.schemaHide !== 'undefined' ? opts.schemaHide : true } }
 
@@ -137,7 +140,6 @@ function fastifyStatic (fastify, opts, next) {
   if (opts.serve !== false) {
     if (opts.wildcard === undefined || opts.wildcard === true) {
       fastify.get(prefix + '*', schema, function (req, reply) {
-        // @todo append opts.list.names
         pumpSendToReply(req, reply, '/' + req.params['*'])
       })
       if (opts.redirect === true && prefix !== opts.prefix) {
