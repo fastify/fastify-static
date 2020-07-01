@@ -5,10 +5,10 @@ const url = require('url')
 const statSync = require('fs').statSync
 const { PassThrough } = require('readable-stream')
 const glob = require('glob')
-
 const send = require('send')
-
 const fp = require('fastify-plugin')
+
+const dirList = require('./lib/dirList')
 
 function fastifyStatic (fastify, opts, next) {
   const error = checkRootPathForErrors(fastify, opts.root)
@@ -18,6 +18,11 @@ function fastifyStatic (fastify, opts, next) {
 
   if (setHeaders !== undefined && typeof setHeaders !== 'function') {
     return next(new TypeError('The `setHeaders` option must be a function'))
+  }
+
+  const invalidDirListOpts = dirList.validateOptions(opts.list)
+  if (invalidDirListOpts) {
+    return next(invalidDirListOpts)
   }
 
   const sendOptions = {
@@ -83,7 +88,11 @@ function fastifyStatic (fastify, opts, next) {
       stream.on('headers', setHeaders)
     }
 
-    stream.on('directory', function (res, path) {
+    stream.on('directory', function (_, path) {
+      if (opts.list) {
+        return dirList.send({ reply, dir: path, options: opts.list, route: pathname })
+      }
+
       if (opts.redirect === true) {
         /* eslint node/no-deprecated-api: "off" */
         const parsed = url.parse(request.raw.url)
@@ -96,6 +105,10 @@ function fastifyStatic (fastify, opts, next) {
     stream.on('error', function (err) {
       if (err) {
         if (err.code === 'ENOENT') {
+          // if file exists, send real file, otherwise send dir list if name match
+          if (opts.list && dirList.handle(pathname, opts.list)) {
+            return dirList.send({ reply, dir: dirList.path(opts.root, pathname), options: opts.list, route: pathname })
+          }
           return reply.callNotFound()
         }
         reply.send(err)
@@ -114,6 +127,7 @@ function fastifyStatic (fastify, opts, next) {
   if (!opts.prefixAvoidTrailingSlash) {
     prefix = opts.prefix[opts.prefix.length - 1] === '/' ? opts.prefix : (opts.prefix + '/')
   }
+
   // Set the schema hide property if defined in opts or true by default
   const schema = { schema: { hide: typeof opts.schemaHide !== 'undefined' ? opts.schemaHide : true } }
 
