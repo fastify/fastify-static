@@ -134,6 +134,7 @@ function fastifyStatic (fastify, opts, next) {
   if (opts.decorateReply !== false) {
     fastify.decorateReply('sendFile', function (filePath, rootPath) {
       pumpSendToReply(this.request, this, filePath, rootPath)
+      return this
     })
   }
 
