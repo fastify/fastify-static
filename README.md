@@ -22,11 +22,11 @@ fastify.register(require('fastify-static'), {
 })
 
 fastify.get('/another/path', function (req, reply) {
-  reply.sendFile('myHtml.html') // serving path.join(__dirname, 'public', 'myHtml.html') directly
+  return reply.sendFile('myHtml.html') // serving path.join(__dirname, 'public', 'myHtml.html') directly
 })
 
 fastify.get('/path/with/different/root', function (req, reply) {
-  reply.sendFile('myHtml.html', path.join(__dirname, 'build')) // serving a file from a different root location
+  return reply.sendFile('myHtml.html', path.join(__dirname, 'build')) // serving a file from a different root location
 })
 
 ```

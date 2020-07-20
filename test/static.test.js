@@ -627,7 +627,7 @@ t.test('serving disabled', t => {
   fastify.register(fastifyStatic, pluginOptions)
 
   fastify.get('/foo/bar', (request, reply) => {
-    reply.sendFile('index.html')
+    return reply.sendFile('index.html')
   })
 
   t.tearDown(fastify.close.bind(fastify))
@@ -674,11 +674,11 @@ t.test('sendFile', t => {
   fastify.register(fastifyStatic, pluginOptions)
 
   fastify.get('/foo/bar', function (req, reply) {
-    reply.sendFile('/index.html')
+    return reply.sendFile('/index.html')
   })
 
   fastify.get('/root/path/override/test', (request, reply) => {
-    reply.sendFile('/foo.html', path.join(__dirname, 'static', 'deep', 'path', 'for', 'test', 'purpose'))
+    return reply.sendFile('/foo.html', path.join(__dirname, 'static', 'deep', 'path', 'for', 'test', 'purpose'))
   })
 
   fastify.listen(0, err => {
