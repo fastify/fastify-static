@@ -12,6 +12,7 @@ const Fastify = require('fastify')
 const compress = require('fastify-compress')
 const concat = require('concat-stream')
 const pino = require('pino')
+const proxyquire = require('proxyquire')
 
 const fastifyStatic = require('../')
 
@@ -823,7 +824,7 @@ t.test('send options', t => {
       t.strictEqual(options.index, 'index')
       t.strictEqual(options.lastModified, 'lastModified')
       t.strictEqual(options.maxAge, 'maxAge')
-      return { on: () => {}, pipe: () => {} }
+      return { on: () => { }, pipe: () => { } }
     }
   })
   fastify.register(fastifyStatic, pluginOptions)
@@ -2105,5 +2106,55 @@ t.test('trailing slash behavior with redirect = false', t => {
         t.strictEqual(response.statusCode, 200)
       })
     })
+  })
+})
+
+t.test('register with failing glob handler', t => {
+  const fastifyStatic = proxyquire.noCallThru()('../', {
+    glob: function globStub (pattern, options, cb) {
+      process.nextTick(function () {
+        return cb(new Error('mock glob error'))
+      })
+    }
+  })
+
+  const pluginOptions = {
+    root: path.join(__dirname, '/static'),
+    serve: true,
+    wildcard: '*'
+  }
+  const fastify = Fastify()
+  fastify.register(fastifyStatic, pluginOptions)
+
+  t.tearDown(fastify.close.bind(fastify))
+
+  fastify.listen(0, err => {
+    fastify.server.unref()
+    t.ok(err)
+    t.end()
+  })
+})
+
+t.test('register with rootpath that causes statSync to fail with non-ENOENT code', t => {
+  const fastifyStatic = proxyquire('../', {
+    fs: {
+      statSync: function statSyncStub (path) {
+        throw new Error({ code: 'MOCK' })
+      }
+    }
+  })
+
+  const pluginOptions = {
+    root: path.join(__dirname, '/static'),
+    wildcard: '*'
+  }
+  const fastify = Fastify()
+  fastify.register(fastifyStatic, pluginOptions)
+
+  t.tearDown(fastify.close.bind(fastify))
+  fastify.listen(0, err => {
+    fastify.server.unref()
+    t.ok(err)
+    t.end()
   })
 })
