@@ -63,7 +63,6 @@ function fastifyStatic (fastify, opts, next) {
 
     wrap.getHeader = reply.getHeader.bind(reply)
     wrap.setHeader = reply.header.bind(reply)
-    wrap.socket = request.raw.socket
     wrap.finished = false
 
     Object.defineProperty(wrap, 'filename', {
