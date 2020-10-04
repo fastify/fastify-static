@@ -2158,3 +2158,20 @@ t.test('register with rootpath that causes statSync to fail with non-ENOENT code
     t.end()
   })
 })
+
+t.test('inject support', async (t) => {
+  const pluginOptions = {
+    root: path.join(__dirname, '/static'),
+    prefix: '/static'
+  }
+  const fastify = Fastify()
+  fastify.register(fastifyStatic, pluginOptions)
+  t.tearDown(fastify.close.bind(fastify))
+
+  const response = await fastify.inject({
+    method: 'GET',
+    url: '/static/index.html'
+  })
+  t.strictEqual(response.statusCode, 200)
+  t.strictEqual(response.body.toString(), indexContent)
+})
