@@ -128,7 +128,14 @@ function fastifyStatic (fastify, opts, next) {
   }
 
   // Set the schema hide property if defined in opts or true by default
-  const schema = { schema: { hide: typeof opts.schemaHide !== 'undefined' ? opts.schemaHide : true } }
+  const routeOpts = {
+    schema: { hide: typeof opts.schemaHide !== 'undefined' ? opts.schemaHide : true },
+    errorHandler: fastify.errorHandler ? (error, request, reply) => {
+      if (error && error.code !== 'ERR_STREAM_PREMATURE_CLOSE') {
+        fastify.errorHandler(error, request, reply)
+      }
+    } : undefined
+  }
 
   if (opts.decorateReply !== false) {
     fastify.decorateReply('sendFile', function (filePath, rootPath) {
@@ -139,11 +146,11 @@ function fastifyStatic (fastify, opts, next) {
 
   if (opts.serve !== false) {
     if (opts.wildcard === undefined || opts.wildcard === true) {
-      fastify.get(prefix + '*', schema, function (req, reply) {
+      fastify.get(prefix + '*', routeOpts, function (req, reply) {
         pumpSendToReply(req, reply, '/' + req.params['*'])
       })
       if (opts.redirect === true && prefix !== opts.prefix) {
-        fastify.get(opts.prefix, schema, function (req, reply) {
+        fastify.get(opts.prefix, routeOpts, function (req, reply) {
           /* eslint node/no-deprecated-api: "off" */
           const parsed = url.parse(req.raw.url)
           reply.redirect(301, parsed.pathname + '/' + (parsed.search || ''))
@@ -160,7 +167,7 @@ function fastifyStatic (fastify, opts, next) {
         for (let file of files) {
           file = file.replace(sendOptions.root.replace(/\\/g, '/'), '').replace(/^\//, '')
           const route = (prefix + file).replace(/\/\//g, '/')
-          fastify.get(route, schema, function (req, reply) {
+          fastify.get(route, routeOpts, function (req, reply) {
             pumpSendToReply(req, reply, '/' + file)
           })
 
@@ -172,12 +179,12 @@ function fastifyStatic (fastify, opts, next) {
           const pathname = dirname + (dirname.endsWith('/') ? '' : '/')
           const file = '/' + pathname.replace(prefix, '')
 
-          fastify.get(pathname, schema, function (req, reply) {
+          fastify.get(pathname, routeOpts, function (req, reply) {
             pumpSendToReply(req, reply, file)
           })
 
           if (opts.redirect === true) {
-            fastify.get(pathname.replace(/\/$/, ''), schema, function (req, reply) {
+            fastify.get(pathname.replace(/\/$/, ''), routeOpts, function (req, reply) {
               pumpSendToReply(req, reply, file.replace(/\/$/, ''))
             })
           }
