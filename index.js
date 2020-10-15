@@ -127,14 +127,19 @@ function fastifyStatic (fastify, opts, next) {
     prefix = opts.prefix[opts.prefix.length - 1] === '/' ? opts.prefix : (opts.prefix + '/')
   }
 
+  const errorHandler = (error, request, reply) => {
+    if (error && error.code === 'ERR_STREAM_PREMATURE_CLOSE') {
+      reply.request.raw.destroy()
+      return
+    }
+
+    fastify.errorHandler(error, request, reply)
+  }
+
   // Set the schema hide property if defined in opts or true by default
   const routeOpts = {
     schema: { hide: typeof opts.schemaHide !== 'undefined' ? opts.schemaHide : true },
-    errorHandler: fastify.errorHandler ? (error, request, reply) => {
-      if (error && error.code !== 'ERR_STREAM_PREMATURE_CLOSE') {
-        fastify.errorHandler(error, request, reply)
-      }
-    } : undefined
+    errorHandler: fastify.errorHandler ? errorHandler : undefined
   }
 
   if (opts.decorateReply !== false) {
