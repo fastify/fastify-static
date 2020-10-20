@@ -9,6 +9,7 @@ const http = require('http')
 const t = require('tap')
 const simple = require('simple-get')
 const Fastify = require('fastify')
+const { kErrorHandler } = require('fastify/lib/symbols')
 const compress = require('fastify-compress')
 const concat = require('concat-stream')
 const pino = require('pino')
@@ -2174,4 +2175,111 @@ t.test('inject support', async (t) => {
   })
   t.strictEqual(response.statusCode, 200)
   t.strictEqual(response.body.toString(), indexContent)
+})
+
+t.test('routes should use custom errorHandler premature stream close', t => {
+  t.plan(3)
+
+  const pluginOptions = {
+    root: path.join(__dirname, '/static'),
+    prefix: '/static/'
+  }
+
+  const fastify = Fastify()
+
+  fastify.addHook('onRoute', function (routeOptions) {
+    t.ok(routeOptions.errorHandler instanceof Function)
+
+    routeOptions.onRequest = (request, reply, done) => {
+      const fakeError = new Error()
+      fakeError.code = 'ERR_STREAM_PREMATURE_CLOSE'
+      done(fakeError)
+    }
+  })
+
+  fastify.register(fastifyStatic, pluginOptions)
+  t.tearDown(fastify.close.bind(fastify))
+
+  fastify.inject({
+    method: 'GET',
+    url: '/static/index.html'
+  }, (err, response) => {
+    t.error(err)
+    t.equal(response, null)
+  })
+})
+
+t.test('routes should fallback to default errorHandler', t => {
+  t.plan(3)
+
+  const pluginOptions = {
+    root: path.join(__dirname, '/static'),
+    prefix: '/static/'
+  }
+
+  const fastify = Fastify()
+
+  fastify.addHook('onRoute', function (routeOptions) {
+    t.ok(routeOptions.errorHandler instanceof Function)
+
+    routeOptions.preHandler = (request, reply, done) => {
+      const fakeError = new Error()
+      fakeError.code = 'SOMETHING_ELSE'
+      done(fakeError)
+    }
+  })
+
+  fastify.register(fastifyStatic, pluginOptions)
+  t.tearDown(fastify.close.bind(fastify))
+
+  fastify.inject({
+    method: 'GET',
+    url: '/static/index.html'
+  }, (err, response) => {
+    t.error(err)
+    t.deepEqual(JSON.parse(response.payload), {
+      statusCode: 500,
+      code: 'SOMETHING_ELSE',
+      error: 'Internal Server Error',
+      message: ''
+    })
+  })
+})
+
+t.test('routes use default errorHandler when fastify.errorHandler is not defined', t => {
+  t.plan(3)
+
+  const pluginOptions = {
+    root: path.join(__dirname, '/static'),
+    prefix: '/static/'
+  }
+
+  const fastify = Fastify()
+  fastify[kErrorHandler] = undefined // simulate old fastify version
+
+  fastify.addHook('onRoute', function (routeOptions) {
+    t.notOk(routeOptions.errorHandler instanceof Function)
+
+    routeOptions.preHandler = (request, reply, done) => {
+      const fakeError = new Error()
+      fakeError.code = 'SOMETHING_ELSE'
+      done(fakeError)
+    }
+  })
+
+  fastify.register(fastifyStatic, pluginOptions)
+  t.tearDown(fastify.close.bind(fastify))
+
+  fastify.inject({
+    method: 'GET',
+    url: '/static/index.html'
+  }, (err, response) => {
+    t.error(err)
+    t.deepEqual(JSON.parse(response.payload), {
+      statusCode: 500,
+      code: 'SOMETHING_ELSE',
+      error: 'Internal Server Error',
+      message: ''
+    })
+  })
 })
