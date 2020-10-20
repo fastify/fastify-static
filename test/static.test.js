@@ -9,6 +9,7 @@ const http = require('http')
 const t = require('tap')
 const simple = require('simple-get')
 const Fastify = require('fastify')
+const { kErrorHandler } = require('fastify/lib/symbols')
 const compress = require('fastify-compress')
 const concat = require('concat-stream')
 const pino = require('pino')
@@ -2186,12 +2187,6 @@ t.test('routes should use custom errorHandler premature stream close', t => {
 
   const fastify = Fastify()
 
-  if (!fastify.errorHandler) {
-    fastify.errorHandler = (_, __, reply) => {
-      reply.send('default-error-obj')
-    }
-  }
-
   fastify.addHook('onRoute', function (routeOptions) {
     t.ok(routeOptions.errorHandler instanceof Function)
 
@@ -2224,12 +2219,6 @@ t.test('routes should fallback to default errorHandler', t => {
 
   const fastify = Fastify()
 
-  if (!fastify.errorHandler) {
-    fastify.errorHandler = (_, __, reply) => {
-      reply.send({ default: 'error-obj' })
-    }
-  }
-
   fastify.addHook('onRoute', function (routeOptions) {
     t.ok(routeOptions.errorHandler instanceof Function)
 
@@ -2248,7 +2237,12 @@ t.test('routes should fallback to default errorHandler', t => {
     url: '/static/index.html'
   }, (err, response) => {
     t.error(err)
-    t.deepEqual(JSON.parse(response.payload), { default: 'error-obj' })
+    t.deepEqual(JSON.parse(response.payload), {
+      statusCode: 500,
+      code: 'SOMETHING_ELSE',
+      error: 'Internal Server Error',
+      message: ''
+    })
   })
 })
 
@@ -2261,6 +2255,7 @@ t.test('routes use default errorHandler when fastify.errorHandler is not defined
   }
 
   const fastify = Fastify()
+  fastify[kErrorHandler] = undefined // simulate old fastify version
 
   fastify.addHook('onRoute', function (routeOptions) {
     t.notOk(routeOptions.errorHandler instanceof Function)
