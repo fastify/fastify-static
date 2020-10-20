@@ -40,7 +40,7 @@
     "concat-stream": "^2.0.0",
     "coveralls": "^3.0.4",
     "eslint-plugin-typescript": "^0.14.0",
-    "fastify": "^3.0.0",
+    "fastify": "^3.7.0",
     "fastify-compress": "^3.3.1",
     "handlebars": "^4.7.6",
     "pre-commit": "^1.2.2",
