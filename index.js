@@ -45,18 +45,20 @@ function fastifyStatic (fastify, opts, next) {
       options.root = rootPath
     }
 
-    let encodingExtension = ''
+    let encodingExt
+    let pathnameForSend = pathname
 
     if (opts.preCompressed) {
       if (!checkedExtensions) {
         checkedExtensions = new Set()
       }
-      encodingExtension = checkEncodingHeaders(request.headers, checkedExtensions)
+
+      if ((encodingExt = checkEncodingHeaders(request.headers, checkedExtensions))) {
+        pathnameForSend = pathname + '.' + encodingExt
+      }
     }
 
-    const pathnameWithExtension = pathname + `${encodingExtension ? `.${encodingExtension}` : ''}`
-
-    const stream = send(request.raw, pathnameWithExtension, options)
+    const stream = send(request.raw, pathnameForSend, options)
 
     var resolvedFilename
     stream.on('file', function (file) {
@@ -92,8 +94,8 @@ function fastifyStatic (fastify, opts, next) {
     })
 
     wrap.on('pipe', function () {
-      if (encodingExtension) {
-        reply.header('content-encoding', encodingExtension)
+      if (encodingExt) {
+        reply.header('content-encoding', encodingExt)
       }
       reply.send(wrap)
     })
@@ -124,8 +126,8 @@ function fastifyStatic (fastify, opts, next) {
             return dirList.send({ reply, dir: dirList.path(opts.root, pathname), options: opts.list, route: pathname })
           }
 
-          if (opts.preCompressed && !(checkedExtensions.has(encodingExtension))) {
-            checkedExtensions.add(encodingExtension)
+          if (opts.preCompressed && !(checkedExtensions.has(encodingExt))) {
+            checkedExtensions.add(encodingExt)
             return pumpSendToReply(request, reply, pathname, rootPath, checkedExtensions)
           } else {
             return reply.callNotFound()
