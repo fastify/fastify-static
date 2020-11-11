@@ -41,6 +41,11 @@ export interface FastifyStaticOptions {
   redirect?: boolean;
   wildcard?: boolean | string;
   list?: boolean | ListOptions;
+  /**
+   * @description
+   * Opt-in to looking for pre-compressed files
+   */
+  preCompressed?: boolean;
 
   // Passed on to `send`
   acceptRanges?: boolean;

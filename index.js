@@ -38,14 +38,26 @@ function fastifyStatic (fastify, opts, next) {
     maxAge: opts.maxAge
   }
 
-  function pumpSendToReply (request, reply, pathname, rootPath) {
+  function pumpSendToReply (request, reply, pathname, rootPath, checkedExtensions) {
     var options = Object.assign({}, sendOptions)
 
     if (rootPath) {
       options.root = rootPath
     }
 
-    const stream = send(request.raw, pathname, options)
+    let encodingExtension = ''
+
+    if (opts.preCompressed) {
+      if (!checkedExtensions) {
+        checkedExtensions = new Set()
+      }
+      encodingExtension = checkEncodingHeaders(request.headers, checkedExtensions)
+    }
+
+    const pathnameWithExtension = pathname + `${encodingExtension ? `.${encodingExtension}` : ''}`
+
+    const stream = send(request.raw, pathnameWithExtension, options)
+
     var resolvedFilename
     stream.on('file', function (file) {
       resolvedFilename = file
@@ -80,6 +92,9 @@ function fastifyStatic (fastify, opts, next) {
     })
 
     wrap.on('pipe', function () {
+      if (encodingExtension) {
+        reply.header('content-encoding', encodingExtension)
+      }
       reply.send(wrap)
     })
 
@@ -108,7 +123,13 @@ function fastifyStatic (fastify, opts, next) {
           if (opts.list && dirList.handle(pathname, opts.list)) {
             return dirList.send({ reply, dir: dirList.path(opts.root, pathname), options: opts.list, route: pathname })
           }
-          return reply.callNotFound()
+
+          if (opts.preCompressed && !(checkedExtensions.has(encodingExtension))) {
+            checkedExtensions.add(encodingExtension)
+            return pumpSendToReply(request, reply, pathname, rootPath, checkedExtensions)
+          } else {
+            return reply.callNotFound()
+          }
         }
         reply.send(err)
       }
@@ -232,6 +253,22 @@ function checkRootPathForErrors (fastify, rootPath) {
   if (pathStat.isDirectory() === false) {
     return new Error('"root" option must point to a directory')
   }
+}
+
+function checkEncodingHeaders (headers, checked) {
+  if (!('accept-encoding' in headers)) return
+
+  const accepted = new Set(headers['accept-encoding'].split(', '))
+
+  let ext; const checkedForBr = checked.has('br')
+
+  if (accepted.has('br') && !checkedForBr) {
+    ext = 'br'
+  } else if ((accepted.has('gzip') || checkedForBr) && !checked.has('gz')) {
+    ext = 'gz'
+  }
+
+  return ext
 }
 
 module.exports = fp(fastifyStatic, {

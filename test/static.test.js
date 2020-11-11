@@ -2283,3 +2283,78 @@ t.test('routes use default errorHandler when fastify.errorHandler is not defined
     })
   })
 })
+
+t.test('will serve pre-compressed files with .br at the highest priority', async (t) => {
+  const pluginOptions = {
+    root: path.join(__dirname, '/static-pre-compressed'),
+    prefix: '/static-pre-compressed/',
+    preCompressed: true
+  }
+
+  const fastify = Fastify()
+
+  fastify.register(fastifyStatic, pluginOptions)
+  t.tearDown(fastify.close.bind(fastify))
+
+  const response = await fastify.inject({
+    method: 'GET',
+    url: '/static-pre-compressed/all-three.html',
+    headers: {
+      'accept-encoding': 'gzip, deflate, br'
+    }
+  })
+
+  t.strictEqual(response.headers['content-encoding'], 'br')
+  t.strictEqual(response.statusCode, 200)
+  t.end()
+})
+
+t.test('will serve pre-compressed files and fallback to .gz if .br is not on disk', async (t) => {
+  const pluginOptions = {
+    root: path.join(__dirname, '/static-pre-compressed'),
+    prefix: '/static-pre-compressed/',
+    preCompressed: true
+  }
+
+  const fastify = Fastify()
+
+  fastify.register(fastifyStatic, pluginOptions)
+  t.tearDown(fastify.close.bind(fastify))
+
+  const response = await fastify.inject({
+    method: 'GET',
+    url: '/static-pre-compressed/gzip-only.html',
+    headers: {
+      'accept-encoding': 'gzip, deflate, br'
+    }
+  })
+
+  t.strictEqual(response.headers['content-encoding'], 'gz')
+  t.strictEqual(response.statusCode, 200)
+  t.end()
+})
+
+t.test('will serve uncompressed files if there are no compressed variants on disk', async (t) => {
+  const pluginOptions = {
+    root: path.join(__dirname, '/static-pre-compressed'),
+    prefix: '/static-pre-compressed/',
+    preCompressed: true
+  }
+
+  const fastify = Fastify()
+
+  fastify.register(fastifyStatic, pluginOptions)
+  t.tearDown(fastify.close.bind(fastify))
+
+  const response = await fastify.inject({
+    method: 'GET',
+    url: '/static-pre-compressed/uncompressed.html',
+    headers: {
+      'accept-encoding': 'gzip, deflate, br'
+    }
+  })
+
+  t.strictEqual(response.headers['content-encoding'], undefined)
+  t.strictEqual(response.statusCode, 200)
+  t.end()
+})
