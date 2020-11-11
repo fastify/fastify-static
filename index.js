@@ -258,14 +258,20 @@ function checkRootPathForErrors (fastify, rootPath) {
 function checkEncodingHeaders (headers, checked) {
   if (!('accept-encoding' in headers)) return
 
-  const accepted = new Set(headers['accept-encoding'].split(', '))
+  let ext
+  const accepted = headers['accept-encoding'].split(', ')
+  const checkedForBr = checked.has('br')
 
-  let ext; const checkedForBr = checked.has('br')
+  for (let index = 0; index < accepted.length; index++) {
+    const acceptedEncoding = accepted[index]
 
-  if (accepted.has('br') && !checkedForBr) {
-    ext = 'br'
-  } else if ((accepted.has('gzip') || checkedForBr) && !checked.has('gz')) {
-    ext = 'gz'
+    if (acceptedEncoding === 'br' && !checkedForBr) {
+      ext = 'br'
+      break
+    } else if (acceptedEncoding === 'gzip' && checkedForBr && !checked.has('gz')) {
+      ext = 'gz'
+      break
+    }
   }
 
   return ext
