@@ -21,6 +21,9 @@ const indexContent = fs.readFileSync('./test/static/index.html').toString('utf8'
 const foobarContent = fs.readFileSync('./test/static/foobar.html').toString('utf8')
 const deepContent = fs.readFileSync('./test/static/deep/path/for/test/purpose/foo.html').toString('utf8')
 const innerIndex = fs.readFileSync('./test/static/deep/path/for/test/index.html').toString('utf8')
+const allThreeBr = fs.readFileSync('./test/static-pre-compressed/all-three.html.br').toString('utf8')
+const gzipOnly = fs.readFileSync('./test/static-pre-compressed/gzip-only.html.gz').toString('utf8')
+const uncompressedStatic = fs.readFileSync('./test/static-pre-compressed/uncompressed.html').toString('utf8')
 
 const GENERIC_RESPONSE_CHECK_COUNT = 5
 function genericResponseChecks (t, response) {
@@ -2306,6 +2309,7 @@ t.test('will serve pre-compressed files with .br at the highest priority', async
 
   t.strictEqual(response.headers['content-encoding'], 'br')
   t.strictEqual(response.statusCode, 200)
+  t.strictEqual(response.body, allThreeBr)
   t.end()
 })
 
@@ -2331,6 +2335,7 @@ t.test('will serve pre-compressed files and fallback to .gz if .br is not on dis
 
   t.strictEqual(response.headers['content-encoding'], 'gz')
   t.strictEqual(response.statusCode, 200)
+  t.strictEqual(response.body, gzipOnly)
   t.end()
 })
 
@@ -2356,5 +2361,89 @@ t.test('will serve uncompressed files if there are no compressed variants on dis
 
   t.strictEqual(response.headers['content-encoding'], undefined)
   t.strictEqual(response.statusCode, 200)
+  t.strictEqual(response.body, uncompressedStatic)
+  t.end()
+})
+
+//
+
+t.test('will serve pre-compressed files with .br at the highest priority (with wildcard: false)', async (t) => {
+  const pluginOptions = {
+    root: path.join(__dirname, '/static-pre-compressed'),
+    prefix: '/static-pre-compressed/',
+    preCompressed: true,
+    wildcard: false
+  }
+
+  const fastify = Fastify()
+
+  fastify.register(fastifyStatic, pluginOptions)
+  t.tearDown(fastify.close.bind(fastify))
+
+  const response = await fastify.inject({
+    method: 'GET',
+    url: '/static-pre-compressed/all-three.html',
+    headers: {
+      'accept-encoding': 'gzip, deflate, br'
+    }
+  })
+
+  t.strictEqual(response.headers['content-encoding'], 'br')
+  t.strictEqual(response.statusCode, 200)
+  t.strictEqual(response.body, allThreeBr)
+  t.end()
+})
+
+t.test('will serve pre-compressed files and fallback to .gz if .br is not on disk  (with wildcard: false) ', async (t) => {
+  const pluginOptions = {
+    root: path.join(__dirname, '/static-pre-compressed'),
+    prefix: '/static-pre-compressed/',
+    preCompressed: true,
+    wildcard: false
+  }
+
+  const fastify = Fastify()
+
+  fastify.register(fastifyStatic, pluginOptions)
+  t.tearDown(fastify.close.bind(fastify))
+
+  const response = await fastify.inject({
+    method: 'GET',
+    url: '/static-pre-compressed/gzip-only.html',
+    headers: {
+      'accept-encoding': 'gzip, deflate, br'
+    }
+  })
+
+  t.strictEqual(response.headers['content-encoding'], 'gz')
+  t.strictEqual(response.statusCode, 200)
+  t.strictEqual(response.body, gzipOnly)
+  t.end()
+})
+
+t.test('will serve uncompressed files if there are no compressed variants on disk  (with wildcard: false)', async (t) => {
+  const pluginOptions = {
+    root: path.join(__dirname, '/static-pre-compressed'),
+    prefix: '/static-pre-compressed/',
+    preCompressed: true,
+    wildcard: false
+  }
+
+  const fastify = Fastify()
+
+  fastify.register(fastifyStatic, pluginOptions)
+  t.tearDown(fastify.close.bind(fastify))
+
+  const response = await fastify.inject({
+    method: 'GET',
+    url: '/static-pre-compressed/uncompressed.html',
+    headers: {
+      'accept-encoding': 'gzip, deflate, br'
+    }
+  })
+
+  t.strictEqual(response.headers['content-encoding'], undefined)
+  t.strictEqual(response.statusCode, 200)
+  t.strictEqual(response.body, uncompressedStatic)
   t.end()
 })
