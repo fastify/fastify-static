@@ -21,8 +21,8 @@ const indexContent = fs.readFileSync('./test/static/index.html').toString('utf8'
 const foobarContent = fs.readFileSync('./test/static/foobar.html').toString('utf8')
 const deepContent = fs.readFileSync('./test/static/deep/path/for/test/purpose/foo.html').toString('utf8')
 const innerIndex = fs.readFileSync('./test/static/deep/path/for/test/index.html').toString('utf8')
-const allThreeBr = fs.readFileSync('./test/static-pre-compressed/all-three.html.br').toString('utf8')
-const gzipOnly = fs.readFileSync('./test/static-pre-compressed/gzip-only.html.gz').toString('utf8')
+const allThreeBr = fs.readFileSync('./test/static-pre-compressed/all-three.html.br').toString()
+const gzipOnly = fs.readFileSync('./test/static-pre-compressed/gzip-only.html.gz').toString()
 const uncompressedStatic = fs.readFileSync('./test/static-pre-compressed/uncompressed.html').toString('utf8')
 
 const GENERIC_RESPONSE_CHECK_COUNT = 5
