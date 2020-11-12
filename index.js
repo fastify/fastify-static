@@ -49,6 +49,10 @@ function fastifyStatic (fastify, opts, next) {
     let pathnameForSend = pathname
 
     if (opts.preCompressed) {
+      /**
+       * We conditionally create this structure to track our attempts
+       * at sending pre-compressed assets
+       */
       if (!checkedExtensions) {
         checkedExtensions = new Set()
       }
