@@ -39,14 +39,14 @@ function fastifyStatic (fastify, opts, next) {
   }
 
   function pumpSendToReply (request, reply, pathname, rootPath) {
-    var options = Object.assign({}, sendOptions)
+    const options = Object.assign({}, sendOptions)
 
     if (rootPath) {
       options.root = rootPath
     }
 
     const stream = send(request.raw, pathname, options)
-    var resolvedFilename
+    let resolvedFilename
     stream.on('file', function (file) {
       resolvedFilename = file
     })
@@ -216,7 +216,7 @@ function checkRootPathForErrors (fastify, rootPath) {
     return new Error('"root" option must be an absolute path')
   }
 
-  var pathStat
+  let pathStat
 
   try {
     pathStat = statSync(rootPath)
