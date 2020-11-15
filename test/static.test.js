@@ -496,7 +496,7 @@ t.test('payload.filename is set', t => {
     prefix: '/static/'
   }
   const fastify = Fastify()
-  var gotFilename
+  let gotFilename
   fastify.register(fastifyStatic, pluginOptions)
   fastify.addHook('onSend', function (req, reply, payload, next) {
     gotFilename = payload.filename
