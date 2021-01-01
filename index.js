@@ -57,7 +57,9 @@ function fastifyStatic (fastify, opts, next) {
         checkedExtensions = new Set()
       }
 
-      if ((encodingExt = checkEncodingHeaders(request.headers, checkedExtensions))) {
+      encodingExt = checkEncodingHeaders(request.headers, checkedExtensions)
+
+      if (encodingExt) {
         pathnameForSend = pathname + '.' + encodingExt
       }
     }
