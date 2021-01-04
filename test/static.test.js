@@ -2283,3 +2283,35 @@ t.test('routes use default errorHandler when fastify.errorHandler is not defined
     })
   })
 })
+
+t.test('precent encoded URLs in glob mode', t => {
+  t.plan(4)
+
+  const fastify = Fastify({})
+
+  fastify.register(fastifyStatic, {
+    root: path.join(__dirname, 'static'),
+    prefix: '/static',
+    wildcard: true
+  })
+
+  t.tearDown(fastify.close.bind(fastify))
+
+  fastify.listen(0, (err) => {
+    t.error(err)
+    fastify.server.unref()
+
+    simple.concat({
+      method: 'GET',
+      url: 'http://localhost:' + fastify.server.address().port + '/static/a .md',
+      followRedirect: false
+    }, (err, response, body) => {
+      t.error(err)
+      t.strictEquals(response.statusCode, 200)
+      t.strictEquals(
+        fs.readFileSync(path.join(__dirname, 'static', 'a .md'), 'utf-8'),
+        body.toString()
+      )
+    })
+  })
+})
