@@ -6,7 +6,7 @@ const options: FastifyStaticOptions = {
   acceptRanges: true,
   cacheControl: true,
   decorateReply: true,
-  dotfiles: 'allow',
+  dotfiles: true,
   etag: true,
   extensions: ['.js'],
   immutable: true,
