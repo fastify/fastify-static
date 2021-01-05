@@ -2248,6 +2248,7 @@ t.test('routes should fallback to default errorHandler', t => {
 
 t.test('if dotfiles are properly served according to plugin options', t => {
   t.plan(3)
+  const exampleContents = fs.readFileSync(path.join(__dirname, 'static', '.example'), { encoding: 'utf8' }).toString()
 
   t.test('freely serve dotfiles', (t) => {
     t.plan(4)
@@ -2258,9 +2259,6 @@ t.test('if dotfiles are properly served according to plugin options', t => {
       prefix: '/static/',
       dotfiles: 'allow'
     }
-
-    const exampleContents = 'contents of a dotfile'
-    fs.writeFileSync(path.join(__dirname, 'static', '.example'), exampleContents, { encoding: 'utf-8' })
 
     fastify.register(fastifyStatic, pluginOptions)
 
@@ -2275,7 +2273,6 @@ t.test('if dotfiles are properly served according to plugin options', t => {
         t.error(err)
         t.strictEqual(response.statusCode, 200)
         t.strictEqual(body.toString(), exampleContents)
-        fs.rmSync(path.join(__dirname, 'static', '.example'))
       })
     })
   })
@@ -2290,9 +2287,6 @@ t.test('if dotfiles are properly served according to plugin options', t => {
       dotfiles: 'ignore'
     }
 
-    const exampleContents = 'contents of a dotfile'
-    fs.writeFileSync(path.join(__dirname, 'static', '.example'), exampleContents, { encoding: 'utf-8' })
-
     fastify.register(fastifyStatic, pluginOptions)
 
     t.teardown(fastify.close.bind(fastify))
@@ -2305,7 +2299,6 @@ t.test('if dotfiles are properly served according to plugin options', t => {
       }, (err, response, body) => {
         t.error(err)
         t.strictEqual(response.statusCode, 404)
-        fs.rmSync(path.join(__dirname, 'static', '.example'))
       })
     })
   })
@@ -2320,9 +2313,6 @@ t.test('if dotfiles are properly served according to plugin options', t => {
       dotfiles: 'deny'
     }
 
-    const exampleContents = 'contents of a dotfile'
-    fs.writeFileSync(path.join(__dirname, 'static', '.example'), exampleContents, { encoding: 'utf-8' })
-
     fastify.register(fastifyStatic, pluginOptions)
 
     t.teardown(fastify.close.bind(fastify))
@@ -2335,7 +2325,6 @@ t.test('if dotfiles are properly served according to plugin options', t => {
       }, (err, response, body) => {
         t.error(err)
         t.strictEqual(response.statusCode, 403)
-        fs.rmSync(path.join(__dirname, 'static', '.example'))
       })
     })
   })
