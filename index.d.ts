@@ -45,7 +45,7 @@ export interface FastifyStaticOptions {
   // Passed on to `send`
   acceptRanges?: boolean;
   cacheControl?: boolean;
-  dotfiles?: boolean;
+  dotfiles?: 'allow' | 'deny' | 'ignore';
   etag?: boolean;
   extensions?: string[];
   immutable?: boolean;
