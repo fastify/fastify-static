@@ -171,7 +171,7 @@ function fastifyStatic (fastify, opts, next) {
         const indexes = typeof opts.index === 'undefined' ? ['index.html'] : [].concat(opts.index || [])
         for (let file of files) {
           file = file.replace(sendOptions.root.replace(/\\/g, '/'), '').replace(/^\//, '')
-          const route = (prefix + file).replace(/\/\//g, '/')
+          const route = encodeURI(prefix + file).replace(/\/\//g, '/')
           fastify.get(route, routeOpts, function (req, reply) {
             pumpSendToReply(req, reply, '/' + file)
           })

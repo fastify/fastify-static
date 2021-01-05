@@ -110,7 +110,7 @@ t.test('dir list, custom options', t => {
   }
 
   const route = '/public/'
-  const content = { dirs: ['deep', 'shallow'], files: ['.example', 'foo.html', 'foobar.html', 'index.css', 'index.html'] }
+  const content = { dirs: ['deep', 'shallow'], files: ['.example', 'a. md', 'foo.html', 'foobar.html', 'index.css', 'index.html'] }
 
   helper.arrange(t, options, (url) => {
     t.test(route, t => {
@@ -161,6 +161,7 @@ t.test('dir list html format', t => {
 </ul>
 <ul>
   <li><a href="/.example" target="_blank">.example</a></li>
+  <li><a href="/a .md" target="_blank">a .md</a></li>
   <li><a href="/foo.html" target="_blank">foo.html</a></li>
   <li><a href="/foobar.html" target="_blank">foobar.html</a></li>
   <li><a href="/index.css" target="_blank">index.css</a></li>
@@ -191,6 +192,7 @@ t.test('dir list html format', t => {
 </ul>
 <ul>
   <li><a href="/.example" target="_blank">.example</a></li>
+  <li><a href="/a .md" target="_blank">a .md</a></li>
   <li><a href="/foo.html" target="_blank">foo.html</a></li>
   <li><a href="/foobar.html" target="_blank">foobar.html</a></li>
   <li><a href="/index.css" target="_blank">index.css</a></li>
