@@ -110,7 +110,7 @@ t.test('dir list, custom options', t => {
   }
 
   const route = '/public/'
-  const content = { dirs: ['deep', 'shallow'], files: ['.example', 'a. md', 'foo.html', 'foobar.html', 'index.css', 'index.html'] }
+  const content = { dirs: ['deep', 'shallow'], files: ['.example', 'a .md', 'foo.html', 'foobar.html', 'index.css', 'index.html'] }
 
   helper.arrange(t, options, (url) => {
     t.test(route, t => {
