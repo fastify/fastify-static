@@ -38,11 +38,15 @@ function fastifyStatic (fastify, opts, next) {
     maxAge: opts.maxAge
   }
 
-  function pumpSendToReply (request, reply, pathname, rootPath) {
+  function pumpSendToReply (request, reply, pathname, rootPath, rootPathOffset = 0) {
     const options = Object.assign({}, sendOptions)
 
     if (rootPath) {
-      options.root = rootPath
+      if (Array.isArray(rootPath)) {
+        options.root = rootPath[rootPathOffset]
+      } else {
+        options.root = rootPath
+      }
     }
 
     const stream = send(request.raw, pathname, options)
@@ -108,6 +112,12 @@ function fastifyStatic (fastify, opts, next) {
           if (opts.list && dirList.handle(pathname, opts.list)) {
             return dirList.send({ reply, dir: dirList.path(opts.root, pathname), options: opts.list, route: pathname })
           }
+
+          // root paths left to try?
+          if (Array.isArray(rootPath) && rootPathOffset <= rootPath.length) {
+            return pumpSendToReply(request, reply, pathname, rootPath, rootPathOffset + 1)
+          }
+
           return reply.callNotFound()
         }
         reply.send(err)
@@ -152,7 +162,7 @@ function fastifyStatic (fastify, opts, next) {
   if (opts.serve !== false) {
     if (opts.wildcard === undefined || opts.wildcard === true) {
       fastify.get(prefix + '*', routeOpts, function (req, reply) {
-        pumpSendToReply(req, reply, '/' + req.params['*'])
+        pumpSendToReply(req, reply, '/' + req.params['*'], sendOptions.root)
       })
       if (opts.redirect === true && prefix !== opts.prefix) {
         fastify.get(opts.prefix, routeOpts, function (req, reply) {
@@ -163,6 +173,12 @@ function fastifyStatic (fastify, opts, next) {
       }
     } else {
       const globPattern = typeof opts.wildcard === 'string' ? opts.wildcard : '**/*'
+
+      // TODO: This won't work with an array of roots.
+      if (Array.isArray(sendOptions.root)) {
+        return next(new Error('wildcard option not currently supported with multiple root paths'))
+      }
+
       glob(path.join(sendOptions.root, globPattern), { nodir: true }, function (err, files) {
         if (err) {
           return next(err)
@@ -170,10 +186,11 @@ function fastifyStatic (fastify, opts, next) {
         const indexDirs = new Set()
         const indexes = typeof opts.index === 'undefined' ? ['index.html'] : [].concat(opts.index || [])
         for (let file of files) {
+          // TODO: This won't work with an array of roots.
           file = file.replace(sendOptions.root.replace(/\\/g, '/'), '').replace(/^\//, '')
-          const route = encodeURI(prefix + file).replace(/\/\//g, '/')
+          const route = (prefix + file).replace(/\/\//g, '/')
           fastify.get(route, routeOpts, function (req, reply) {
-            pumpSendToReply(req, reply, '/' + file)
+            pumpSendToReply(req, reply, '/' + file, sendOptions.root)
           })
 
           if (indexes.includes(path.posix.basename(route))) {
@@ -185,12 +202,12 @@ function fastifyStatic (fastify, opts, next) {
           const file = '/' + pathname.replace(prefix, '')
 
           fastify.get(pathname, routeOpts, function (req, reply) {
-            pumpSendToReply(req, reply, file)
+            pumpSendToReply(req, reply, file, sendOptions.root)
           })
 
           if (opts.redirect === true) {
             fastify.get(pathname.replace(/\/$/, ''), routeOpts, function (req, reply) {
-              pumpSendToReply(req, reply, file.replace(/\/$/, ''))
+              pumpSendToReply(req, reply, file.replace(/\/$/, ''), sendOptions.root)
             })
           }
         })
@@ -209,6 +226,26 @@ function checkRootPathForErrors (fastify, rootPath) {
   if (rootPath === undefined) {
     return new Error('"root" option is required')
   }
+
+  if (Array.isArray(rootPath)) {
+    if (!rootPath.length) { return new Error('"root" option array requires one or more paths') }
+
+    // check paths and fail at first invalid
+    for (let i = 0; i < rootPath.length; i++) {
+      const error = checkPath(fastify, rootPath[i])
+      if (error) return error
+    }
+    return
+  }
+
+  if (typeof rootPath === 'string') {
+    return checkPath(fastify, rootPath)
+  }
+
+  return new Error('"root" option must be a string or array of strings')
+}
+
+function checkPath (fastify, rootPath) {
   if (typeof rootPath !== 'string') {
     return new Error('"root" option must be a string')
   }
