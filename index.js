@@ -114,8 +114,9 @@ function fastifyStatic (fastify, opts, next) {
           }
 
           // root paths left to try?
-          if (Array.isArray(rootPath) && rootPathOffset <= rootPath.length) {
-            return pumpSendToReply(request, reply, pathname, rootPath, rootPathOffset + 1)
+          rootPathOffset = rootPathOffset + 1
+          if (Array.isArray(rootPath) && rootPathOffset < (rootPath.length - 1)) {
+            return pumpSendToReply(request, reply, pathname, rootPath, rootPathOffset)
           }
 
           return reply.callNotFound()
@@ -174,45 +175,49 @@ function fastifyStatic (fastify, opts, next) {
     } else {
       const globPattern = typeof opts.wildcard === 'string' ? opts.wildcard : '**/*'
 
-      // TODO: This won't work with an array of roots.
-      if (Array.isArray(sendOptions.root)) {
-        return next(new Error('wildcard option not currently supported with multiple root paths'))
+      function globber (rootPath) {
+        glob(path.join(rootPath, globPattern), { nodir: true }, function (err, files) {
+          if (err) {
+            return next(err)
+          }
+          const indexDirs = new Set()
+          const indexes = typeof opts.index === 'undefined' ? ['index.html'] : [].concat(opts.index || [])
+          for (let file of files) {
+            file = file.replace(rootPath.replace(/\\/g, '/'), '').replace(/^\//, '')
+            const route = encodeURI(prefix + file).replace(/\/\//g, '/')
+            fastify.get(route, routeOpts, function (req, reply) {
+              pumpSendToReply(req, reply, '/' + file, rootPath)
+            })
+
+            if (indexes.includes(path.posix.basename(route))) {
+              indexDirs.add(path.posix.dirname(route))
+            }
+          }
+          indexDirs.forEach(function (dirname) {
+            const pathname = dirname + (dirname.endsWith('/') ? '' : '/')
+            const file = '/' + pathname.replace(prefix, '')
+
+            fastify.get(pathname, routeOpts, function (req, reply) {
+              pumpSendToReply(req, reply, file, rootPath)
+            })
+
+            if (opts.redirect === true) {
+              fastify.get(pathname.replace(/\/$/, ''), routeOpts, function (req, reply) {
+                pumpSendToReply(req, reply, file.replace(/\/$/, ''), rootPath)
+              })
+            }
+          })
+        })
       }
 
-      glob(path.join(sendOptions.root, globPattern), { nodir: true }, function (err, files) {
-        if (err) {
-          return next(err)
+      // TODO: this causes fastify to fail when running with multiple root paths.
+      if (Array.isArray(sendOptions.root)) {
+        for (let i = 0; i < sendOptions.root.length; i++) {
+          globber(sendOptions.root[i])
         }
-        const indexDirs = new Set()
-        const indexes = typeof opts.index === 'undefined' ? ['index.html'] : [].concat(opts.index || [])
-        for (let file of files) {
-          // TODO: This won't work with an array of roots.
-          file = file.replace(sendOptions.root.replace(/\\/g, '/'), '').replace(/^\//, '')
-          const route = (prefix + file).replace(/\/\//g, '/')
-          fastify.get(route, routeOpts, function (req, reply) {
-            pumpSendToReply(req, reply, '/' + file, sendOptions.root)
-          })
-
-          if (indexes.includes(path.posix.basename(route))) {
-            indexDirs.add(path.posix.dirname(route))
-          }
-        }
-        indexDirs.forEach(function (dirname) {
-          const pathname = dirname + (dirname.endsWith('/') ? '' : '/')
-          const file = '/' + pathname.replace(prefix, '')
-
-          fastify.get(pathname, routeOpts, function (req, reply) {
-            pumpSendToReply(req, reply, file, sendOptions.root)
-          })
-
-          if (opts.redirect === true) {
-            fastify.get(pathname.replace(/\/$/, ''), routeOpts, function (req, reply) {
-              pumpSendToReply(req, reply, file.replace(/\/$/, ''), sendOptions.root)
-            })
-          }
-        })
-        next()
-      })
+      } else {
+        globber(sendOptions.root)
+      }
 
       // return early to avoid calling next afterwards
       return
