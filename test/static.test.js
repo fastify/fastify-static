@@ -946,7 +946,7 @@ t.test('maxAge option', t => {
 })
 
 t.test('errors', t => {
-  t.plan(10)
+  t.plan(11)
 
   t.test('no root', t => {
     t.plan(1)
@@ -1031,6 +1031,16 @@ t.test('errors', t => {
   t.test('all root array paths must be valid', t => {
     t.plan(1)
     const pluginOptions = { root: [path.join(__dirname, '/static'), 1] }
+    const fastify = Fastify({ logger: false })
+    fastify.register(fastifyStatic, pluginOptions)
+      .ready(err => {
+        t.equal(err.constructor, Error)
+      })
+  })
+
+  t.test('duplicate root paths are not allowed', t => {
+    t.plan(1)
+    const pluginOptions = { root: [path.join(__dirname, '/static'), path.join(__dirname, '/static')] }
     const fastify = Fastify({ logger: false })
     fastify.register(fastifyStatic, pluginOptions)
       .ready(err => {
@@ -1545,6 +1555,41 @@ t.test('register with wildcard "**/index.html"', t => {
         t.error(err)
         t.strictEqual(response.statusCode, 200)
         t.deepEqual(JSON.parse(body), { hello: 'world' })
+      })
+    })
+  })
+})
+
+t.test('register with wildcard "**/index.html" on multiple root paths', t => {
+  t.plan(2)
+
+  const pluginOptions = {
+    root: [path.join(__dirname, '/static'), path.join(__dirname, '/static2')],
+    wildcard: '**/*.js'
+  }
+  const fastify = Fastify()
+  fastify.register(fastifyStatic, pluginOptions)
+
+  fastify.get('/*', (request, reply) => {
+    reply.send({ hello: 'world' })
+  })
+
+  t.tearDown(fastify.close.bind(fastify))
+
+  fastify.listen(0, err => {
+    t.error(err)
+
+    fastify.server.unref()
+
+    t.test('/index.html', t => {
+      t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/index.html'
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        genericErrorResponseChecks(t, response)
       })
     })
   })

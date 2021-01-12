@@ -7,6 +7,7 @@ const { PassThrough } = require('readable-stream')
 const glob = require('glob')
 const send = require('send')
 const fp = require('fastify-plugin')
+const async = require('async')
 
 const dirList = require('./lib/dirList')
 
@@ -114,9 +115,8 @@ function fastifyStatic (fastify, opts, next) {
           }
 
           // root paths left to try?
-          rootPathOffset = rootPathOffset + 1
           if (Array.isArray(rootPath) && rootPathOffset < (rootPath.length - 1)) {
-            return pumpSendToReply(request, reply, pathname, rootPath, rootPathOffset)
+            return pumpSendToReply(request, reply, pathname, rootPath, rootPathOffset + 1)
           }
 
           return reply.callNotFound()
@@ -175,10 +175,10 @@ function fastifyStatic (fastify, opts, next) {
     } else {
       const globPattern = typeof opts.wildcard === 'string' ? opts.wildcard : '**/*'
 
-      function globber (rootPath) {
+      function globber (rootPath, cb) {
         glob(path.join(rootPath, globPattern), { nodir: true }, function (err, files) {
           if (err) {
-            return next(err)
+            return cb(err)
           }
           const indexDirs = new Set()
           const indexes = typeof opts.index === 'undefined' ? ['index.html'] : [].concat(opts.index || [])
@@ -207,16 +207,14 @@ function fastifyStatic (fastify, opts, next) {
               })
             }
           })
+          cb()
         })
       }
 
-      // TODO: this causes fastify to fail when running with multiple root paths.
       if (Array.isArray(sendOptions.root)) {
-        for (let i = 0; i < sendOptions.root.length; i++) {
-          globber(sendOptions.root[i])
-        }
+        async.eachSeries(sendOptions.root, globber, next)
       } else {
-        globber(sendOptions.root)
+        globber(sendOptions.root, next)
       }
 
       // return early to avoid calling next afterwards
@@ -234,6 +232,10 @@ function checkRootPathForErrors (fastify, rootPath) {
 
   if (Array.isArray(rootPath)) {
     if (!rootPath.length) { return new Error('"root" option array requires one or more paths') }
+
+    if ([...new Set(rootPath)].length !== rootPath.length) {
+      return new Error('"root" option array contains one or more duplicate paths')
+    }
 
     // check paths and fail at first invalid
     for (let i = 0; i < rootPath.length; i++) {

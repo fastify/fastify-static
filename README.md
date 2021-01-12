@@ -135,8 +135,6 @@ for getting the file list.
 This option cannot be set to `false` with `redirect` set to `true` on a server
 with `ignoreTrailingSlash` set to `true`.
 
-You also cannot set this option to false when using an array of root directories.
-
 #### `list`
 
 Default: `undefined`
