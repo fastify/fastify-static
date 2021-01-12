@@ -2253,6 +2253,90 @@ t.test('trailing slash behavior with redirect = false', t => {
   })
 })
 
+t.test('if dotfiles are properly served according to plugin options', t => {
+  t.plan(3)
+  const exampleContents = fs.readFileSync(path.join(__dirname, 'static', '.example'), { encoding: 'utf8' }).toString()
+
+  t.test('freely serve dotfiles', (t) => {
+    t.plan(4)
+    const fastify = Fastify()
+
+    const pluginOptions = {
+      root: path.join(__dirname, 'static'),
+      prefix: '/static/',
+      dotfiles: 'allow'
+    }
+
+    fastify.register(fastifyStatic, pluginOptions)
+
+    t.teardown(fastify.close.bind(fastify))
+    fastify.listen(0, (err) => {
+      t.error(err)
+
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/static/.example'
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(body.toString(), exampleContents)
+      })
+    })
+  })
+
+  t.test('ignore dotfiles', (t) => {
+    t.plan(3)
+    const fastify = Fastify()
+
+    const pluginOptions = {
+      root: path.join(__dirname, 'static'),
+      prefix: '/static/',
+      dotfiles: 'ignore'
+    }
+
+    fastify.register(fastifyStatic, pluginOptions)
+
+    t.teardown(fastify.close.bind(fastify))
+    fastify.listen(0, (err) => {
+      t.error(err)
+
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/static/.example'
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 404)
+      })
+    })
+  })
+
+  t.test('deny requests to serve a dotfile', (t) => {
+    t.plan(3)
+    const fastify = Fastify()
+
+    const pluginOptions = {
+      root: path.join(__dirname, 'static'),
+      prefix: '/static/',
+      dotfiles: 'deny'
+    }
+
+    fastify.register(fastifyStatic, pluginOptions)
+
+    t.teardown(fastify.close.bind(fastify))
+    fastify.listen(0, (err) => {
+      t.error(err)
+
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/static/.example'
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 403)
+      })
+    })
+  })
+})
+
 t.test('register with failing glob handler', t => {
   const fastifyStatic = proxyquire.noCallThru()('../', {
     glob: function globStub (pattern, options, cb) {
@@ -2423,6 +2507,38 @@ t.test('routes use default errorHandler when fastify.errorHandler is not defined
       code: 'SOMETHING_ELSE',
       error: 'Internal Server Error',
       message: ''
+    })
+  })
+})
+
+t.test('precent encoded URLs in glob mode', t => {
+  t.plan(4)
+
+  const fastify = Fastify({})
+
+  fastify.register(fastifyStatic, {
+    root: path.join(__dirname, 'static'),
+    prefix: '/static',
+    wildcard: true
+  })
+
+  t.tearDown(fastify.close.bind(fastify))
+
+  fastify.listen(0, (err) => {
+    t.error(err)
+    fastify.server.unref()
+
+    simple.concat({
+      method: 'GET',
+      url: 'http://localhost:' + fastify.server.address().port + '/static/a .md',
+      followRedirect: false
+    }, (err, response, body) => {
+      t.error(err)
+      t.strictEquals(response.statusCode, 200)
+      t.strictEquals(
+        fs.readFileSync(path.join(__dirname, 'static', 'a .md'), 'utf-8'),
+        body.toString()
+      )
     })
   })
 })
