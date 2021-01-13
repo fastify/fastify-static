@@ -13,8 +13,7 @@ const globPromise = util.promisify(glob)
 const dirList = require('./lib/dirList')
 
 async function fastifyStatic (fastify, opts) {
-  const error = checkRootPathForErrors(fastify, opts.root)
-  if (error !== undefined) throw error
+  checkRootPathForErrors(fastify, opts.root)
 
   const setHeaders = opts.setHeaders
 
@@ -220,21 +219,18 @@ async function fastifyStatic (fastify, opts) {
 
 function checkRootPathForErrors (fastify, rootPath) {
   if (rootPath === undefined) {
-    return new Error('"root" option is required')
+    throw new Error('"root" option is required')
   }
 
   if (Array.isArray(rootPath)) {
-    if (!rootPath.length) { return new Error('"root" option array requires one or more paths') }
+    if (!rootPath.length) { throw new Error('"root" option array requires one or more paths') }
 
     if ([...new Set(rootPath)].length !== rootPath.length) {
-      return new Error('"root" option array contains one or more duplicate paths')
+      throw new Error('"root" option array contains one or more duplicate paths')
     }
 
-    // check paths and fail at first invalid
-    for (let i = 0; i < rootPath.length; i++) {
-      const error = checkPath(fastify, rootPath[i])
-      if (error) return error
-    }
+    // check each path and fail at first invalid
+    rootPath.map(path => checkPath(fastify, path))
     return
   }
 
@@ -242,15 +238,15 @@ function checkRootPathForErrors (fastify, rootPath) {
     return checkPath(fastify, rootPath)
   }
 
-  return new Error('"root" option must be a string or array of strings')
+  throw new Error('"root" option must be a string or array of strings')
 }
 
 function checkPath (fastify, rootPath) {
   if (typeof rootPath !== 'string') {
-    return new Error('"root" option must be a string')
+    throw new Error('"root" option must be a string')
   }
   if (path.isAbsolute(rootPath) === false) {
-    return new Error('"root" option must be an absolute path')
+    throw new Error('"root" option must be an absolute path')
   }
 
   let pathStat
@@ -263,11 +259,11 @@ function checkPath (fastify, rootPath) {
       return
     }
 
-    return e
+    throw e
   }
 
   if (pathStat.isDirectory() === false) {
-    return new Error('"root" option must point to a directory')
+    throw new Error('"root" option must point to a directory')
   }
 }
 
