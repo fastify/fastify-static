@@ -8,6 +8,7 @@ const glob = require('glob')
 const send = require('send')
 const fp = require('fastify-plugin')
 const util = require('util')
+const globPromise = util.promisify(glob)
 
 const dirList = require('./lib/dirList')
 
@@ -174,7 +175,6 @@ async function fastifyStatic (fastify, opts) {
       }
     } else {
       const globPattern = typeof opts.wildcard === 'string' ? opts.wildcard : '**/*'
-      const globPromise = util.promisify(glob)
 
       async function addGlobRoutes (rootPath) {
         const files = await globPromise(path.join(rootPath, globPattern), { nodir: true })
