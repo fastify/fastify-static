@@ -11,19 +11,19 @@ const util = require('util')
 
 const dirList = require('./lib/dirList')
 
-function fastifyStatic (fastify, opts, next) {
+async function fastifyStatic (fastify, opts) {
   const error = checkRootPathForErrors(fastify, opts.root)
-  if (error !== undefined) return next(error)
+  if (error !== undefined) throw error
 
   const setHeaders = opts.setHeaders
 
   if (setHeaders !== undefined && typeof setHeaders !== 'function') {
-    return next(new TypeError('The `setHeaders` option must be a function'))
+    throw new TypeError('The `setHeaders` option must be a function')
   }
 
   const invalidDirListOpts = dirList.validateOptions(opts.list)
   if (invalidDirListOpts) {
-    return next(invalidDirListOpts)
+    throw invalidDirListOpts
   }
 
   const sendOptions = {
@@ -176,7 +176,7 @@ function fastifyStatic (fastify, opts, next) {
       const globPattern = typeof opts.wildcard === 'string' ? opts.wildcard : '**/*'
       const globPromise = util.promisify(glob)
 
-      async function addGlobRoutes (rootPath, next) {
+      async function addGlobRoutes (rootPath) {
         const files = await globPromise(path.join(rootPath, globPattern), { nodir: true })
         const indexDirs = new Set()
         const indexes = typeof opts.index === 'undefined' ? ['index.html'] : [].concat(opts.index || [])
@@ -207,24 +207,15 @@ function fastifyStatic (fastify, opts, next) {
             })
           }
         })
-
-        if (next) next()
       }
 
       if (Array.isArray(sendOptions.root)) {
-        sendOptions.root.forEach(async function (globPath, index) {
-          index ? await addGlobRoutes(globPath) : await addGlobRoutes(globPath, next)
-        })
+        await Promise.all(sendOptions.root.map(addGlobRoutes))
       } else {
-        addGlobRoutes(sendOptions.root, next)
+        await addGlobRoutes(sendOptions.root)
       }
-
-      // return early to avoid calling next afterwards
-      return
     }
   }
-
-  next()
 }
 
 function checkRootPathForErrors (fastify, rootPath) {
