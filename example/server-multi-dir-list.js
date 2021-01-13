@@ -31,6 +31,7 @@ fastify
   .register(require('..'), {
     root: [path.join(__dirname, '/public'), path.join(__dirname, '/public2')],
     prefixAvoidTrailingSlash: true,
+    wildcard: '**/*.css',
     list: {
       format: 'html',
       names: ['index', 'index.html', 'index.htm', '/'],

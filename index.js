@@ -7,7 +7,7 @@ const { PassThrough } = require('readable-stream')
 const glob = require('glob')
 const send = require('send')
 const fp = require('fastify-plugin')
-const async = require('async')
+const util = require('util')
 
 const dirList = require('./lib/dirList')
 
@@ -174,47 +174,49 @@ function fastifyStatic (fastify, opts, next) {
       }
     } else {
       const globPattern = typeof opts.wildcard === 'string' ? opts.wildcard : '**/*'
+      const globPromise = util.promisify(glob)
 
-      function globber (rootPath, cb) {
-        glob(path.join(rootPath, globPattern), { nodir: true }, function (err, files) {
-          if (err) {
-            return cb(err)
-          }
-          const indexDirs = new Set()
-          const indexes = typeof opts.index === 'undefined' ? ['index.html'] : [].concat(opts.index || [])
-          for (let file of files) {
-            file = file.replace(rootPath.replace(/\\/g, '/'), '').replace(/^\//, '')
-            const route = encodeURI(prefix + file).replace(/\/\//g, '/')
-            fastify.get(route, routeOpts, function (req, reply) {
-              pumpSendToReply(req, reply, '/' + file, rootPath)
-            })
+      async function addGlobRoutes (rootPath, next) {
+        const files = await globPromise(path.join(rootPath, globPattern), { nodir: true })
+        const indexDirs = new Set()
+        const indexes = typeof opts.index === 'undefined' ? ['index.html'] : [].concat(opts.index || [])
 
-            if (indexes.includes(path.posix.basename(route))) {
-              indexDirs.add(path.posix.dirname(route))
-            }
-          }
-          indexDirs.forEach(function (dirname) {
-            const pathname = dirname + (dirname.endsWith('/') ? '' : '/')
-            const file = '/' + pathname.replace(prefix, '')
-
-            fastify.get(pathname, routeOpts, function (req, reply) {
-              pumpSendToReply(req, reply, file, rootPath)
-            })
-
-            if (opts.redirect === true) {
-              fastify.get(pathname.replace(/\/$/, ''), routeOpts, function (req, reply) {
-                pumpSendToReply(req, reply, file.replace(/\/$/, ''), rootPath)
-              })
-            }
+        for (let file of files) {
+          file = file.replace(rootPath.replace(/\\/g, '/'), '').replace(/^\//, '')
+          const route = encodeURI(prefix + file).replace(/\/\//g, '/')
+          fastify.get(route, routeOpts, function (req, reply) {
+            pumpSendToReply(req, reply, '/' + file, rootPath)
           })
-          cb()
+
+          if (indexes.includes(path.posix.basename(route))) {
+            indexDirs.add(path.posix.dirname(route))
+          }
+        }
+
+        indexDirs.forEach(function (dirname) {
+          const pathname = dirname + (dirname.endsWith('/') ? '' : '/')
+          const file = '/' + pathname.replace(prefix, '')
+
+          fastify.get(pathname, routeOpts, function (req, reply) {
+            pumpSendToReply(req, reply, file, rootPath)
+          })
+
+          if (opts.redirect === true) {
+            fastify.get(pathname.replace(/\/$/, ''), routeOpts, function (req, reply) {
+              pumpSendToReply(req, reply, file.replace(/\/$/, ''), rootPath)
+            })
+          }
         })
+
+        if (next) next()
       }
 
       if (Array.isArray(sendOptions.root)) {
-        async.eachSeries(sendOptions.root, globber, next)
+        sendOptions.root.forEach(async function (globPath, index) {
+          index ? await addGlobRoutes(globPath) : await addGlobRoutes(globPath, next)
+        })
       } else {
-        globber(sendOptions.root, next)
+        addGlobRoutes(sendOptions.root, next)
       }
 
       // return early to avoid calling next afterwards
