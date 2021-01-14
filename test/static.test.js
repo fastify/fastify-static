@@ -18,9 +18,11 @@ const proxyquire = require('proxyquire')
 const fastifyStatic = require('../')
 
 const indexContent = fs.readFileSync('./test/static/index.html').toString('utf8')
+const index2Content = fs.readFileSync('./test/static2/index.html').toString('utf8')
 const foobarContent = fs.readFileSync('./test/static/foobar.html').toString('utf8')
 const deepContent = fs.readFileSync('./test/static/deep/path/for/test/purpose/foo.html').toString('utf8')
 const innerIndex = fs.readFileSync('./test/static/deep/path/for/test/index.html').toString('utf8')
+const barContent = fs.readFileSync('./test/static2/bar.html').toString('utf8')
 
 const GENERIC_RESPONSE_CHECK_COUNT = 5
 function genericResponseChecks (t, response) {
@@ -488,6 +490,52 @@ t.test('register /static/', t => {
   })
 })
 
+t.test('register /static and /static2', t => {
+  t.plan(3)
+
+  const pluginOptions = {
+    root: [path.join(__dirname, '/static'), path.join(__dirname, '/static2')],
+    prefix: '/static'
+  }
+  const fastify = Fastify()
+  fastify.register(fastifyStatic, pluginOptions)
+
+  t.tearDown(fastify.close.bind(fastify))
+
+  fastify.listen(0, err => {
+    t.error(err)
+
+    fastify.server.unref()
+
+    t.test('/static/index.html', t => {
+      t.plan(4 + GENERIC_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/static/index.html'
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.notStrictEqual(body.toString(), index2Content)
+        t.strictEqual(body.toString(), indexContent)
+        genericResponseChecks(t, response)
+      })
+    })
+
+    t.test('/static/bar.html', t => {
+      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/static/bar.html'
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(body.toString(), barContent)
+        genericResponseChecks(t, response)
+      })
+    })
+  })
+})
+
 t.test('payload.filename is set', t => {
   t.plan(3)
 
@@ -803,7 +851,7 @@ t.test('send options', t => {
     root: path.join(__dirname, '/static'),
     acceptRanges: 'acceptRanges',
     cacheControl: 'cacheControl',
-    dotfiles: 'allow',
+    dotfiles: 'dotfiles',
     etag: 'etag',
     extensions: 'extensions',
     immutable: 'immutable',
@@ -818,7 +866,7 @@ t.test('send options', t => {
       t.strictEqual(options.root, path.join(__dirname, '/static'))
       t.strictEqual(options.acceptRanges, 'acceptRanges')
       t.strictEqual(options.cacheControl, 'cacheControl')
-      t.strictEqual(options.dotfiles, 'allow')
+      t.strictEqual(options.dotfiles, 'dotfiles')
       t.strictEqual(options.etag, 'etag')
       t.strictEqual(options.extensions, 'extensions')
       t.strictEqual(options.immutable, 'immutable')
@@ -898,7 +946,7 @@ t.test('maxAge option', t => {
 })
 
 t.test('errors', t => {
-  t.plan(5)
+  t.plan(11)
 
   t.test('no root', t => {
     t.plan(1)
@@ -933,6 +981,66 @@ t.test('errors', t => {
   t.test('root is not a directory', t => {
     t.plan(1)
     const pluginOptions = { root: __filename }
+    const fastify = Fastify({ logger: false })
+    fastify.register(fastifyStatic, pluginOptions)
+      .ready(err => {
+        t.equal(err.constructor, Error)
+      })
+  })
+
+  t.test('root is an empty array', t => {
+    t.plan(1)
+    const pluginOptions = { root: [] }
+    const fastify = Fastify({ logger: false })
+    fastify.register(fastifyStatic, pluginOptions)
+      .ready(err => {
+        t.equal(err.constructor, Error)
+      })
+  })
+
+  t.test('root array does not contain strings', t => {
+    t.plan(1)
+    const pluginOptions = { root: [1] }
+    const fastify = Fastify({ logger: false })
+    fastify.register(fastifyStatic, pluginOptions)
+      .ready(err => {
+        t.equal(err.constructor, Error)
+      })
+  })
+
+  t.test('root array does not contain an absolute path', t => {
+    t.plan(1)
+    const pluginOptions = { root: ['./my/path'] }
+    const fastify = Fastify({ logger: false })
+    fastify.register(fastifyStatic, pluginOptions)
+      .ready(err => {
+        t.equal(err.constructor, Error)
+      })
+  })
+
+  t.test('root array path is not a directory', t => {
+    t.plan(1)
+    const pluginOptions = { root: [__filename] }
+    const fastify = Fastify({ logger: false })
+    fastify.register(fastifyStatic, pluginOptions)
+      .ready(err => {
+        t.equal(err.constructor, Error)
+      })
+  })
+
+  t.test('all root array paths must be valid', t => {
+    t.plan(1)
+    const pluginOptions = { root: [path.join(__dirname, '/static'), 1] }
+    const fastify = Fastify({ logger: false })
+    fastify.register(fastifyStatic, pluginOptions)
+      .ready(err => {
+        t.equal(err.constructor, Error)
+      })
+  })
+
+  t.test('duplicate root paths are not allowed', t => {
+    t.plan(1)
+    const pluginOptions = { root: [path.join(__dirname, '/static'), path.join(__dirname, '/static')] }
     const fastify = Fastify({ logger: false })
     fastify.register(fastifyStatic, pluginOptions)
       .ready(err => {
@@ -1447,6 +1555,41 @@ t.test('register with wildcard "**/index.html"', t => {
         t.error(err)
         t.strictEqual(response.statusCode, 200)
         t.deepEqual(JSON.parse(body), { hello: 'world' })
+      })
+    })
+  })
+})
+
+t.test('register with wildcard "**/index.html" on multiple root paths', t => {
+  t.plan(2)
+
+  const pluginOptions = {
+    root: [path.join(__dirname, '/static'), path.join(__dirname, '/static2')],
+    wildcard: '**/*.js'
+  }
+  const fastify = Fastify()
+  fastify.register(fastifyStatic, pluginOptions)
+
+  fastify.get('/*', (request, reply) => {
+    reply.send({ hello: 'world' })
+  })
+
+  t.tearDown(fastify.close.bind(fastify))
+
+  fastify.listen(0, err => {
+    t.error(err)
+
+    fastify.server.unref()
+
+    t.test('/index.html', t => {
+      t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/index.html'
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        genericErrorResponseChecks(t, response)
       })
     })
   })
@@ -2110,6 +2253,90 @@ t.test('trailing slash behavior with redirect = false', t => {
   })
 })
 
+t.test('if dotfiles are properly served according to plugin options', t => {
+  t.plan(3)
+  const exampleContents = fs.readFileSync(path.join(__dirname, 'static', '.example'), { encoding: 'utf8' }).toString()
+
+  t.test('freely serve dotfiles', (t) => {
+    t.plan(4)
+    const fastify = Fastify()
+
+    const pluginOptions = {
+      root: path.join(__dirname, 'static'),
+      prefix: '/static/',
+      dotfiles: 'allow'
+    }
+
+    fastify.register(fastifyStatic, pluginOptions)
+
+    t.teardown(fastify.close.bind(fastify))
+    fastify.listen(0, (err) => {
+      t.error(err)
+
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/static/.example'
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(body.toString(), exampleContents)
+      })
+    })
+  })
+
+  t.test('ignore dotfiles', (t) => {
+    t.plan(3)
+    const fastify = Fastify()
+
+    const pluginOptions = {
+      root: path.join(__dirname, 'static'),
+      prefix: '/static/',
+      dotfiles: 'ignore'
+    }
+
+    fastify.register(fastifyStatic, pluginOptions)
+
+    t.teardown(fastify.close.bind(fastify))
+    fastify.listen(0, (err) => {
+      t.error(err)
+
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/static/.example'
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 404)
+      })
+    })
+  })
+
+  t.test('deny requests to serve a dotfile', (t) => {
+    t.plan(3)
+    const fastify = Fastify()
+
+    const pluginOptions = {
+      root: path.join(__dirname, 'static'),
+      prefix: '/static/',
+      dotfiles: 'deny'
+    }
+
+    fastify.register(fastifyStatic, pluginOptions)
+
+    t.teardown(fastify.close.bind(fastify))
+    fastify.listen(0, (err) => {
+      t.error(err)
+
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/static/.example'
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 403)
+      })
+    })
+  })
+})
+
 t.test('register with failing glob handler', t => {
   const fastifyStatic = proxyquire.noCallThru()('../', {
     glob: function globStub (pattern, options, cb) {
@@ -2242,90 +2469,6 @@ t.test('routes should fallback to default errorHandler', t => {
       code: 'SOMETHING_ELSE',
       error: 'Internal Server Error',
       message: ''
-    })
-  })
-})
-
-t.test('if dotfiles are properly served according to plugin options', t => {
-  t.plan(3)
-  const exampleContents = fs.readFileSync(path.join(__dirname, 'static', '.example'), { encoding: 'utf8' }).toString()
-
-  t.test('freely serve dotfiles', (t) => {
-    t.plan(4)
-    const fastify = Fastify()
-
-    const pluginOptions = {
-      root: path.join(__dirname, 'static'),
-      prefix: '/static/',
-      dotfiles: 'allow'
-    }
-
-    fastify.register(fastifyStatic, pluginOptions)
-
-    t.teardown(fastify.close.bind(fastify))
-    fastify.listen(0, (err) => {
-      t.error(err)
-
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/static/.example'
-      }, (err, response, body) => {
-        t.error(err)
-        t.strictEqual(response.statusCode, 200)
-        t.strictEqual(body.toString(), exampleContents)
-      })
-    })
-  })
-
-  t.test('ignore dotfiles', (t) => {
-    t.plan(3)
-    const fastify = Fastify()
-
-    const pluginOptions = {
-      root: path.join(__dirname, 'static'),
-      prefix: '/static/',
-      dotfiles: 'ignore'
-    }
-
-    fastify.register(fastifyStatic, pluginOptions)
-
-    t.teardown(fastify.close.bind(fastify))
-    fastify.listen(0, (err) => {
-      t.error(err)
-
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/static/.example'
-      }, (err, response, body) => {
-        t.error(err)
-        t.strictEqual(response.statusCode, 404)
-      })
-    })
-  })
-
-  t.test('deny requests to serve a dotfile', (t) => {
-    t.plan(3)
-    const fastify = Fastify()
-
-    const pluginOptions = {
-      root: path.join(__dirname, 'static'),
-      prefix: '/static/',
-      dotfiles: 'deny'
-    }
-
-    fastify.register(fastifyStatic, pluginOptions)
-
-    t.teardown(fastify.close.bind(fastify))
-    fastify.listen(0, (err) => {
-      t.error(err)
-
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/static/.example'
-      }, (err, response, body) => {
-        t.error(err)
-        t.strictEqual(response.statusCode, 403)
-      })
     })
   })
 })

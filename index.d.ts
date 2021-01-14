@@ -31,7 +31,7 @@ interface ListOptions {
 }
 
 export interface FastifyStaticOptions {
-  root: string;
+  root: string | string[];
   prefix?: string;
   prefixAvoidTrailingSlash?: boolean;
   serve?: boolean;

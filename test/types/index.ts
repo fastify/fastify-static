@@ -42,3 +42,15 @@ appWithHttp2
       reply.sendFile('some-file-name')
     })
   })
+
+const multiRootAppWithImplicitHttp = fastify()
+options.root = ['']
+
+multiRootAppWithImplicitHttp
+  .register(fastifyStatic, options)
+  .after(() => {
+    multiRootAppWithImplicitHttp.get('/', (request, reply) => {
+      reply.sendFile('some-file-name')
+    })
+  })
+  

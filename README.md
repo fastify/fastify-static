@@ -59,6 +59,9 @@ The absolute path of the directory that contains the files to serve.
 The file to serve will be determined by combining `req.url` with the
 provided root directory.
 
+You can also provide an array of directories containing files to serve.
+This is useful for serving multiple static directories under a single prefix. Files are served in a "first found, first served" manner, so the order in which you list the directories is important. For best performance, you should always list your main asset directory first. Duplicate paths will raise an error.
+
 #### `prefix`
 
 Default: `'/'`

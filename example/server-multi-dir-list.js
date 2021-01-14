@@ -30,11 +30,11 @@ const handlebarTemplate = Handlebars.compile(template)
 
 fastify
   .register(require('..'), {
-    // An absolute path containing static files to serve.
-    root: path.join(__dirname, '/public'),
-    // Do not append a trailing slash to prefixes.
+    // Array of absolute paths containing static files to serve
+    root: [path.join(__dirname, '/public'), path.join(__dirname, '/public2')],
+    // Do not append a trailing slash to prefixes
     prefixAvoidTrailingSlash: true,
-    // Return a directory listing with a handlebar template.
+    // Return a directory listing with a handlebar template
     list: {
       // html or json response? html requires a render method.
       format: 'html',
