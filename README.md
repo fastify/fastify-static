@@ -259,7 +259,7 @@ If you'd just like to use the reply decorator and not serve whole directories au
 
 The reply object is decorated with a `sendFile` function by default.  If you want to
 disable this, pass the option `{ decorateReply: false }`.  If fastify-static is
-registers to multiple prefixes in the same route only one can initialize reply
+registered to multiple prefixes in the same route only one can initialize reply
 decorators.
 
 #### Handling 404s
