@@ -41,6 +41,7 @@ export interface FastifyStaticOptions {
   redirect?: boolean;
   wildcard?: boolean | string;
   list?: boolean | ListOptions;
+  allowedPath?: (pathName: string, root?: string) => boolean;
 
   // Passed on to `send`
   acceptRanges?: boolean;

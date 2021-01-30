@@ -819,6 +819,48 @@ t.test('sendFile disabled', t => {
   })
 })
 
+t.test('allowedPath option', t => {
+  t.plan(3)
+
+  const pluginOptions = {
+    root: path.join(__dirname, '/static'),
+    allowedPath: (pathName) => pathName !== '/foobar.html'
+  }
+  const fastify = Fastify()
+  fastify.register(fastifyStatic, pluginOptions)
+
+  fastify.listen(0, err => {
+    t.error(err)
+
+    fastify.server.unref()
+
+    t.test('/foobar.html not found', t => {
+      t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/foobar.html',
+        followRedirect: false
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 404)
+        genericErrorResponseChecks(t, response)
+      })
+    })
+
+    t.test('/index.css found', t => {
+      t.plan(2)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/index.css',
+        followRedirect: false
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+      })
+    })
+  })
+})
+
 t.test('prefix default', t => {
   t.plan(1)
   const pluginOptions = { root: path.join(__dirname, 'static') }

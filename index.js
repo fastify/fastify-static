@@ -39,6 +39,8 @@ async function fastifyStatic (fastify, opts) {
     maxAge: opts.maxAge
   }
 
+  const allowedPath = opts.allowedPath
+
   function pumpSendToReply (request, reply, pathname, rootPath, rootPathOffset = 0) {
     const options = Object.assign({}, sendOptions)
 
@@ -48,6 +50,10 @@ async function fastifyStatic (fastify, opts) {
       } else {
         options.root = rootPath
       }
+    }
+
+    if (allowedPath && !allowedPath(pathname, options.root)) {
+      return reply.callNotFound()
     }
 
     const stream = send(request.raw, pathname, options)
