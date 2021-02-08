@@ -41,7 +41,7 @@ async function fastifyStatic (fastify, opts) {
   }
 
   function pumpSendToReply (request, reply, pathname, rootPath, rootPathOffset = 0, pumpOptions = {}) {
-    const options = Object.assign(pumpOptions, sendOptions)
+    const options = Object.assign({}, sendOptions, pumpOptions)
 
     if (rootPath) {
       if (Array.isArray(rootPath)) {
@@ -160,14 +160,14 @@ async function fastifyStatic (fastify, opts) {
       return this
     })
 
-    fastify.decorateReply('download', function (filePath, fileName, options) {
-      options = typeof fileName === 'object' ? fileName : (options || {})
+    fastify.decorateReply('download', function (filePath, fileName, options = {}) {
+      const { root, ...opts } = typeof fileName === 'object' ? fileName : options
       fileName = typeof fileName === 'string' ? fileName : filePath
 
       // Set content disposition header
       this.header('content-disposition', contentDisposition(fileName))
 
-      pumpSendToReply(this.request, this, filePath, options.root, 0, options)
+      pumpSendToReply(this.request, this, filePath, root, 0, opts)
 
       return this
     })
