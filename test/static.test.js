@@ -820,7 +820,7 @@ t.test('sendFile disabled', t => {
 })
 
 t.test('download', t => {
-  t.plan(5)
+  t.plan(7)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -835,6 +835,14 @@ t.test('download', t => {
 
   fastify.get('/foo/bar/change', function (req, reply) {
     return reply.download('/index.html', 'hello-world.html')
+  })
+
+  fastify.get('/foo/bar/override', function (req, reply) {
+    return reply.download('/index.html', 'hello-world.html', { maxAge: '2 hours', immutable: true })
+  })
+
+  fastify.get('/foo/bar/override/2', function (req, reply) {
+    return reply.download('/index.html', { acceptRanges: false })
   })
 
   fastify.get('/root/path/override/test', (request, reply) => {
@@ -891,6 +899,38 @@ t.test('download', t => {
         t.strictEqual(response.statusCode, 200)
         t.strictEqual(response.headers['content-disposition'], 'attachment; filename="foo.html"')
         t.strictEqual(body.toString(), deepContent)
+        genericResponseChecks(t, response)
+      })
+    })
+
+    t.test('reply.download() with custom opts', t => {
+      t.plan(5 + GENERIC_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/foo/bar/override',
+        followRedirect: false
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(response.headers['content-disposition'], 'attachment; filename="hello-world.html"')
+        t.strictEqual(response.headers['cache-control'], 'public, max-age=7200, immutable')
+        t.strictEqual(body.toString(), indexContent)
+        genericResponseChecks(t, response)
+      })
+    })
+
+    t.test('reply.download() with custom opts (2)', t => {
+      t.plan(5 + GENERIC_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/foo/bar/override/2',
+        followRedirect: false
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(response.headers['content-disposition'], 'attachment; filename="index.html"')
+        t.strictEqual(response.headers['accept-ranges'], undefined)
+        t.strictEqual(body.toString(), indexContent)
         genericResponseChecks(t, response)
       })
     })
