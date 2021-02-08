@@ -7,6 +7,9 @@ import { FastifyPlugin, FastifyReply, RawServerBase } from 'fastify'
 declare module "fastify" {
   interface FastifyReply {
     sendFile(filename: string, rootPath?: string): FastifyReply;
+    download(filepath: string, options?: SendOptions): FastifyReply;
+    download(filepath: string, filename?: string): FastifyReply;
+    download(filepath: string, filename?: string, options?: SendOptions): FastifyReply;
   }
 }
 
@@ -30,7 +33,20 @@ interface ListOptions {
   render: ListRender;
 }
 
-export interface FastifyStaticOptions {
+// Passed on to `send`
+interface SendOptions {
+  acceptRanges?: boolean;
+  cacheControl?: boolean;
+  dotfiles?: 'allow' | 'deny' | 'ignore';
+  etag?: boolean;
+  extensions?: string[];
+  immutable?: boolean;
+  index?: string[];
+  lastModified?: boolean;
+  maxAge?: string | number;
+}
+
+export interface FastifyStaticOptions extends SendOptions {
   root: string | string[];
   prefix?: string;
   prefixAvoidTrailingSlash?: boolean;
@@ -43,15 +59,15 @@ export interface FastifyStaticOptions {
   list?: boolean | ListOptions;
 
   // Passed on to `send`
-  acceptRanges?: boolean;
-  cacheControl?: boolean;
-  dotfiles?: 'allow' | 'deny' | 'ignore';
-  etag?: boolean;
-  extensions?: string[];
-  immutable?: boolean;
-  index?: string[];
-  lastModified?: boolean;
-  maxAge?: string | number;
+  // acceptRanges?: boolean;
+  // cacheControl?: boolean;
+  // dotfiles?: 'allow' | 'deny' | 'ignore';
+  // etag?: boolean;
+  // extensions?: string[];
+  // immutable?: boolean;
+  // index?: string[];
+  // lastModified?: boolean;
+  // maxAge?: string | number;
 }
 
 declare const fastifyStatic: FastifyPlugin<FastifyStaticOptions>
