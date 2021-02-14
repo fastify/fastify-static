@@ -57,17 +57,6 @@ export interface FastifyStaticOptions extends SendOptions {
   redirect?: boolean;
   wildcard?: boolean | string;
   list?: boolean | ListOptions;
-
-  // Passed on to `send`
-  // acceptRanges?: boolean;
-  // cacheControl?: boolean;
-  // dotfiles?: 'allow' | 'deny' | 'ignore';
-  // etag?: boolean;
-  // extensions?: string[];
-  // immutable?: boolean;
-  // index?: string[];
-  // lastModified?: boolean;
-  // maxAge?: string | number;
 }
 
 declare const fastifyStatic: FastifyPlugin<FastifyStaticOptions>
