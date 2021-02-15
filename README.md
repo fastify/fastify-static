@@ -51,6 +51,31 @@ fastify.register(fastifyStatic, {
 
 ```
 
+### Sending a file with `content-disposition` header
+
+```js
+const fastify = require('fastify')()
+const path = require('path')
+
+fastify.register(require('fastify-static'), {
+  root: path.join(__dirname, 'public'),
+  prefix: '/public/', // optional: default '/'
+})
+
+fastify.get('/another/path', function (req, reply) {
+  return reply.download('myHtml.html', 'custom-filename.html') // sending path.join(__dirname, 'public', 'myHtml.html') directly with custom filename
+})
+
+fastify.get('/path/without/cache/control', function (req, reply) {
+  return reply.sendFile('myHtml.html', { cacheControl: false }) // serving a file disabling cache-control headers
+})
+
+fastify.get('/path/without/cache/control', function (req, reply) {
+  return reply.sendFile('myHtml.html', 'custom-filename.html', { cacheControl: false })
+})
+
+```
+
 ### Options
 
 #### `root` (required)
@@ -106,6 +131,8 @@ The following options are also supported and will be passed directly to the
 - [`index`](https://www.npmjs.com/package/send#index)
 - [`lastModified`](https://www.npmjs.com/package/send#lastmodified)
 - [`maxAge`](https://www.npmjs.com/package/send#maxage)
+
+You're able to alter this options when calling `reply.download('filename.html', options)` or `reply.download('filename.html', 'otherfilename.html', options)` on each response to a request.
 
 #### `redirect`
 
