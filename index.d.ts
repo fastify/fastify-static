@@ -2,7 +2,7 @@
 //                 Leo <https://github.com/leomelzer>
 /// <reference types="node" />
 
-import { FastifyPlugin, FastifyReply, RawServerBase } from 'fastify'
+import { FastifyPluginCallback, FastifyReply } from 'fastify';
 
 declare module "fastify" {
   interface FastifyReply {
@@ -55,10 +55,10 @@ export interface FastifyStaticOptions extends SendOptions {
   schemaHide?: boolean;
   setHeaders?: (...args: any[]) => void;
   redirect?: boolean;
-  wildcard?: boolean | string;
+  wildcard?: boolean;
   list?: boolean | ListOptions;
 }
 
-declare const fastifyStatic: FastifyPlugin<FastifyStaticOptions>
+declare const fastifyStatic: FastifyPluginCallback<FastifyStaticOptions>
 
 export default fastifyStatic;
