@@ -6,6 +6,7 @@ const statSync = require('fs').statSync
 const { PassThrough } = require('readable-stream')
 const glob = require('glob')
 const send = require('send')
+const contentDisposition = require('content-disposition')
 const fp = require('fastify-plugin')
 const util = require('util')
 const globPromise = util.promisify(glob)
@@ -41,8 +42,8 @@ async function fastifyStatic (fastify, opts) {
 
   const allowedPath = opts.allowedPath
 
-  function pumpSendToReply (request, reply, pathname, rootPath, rootPathOffset = 0) {
-    const options = Object.assign({}, sendOptions)
+  function pumpSendToReply (request, reply, pathname, rootPath, rootPathOffset = 0, pumpOptions = {}) {
+    const options = Object.assign({}, sendOptions, pumpOptions)
 
     if (rootPath) {
       if (Array.isArray(rootPath)) {
@@ -162,6 +163,18 @@ async function fastifyStatic (fastify, opts) {
   if (opts.decorateReply !== false) {
     fastify.decorateReply('sendFile', function (filePath, rootPath) {
       pumpSendToReply(this.request, this, filePath, rootPath)
+      return this
+    })
+
+    fastify.decorateReply('download', function (filePath, fileName, options = {}) {
+      const { root, ...opts } = typeof fileName === 'object' ? fileName : options
+      fileName = typeof fileName === 'string' ? fileName : filePath
+
+      // Set content disposition header
+      this.header('content-disposition', contentDisposition(fileName))
+
+      pumpSendToReply(this.request, this, filePath, root, 0, opts)
+
       return this
     })
   }

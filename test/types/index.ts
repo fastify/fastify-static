@@ -41,6 +41,18 @@ appWithHttp2
     appWithHttp2.get('/', (request, reply) => {
       reply.sendFile('some-file-name')
     })
+
+    appWithHttp2.get('/download', (request, reply) => {
+      reply.download('some-file-name')
+    })
+
+    appWithHttp2.get('/download/1', (request, reply) => {
+      reply.download('some-file-name', { maxAge: '2 days' })
+    })
+
+    appWithHttp2.get('/download/2', (request, reply) => {
+      reply.download('some-file-name', 'some-filename' ,{ cacheControl: false, acceptRanges: true })
+    })
   })
 
 const multiRootAppWithImplicitHttp = fastify()
@@ -51,6 +63,18 @@ multiRootAppWithImplicitHttp
   .after(() => {
     multiRootAppWithImplicitHttp.get('/', (request, reply) => {
       reply.sendFile('some-file-name')
+    })
+
+    multiRootAppWithImplicitHttp.get('/download', (request, reply) => {
+      reply.download('some-file-name')
+    })
+
+    multiRootAppWithImplicitHttp.get('/download/1', (request, reply) => {
+      reply.download('some-file-name', { maxAge: '2 days' })
+    })
+
+    multiRootAppWithImplicitHttp.get('/download/2', (request, reply) => {
+      reply.download('some-file-name', 'some-filename', { cacheControl: false, acceptRanges: true })
     })
   })
   

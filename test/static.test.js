@@ -819,6 +819,7 @@ t.test('sendFile disabled', t => {
   })
 })
 
+
 t.test('allowedPath option', t => {
   t.plan(3)
 
@@ -828,12 +829,11 @@ t.test('allowedPath option', t => {
   }
   const fastify = Fastify()
   fastify.register(fastifyStatic, pluginOptions)
-
   fastify.listen(0, err => {
     t.error(err)
 
     fastify.server.unref()
-
+    
     t.test('/foobar.html not found', t => {
       t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
       simple.concat({
@@ -856,6 +856,219 @@ t.test('allowedPath option', t => {
       }, (err, response, body) => {
         t.error(err)
         t.strictEqual(response.statusCode, 200)
+      })
+    })
+  })
+})
+
+t.test('download', t => {
+  t.plan(7)
+
+  const pluginOptions = {
+    root: path.join(__dirname, '/static'),
+    prefix: '/static'
+  }
+  const fastify = Fastify()
+  fastify.register(fastifyStatic, pluginOptions)
+
+
+  fastify.get('/foo/bar', function (req, reply) {
+    return reply.download('/index.html')
+  })
+
+  fastify.get('/foo/bar/change', function (req, reply) {
+    return reply.download('/index.html', 'hello-world.html')
+  })
+
+  fastify.get('/foo/bar/override', function (req, reply) {
+    return reply.download('/index.html', 'hello-world.html', { maxAge: '2 hours', immutable: true })
+  })
+
+  fastify.get('/foo/bar/override/2', function (req, reply) {
+    return reply.download('/index.html', { acceptRanges: false })
+  })
+
+  fastify.get('/root/path/override/test', (request, reply) => {
+    return reply.download('/foo.html', { root: path.join(__dirname, 'static', 'deep', 'path', 'for', 'test', 'purpose') })
+  })
+
+  fastify.get('/root/path/override/test/change', (request, reply) => {
+    return reply.download('/foo.html', 'hello-world.html', { root: path.join(__dirname, 'static', 'deep', 'path', 'for', 'test', 'purpose') })
+  })
+
+  fastify.listen(0, err => {
+    t.error(err)
+
+    fastify.server.unref()
+
+    t.test('reply.download()', t => {
+      t.plan(4 + GENERIC_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/foo/bar',
+        followRedirect: false
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(response.headers['content-disposition'], 'attachment; filename="index.html"')
+        t.strictEqual(body.toString(), indexContent)
+        genericResponseChecks(t, response)
+      })
+    })
+
+    t.test('reply.download() with fileName', t => {
+      t.plan(4 + GENERIC_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/foo/bar/change',
+        followRedirect: false
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(response.headers['content-disposition'], 'attachment; filename="hello-world.html"')
+        t.strictEqual(body.toString(), indexContent)
+        genericResponseChecks(t, response)
+      })
+    })
+
+    t.test('reply.download() with rootPath', t => {
+      t.plan(4 + GENERIC_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/root/path/override/test',
+        followRedirect: false
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(response.headers['content-disposition'], 'attachment; filename="foo.html"')
+        t.strictEqual(body.toString(), deepContent)
+        genericResponseChecks(t, response)
+      })
+    })
+
+    t.test('reply.download() with custom opts', t => {
+      t.plan(5 + GENERIC_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/foo/bar/override',
+        followRedirect: false
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(response.headers['content-disposition'], 'attachment; filename="hello-world.html"')
+        t.strictEqual(response.headers['cache-control'], 'public, max-age=7200, immutable')
+        t.strictEqual(body.toString(), indexContent)
+        genericResponseChecks(t, response)
+      })
+    })
+
+    t.test('reply.download() with custom opts (2)', t => {
+      t.plan(5 + GENERIC_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/foo/bar/override/2',
+        followRedirect: false
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(response.headers['content-disposition'], 'attachment; filename="index.html"')
+        t.strictEqual(response.headers['accept-ranges'], undefined)
+        t.strictEqual(body.toString(), indexContent)
+        genericResponseChecks(t, response)
+      })
+    })
+
+    t.test('reply.download() with rootPath and fileName', t => {
+      t.plan(4 + GENERIC_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/root/path/override/test/change',
+        followRedirect: false
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(response.headers['content-disposition'], 'attachment; filename="hello-world.html"')
+        t.strictEqual(body.toString(), deepContent)
+        genericResponseChecks(t, response)
+      })
+    })
+  })
+})
+
+t.test('sendFile disabled', t => {
+  t.plan(2)
+
+  const pluginOptions = {
+    root: path.join(__dirname, '/static'),
+    prefix: '/static',
+    decorateReply: false
+  }
+  const fastify = Fastify()
+  fastify.register(fastifyStatic, pluginOptions)
+
+  fastify.get('/foo/bar', function (req, reply) {
+    if (typeof reply.sendFile === 'undefined') {
+      reply.send('pass')
+    } else {
+      reply.send('fail')
+    }
+  })
+
+  fastify.listen(0, err => {
+    t.error(err)
+
+    fastify.server.unref()
+
+    t.test('reply.sendFile undefined', t => {
+      t.plan(3)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/foo/bar',
+        followRedirect: false
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(body.toString(), 'pass')
+      })
+    })
+  })
+})
+
+t.test('download disabled', t => {
+  t.plan(3)
+
+  const pluginOptions = {
+    root: path.join(__dirname, '/static'),
+    prefix: '/static',
+    decorateReply: false
+  }
+  const fastify = Fastify()
+  fastify.register(fastifyStatic, pluginOptions)
+
+  fastify.get('/foo/bar', function (req, reply) {
+    if (typeof reply.download === 'undefined') {
+      t.equals(reply.download, undefined)
+      reply.send('pass')
+    } else {
+      reply.send('fail')
+    }
+  })
+
+  fastify.listen(0, err => {
+    t.error(err)
+
+    fastify.server.unref()
+
+    t.test('reply.sendFile undefined', t => {
+      t.plan(3)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/foo/bar',
+        followRedirect: false
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(body.toString(), 'pass')
       })
     })
   })
