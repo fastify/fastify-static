@@ -819,7 +819,6 @@ t.test('sendFile disabled', t => {
   })
 })
 
-
 t.test('allowedPath option', t => {
   t.plan(3)
 
@@ -833,7 +832,7 @@ t.test('allowedPath option', t => {
     t.error(err)
 
     fastify.server.unref()
-    
+
     t.test('/foobar.html not found', t => {
       t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
       simple.concat({
@@ -870,7 +869,6 @@ t.test('download', t => {
   }
   const fastify = Fastify()
   fastify.register(fastifyStatic, pluginOptions)
-
 
   fastify.get('/foo/bar', function (req, reply) {
     return reply.download('/index.html')
