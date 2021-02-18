@@ -162,6 +162,14 @@ for getting the file list.
 This option cannot be set to `false` with `redirect` set to `true` on a server
 with `ignoreTrailingSlash` set to `true`.
 
+#### `allowedPath`
+
+Default: `(pathname, root) => true`
+
+This function allows filtering the served files.
+If the function returns `true`, the file will be served.
+If the function returns `false`, Fastify's 404 handler will be called.
+
 #### `list`
 
 Default: `undefined`
