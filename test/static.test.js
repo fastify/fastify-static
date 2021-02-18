@@ -1702,8 +1702,8 @@ t.test('register with wildcard false', t => {
   })
 })
 
-t.test('register with wildcard "**/index.html"', t => {
-  t.plan(8)
+t.test('register with wildcard string', t => {
+  t.plan(1)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -1716,105 +1716,13 @@ t.test('register with wildcard "**/index.html"', t => {
     reply.send({ hello: 'world' })
   })
 
-  t.tearDown(fastify.close.bind(fastify))
-
-  fastify.listen(0, err => {
-    t.error(err)
-
-    fastify.server.unref()
-
-    t.test('/index.html', t => {
-      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/index.html'
-      }, (err, response, body) => {
-        t.error(err)
-        t.strictEqual(response.statusCode, 200)
-        t.strictEqual(body.toString(), indexContent)
-        genericResponseChecks(t, response)
-      })
-    })
-
-    t.test('/index.css', t => {
-      t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/index.css'
-      }, (err, response, body) => {
-        t.error(err)
-        t.strictEqual(response.statusCode, 200)
-        genericErrorResponseChecks(t, response)
-      })
-    })
-
-    t.test('/', t => {
-      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port
-      }, (err, response, body) => {
-        t.error(err)
-        t.strictEqual(response.statusCode, 200)
-        t.strictEqual(body.toString(), indexContent)
-        genericResponseChecks(t, response)
-      })
-    })
-
-    t.test('/not-defined', t => {
-      t.plan(3)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/not-defined'
-      }, (err, response, body) => {
-        t.error(err)
-        t.strictEqual(response.statusCode, 200)
-        t.deepEqual(JSON.parse(body), { hello: 'world' })
-      })
-    })
-
-    t.test('/deep/path/for/test/purpose/foo.html', t => {
-      t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/deep/path/for/test/purpose/foo.html'
-      }, (err, response, body) => {
-        t.error(err)
-        t.strictEqual(response.statusCode, 200)
-        genericErrorResponseChecks(t, response)
-      })
-    })
-
-    t.test('/deep/path/for/test/', t => {
-      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/deep/path/for/test/'
-      }, (err, response, body) => {
-        t.error(err)
-        t.strictEqual(response.statusCode, 200)
-        t.strictEqual(body.toString(), innerIndex)
-        genericResponseChecks(t, response)
-      })
-    })
-
-    t.test('/../index.js', t => {
-      t.plan(3)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/../index.js',
-        followRedirect: false
-      }, (err, response, body) => {
-        t.error(err)
-        t.strictEqual(response.statusCode, 200)
-        t.deepEqual(JSON.parse(body), { hello: 'world' })
-      })
-    })
+  fastify.ready(function (err) {
+    t.ok(err)
   })
 })
 
-t.test('register with wildcard "**/index.html" on multiple root paths', t => {
-  t.plan(2)
+t.test('register with wildcard string on multiple root paths', t => {
+  t.plan(1)
 
   const pluginOptions = {
     root: [path.join(__dirname, '/static'), path.join(__dirname, '/static2')],
@@ -1830,134 +1738,9 @@ t.test('register with wildcard "**/index.html" on multiple root paths', t => {
   t.tearDown(fastify.close.bind(fastify))
 
   fastify.listen(0, err => {
-    t.error(err)
+    t.ok(err)
 
     fastify.server.unref()
-
-    t.test('/index.html', t => {
-      t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/index.html'
-      }, (err, response, body) => {
-        t.error(err)
-        t.strictEqual(response.statusCode, 200)
-        genericErrorResponseChecks(t, response)
-      })
-    })
-  })
-})
-
-t.test('register with wildcard "**/foo.*"', t => {
-  t.plan(8)
-
-  const pluginOptions = {
-    root: path.join(__dirname, '/static'),
-    wildcard: '**/foo.*'
-  }
-  const fastify = Fastify()
-  fastify.register(fastifyStatic, pluginOptions)
-
-  fastify.get('/*', (request, reply) => {
-    reply.send({ hello: 'world' })
-  })
-
-  t.tearDown(fastify.close.bind(fastify))
-
-  fastify.listen(0, err => {
-    t.error(err)
-
-    fastify.server.unref()
-
-    t.test('/index.html', t => {
-      t.plan(3 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/index.html'
-      }, (err, response, body) => {
-        t.error(err)
-        t.strictEqual(response.statusCode, 200)
-        t.deepEqual(JSON.parse(body), { hello: 'world' })
-
-        genericErrorResponseChecks(t, response)
-      })
-    })
-
-    t.test('/index.css', t => {
-      t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/index.css'
-      }, (err, response, body) => {
-        t.error(err)
-        t.strictEqual(response.statusCode, 200)
-        genericErrorResponseChecks(t, response)
-      })
-    })
-
-    t.test('/', t => {
-      t.plan(3 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port
-      }, (err, response, body) => {
-        t.error(err)
-        t.strictEqual(response.statusCode, 200)
-        t.deepEqual(JSON.parse(body), { hello: 'world' })
-        genericErrorResponseChecks(t, response)
-      })
-    })
-
-    t.test('/not-defined', t => {
-      t.plan(3)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/not-defined'
-      }, (err, response, body) => {
-        t.error(err)
-        t.strictEqual(response.statusCode, 200)
-        t.deepEqual(JSON.parse(body), { hello: 'world' })
-      })
-    })
-
-    t.test('/deep/path/for/test/purpose/foo.html', t => {
-      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/deep/path/for/test/purpose/foo.html'
-      }, (err, response, body) => {
-        t.error(err)
-        t.strictEqual(response.statusCode, 200)
-        t.strictEqual(body.toString(), deepContent)
-        genericResponseChecks(t, response)
-      })
-    })
-
-    t.test('/deep/path/for/test/', t => {
-      t.plan(3 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/deep/path/for/test/'
-      }, (err, response, body) => {
-        t.error(err)
-        t.strictEqual(response.statusCode, 200)
-        t.deepEqual(JSON.parse(body), { hello: 'world' })
-        genericErrorResponseChecks(t, response)
-      })
-    })
-
-    t.test('/../index.js', t => {
-      t.plan(3)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/../index.js',
-        followRedirect: false
-      }, (err, response, body) => {
-        t.error(err)
-        t.strictEqual(response.statusCode, 200)
-        t.deepEqual(JSON.parse(body), { hello: 'world' })
-      })
-    })
   })
 })
 
@@ -2602,7 +2385,7 @@ t.test('register with failing glob handler', t => {
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
     serve: true,
-    wildcard: '*'
+    wildcard: false
   }
   const fastify = Fastify()
   fastify.register(fastifyStatic, pluginOptions)
@@ -2627,7 +2410,7 @@ t.test('register with rootpath that causes statSync to fail with non-ENOENT code
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
-    wildcard: '*'
+    wildcard: true
   }
   const fastify = Fastify()
   fastify.register(fastifyStatic, pluginOptions)

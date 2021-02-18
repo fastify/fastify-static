@@ -180,6 +180,7 @@ async function fastifyStatic (fastify, opts) {
   }
 
   if (opts.serve !== false) {
+    if (opts.wildcard && typeof opts.wildcard !== 'boolean') throw new Error('"wildcard" option must be a boolean')
     if (opts.wildcard === undefined || opts.wildcard === true) {
       fastify.get(prefix + '*', routeOpts, function (req, reply) {
         pumpSendToReply(req, reply, '/' + req.params['*'], sendOptions.root)
@@ -192,7 +193,7 @@ async function fastifyStatic (fastify, opts) {
         })
       }
     } else {
-      const globPattern = typeof opts.wildcard === 'string' ? opts.wildcard : '**/*'
+      const globPattern = '**/*'
 
       async function addGlobRoutes (rootPath) {
         const files = await globPromise(path.join(rootPath, globPattern), { nodir: true })

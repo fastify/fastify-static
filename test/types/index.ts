@@ -1,4 +1,5 @@
 import fastify from 'fastify'
+import { expectError } from 'tsd'
 import fastifyStatic, { FastifyStaticOptions } from '../..'
 
 const appWithImplicitHttp = fastify()
@@ -24,6 +25,10 @@ const options: FastifyStaticOptions = {
     res.setHeader('test', pathName)
   },
 }
+
+expectError<FastifyStaticOptions>({
+  wlidcard: '**/*'
+})
 
 appWithImplicitHttp
   .register(fastifyStatic, options)
