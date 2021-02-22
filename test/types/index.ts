@@ -82,4 +82,15 @@ multiRootAppWithImplicitHttp
       reply.download('some-file-name', 'some-filename', { cacheControl: false, acceptRanges: true })
     })
   })
-  
+
+const noIndexApp = fastify()
+options.root = ''
+options.index = false
+
+noIndexApp
+  .register(fastifyStatic, options)
+  .after(() => {
+    noIndexApp.get('/', (request, reply) => {
+      reply.send('<h1>fastify-static</h1>')
+    })
+})
