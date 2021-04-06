@@ -1,5 +1,9 @@
 # fastify-static
-![CI workflow](https://github.com/fastify/fastify-static/workflows/CI%20workflow/badge.svg) [![Known Vulnerabilities](https://snyk.io/test/github/fastify/fastify-static/badge.svg)](https://snyk.io/test/github/fastify/fastify-static)
+
+![CI](https://github.com/fastify/fastify-static/workflows/CI/badge.svg)
+[![NPM version](https://img.shields.io/npm/v/fastify-static.svg?style=flat)](https://www.npmjs.com/package/fastify-static)
+[![Known Vulnerabilities](https://snyk.io/test/github/fastify/fastify-static/badge.svg)](https://snyk.io/test/github/fastify/fastify-static)
+[![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat)](https://standardjs.com/)
 
 Plugin for serving static files as fast as possible. Supports Fastify version `3.x`.
 
