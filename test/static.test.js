@@ -40,7 +40,7 @@ function genericErrorResponseChecks (t, response) {
 }
 
 t.test('register /static prefixAvoidTrailingSlash', t => {
-  t.plan(11)
+  t.plan(12)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -182,6 +182,19 @@ t.test('register /static prefixAvoidTrailingSlash', t => {
       }, (err, response, body) => {
         t.error(err)
         t.strictEqual(response.statusCode, 404)
+      })
+    })
+
+    t.test('file not exposed outside of the plugin', t => {
+      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'HEAD',
+        url: 'http://localhost:' + fastify.server.address().port + '/static/index.html'
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(body.toString(), '')
+        genericResponseChecks(t, response)
       })
     })
   })
@@ -333,7 +346,7 @@ t.test('register /static', t => {
 })
 
 t.test('register /static/', t => {
-  t.plan(11)
+  t.plan(12)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -358,6 +371,19 @@ t.test('register /static/', t => {
         t.error(err)
         t.strictEqual(response.statusCode, 200)
         t.strictEqual(body.toString(), indexContent)
+        genericResponseChecks(t, response)
+      })
+    })
+
+    t.test('/static/index.html', t => {
+      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'HEAD',
+        url: 'http://localhost:' + fastify.server.address().port + '/static/index.html'
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(body.toString(), '')
         genericResponseChecks(t, response)
       })
     })
@@ -1472,7 +1498,7 @@ t.test('with fastify-compress', t => {
 })
 
 t.test('register /static/ with schemaHide true', t => {
-  t.plan(3)
+  t.plan(4)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -1512,7 +1538,7 @@ t.test('register /static/ with schemaHide true', t => {
 })
 
 t.test('register /static/ with schemaHide false', t => {
-  t.plan(3)
+  t.plan(4)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -1552,7 +1578,7 @@ t.test('register /static/ with schemaHide false', t => {
 })
 
 t.test('register /static/ without schemaHide', t => {
-  t.plan(3)
+  t.plan(4)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -2441,7 +2467,7 @@ t.test('inject support', async (t) => {
 })
 
 t.test('routes should use custom errorHandler premature stream close', t => {
-  t.plan(3)
+  t.plan(4)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -2473,7 +2499,7 @@ t.test('routes should use custom errorHandler premature stream close', t => {
 })
 
 t.test('routes should fallback to default errorHandler', t => {
-  t.plan(3)
+  t.plan(4)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -2510,7 +2536,7 @@ t.test('routes should fallback to default errorHandler', t => {
 })
 
 t.test('routes use default errorHandler when fastify.errorHandler is not defined', t => {
-  t.plan(3)
+  t.plan(4)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
