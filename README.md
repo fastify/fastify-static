@@ -291,7 +291,7 @@ GET .../public/index.json
 
 #### Disable serving
 
-If you'd just like to use the reply decorator and not serve whole directories automatically, you can simply pass the option `{ serve: false }`. This will prevent the plugin from serving everything under `root`.
+If you would just like to use the reply decorator and not serve whole directories automatically, you can simply pass the option `{ serve: false }`. This will prevent the plugin from serving everything under `root`.
 
 #### Disabling reply decorator
 
