@@ -4,7 +4,10 @@ const path = require('path')
 const fastify = require('fastify')({ logger: { level: 'trace' } })
 
 fastify
-  .register(require('../'), { root: path.join(__dirname, '/public') })
+  .register(require('../'), {
+    // An absolute path containing static files to serve.
+    root: path.join(__dirname, '/public')
+  })
   .listen(3000, err => {
     if (err) throw err
   })

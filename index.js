@@ -1,28 +1,30 @@
-'use strict'
+"use strict"
 
-const path = require('path')
-const url = require('url')
-const statSync = require('fs').statSync
-const { PassThrough } = require('readable-stream')
-const glob = require('glob')
-const send = require('send')
-const fp = require('fastify-plugin')
+const path = require("path")
+const url = require("url")
+const statSync = require("fs").statSync
+const { PassThrough } = require("readable-stream")
+const glob = require("glob")
+const send = require("send")
+const contentDisposition = require("content-disposition")
+const fp = require("fastify-plugin")
+const util = require("util")
+const globPromise = util.promisify(glob)
 
-const dirList = require('./lib/dirList')
+const dirList = require("./lib/dirList")
 
-function fastifyStatic (fastify, opts, next) {
-  const error = checkRootPathForErrors(fastify, opts.root)
-  if (error !== undefined) return next(error)
+async function fastifyStatic(fastify, opts) {
+  checkRootPathForErrors(fastify, opts.root)
 
   const setHeaders = opts.setHeaders
 
-  if (setHeaders !== undefined && typeof setHeaders !== 'function') {
-    return next(new TypeError('The `setHeaders` option must be a function'))
+  if (setHeaders !== undefined && typeof setHeaders !== "function") {
+    throw new TypeError("The `setHeaders` option must be a function")
   }
 
   const invalidDirListOpts = dirList.validateOptions(opts.list)
   if (invalidDirListOpts) {
-    return next(invalidDirListOpts)
+    throw invalidDirListOpts
   }
 
   const sendOptions = {
@@ -38,11 +40,29 @@ function fastifyStatic (fastify, opts, next) {
     maxAge: opts.maxAge
   }
 
-  function pumpSendToReply (request, reply, pathname, rootPath, checkedExtensions) {
-    var options = Object.assign({}, sendOptions)
+  const allowedPath = opts.allowedPath
+
+  function pumpSendToReply(
+    request,
+    reply,
+    pathname,
+    rootPath,
+    rootPathOffset = 0,
+    pumpOptions = {},
+    checkedExtensions
+  ) {
+    const options = Object.assign({}, sendOptions, pumpOptions)
 
     if (rootPath) {
-      options.root = rootPath
+      if (Array.isArray(rootPath)) {
+        options.root = rootPath[rootPathOffset]
+      } else {
+        options.root = rootPath
+      }
+    }
+
+    if (allowedPath && !allowedPath(pathname, options.root)) {
+      return reply.callNotFound()
     }
 
     let encodingExt
@@ -60,22 +80,21 @@ function fastifyStatic (fastify, opts, next) {
       encodingExt = checkEncodingHeaders(request.headers, checkedExtensions)
 
       if (encodingExt) {
-        pathnameForSend = pathname + '.' + encodingExt
+        pathnameForSend = pathname + "." + encodingExt
       }
     }
 
     const stream = send(request.raw, pathnameForSend, options)
-
-    var resolvedFilename
-    stream.on('file', function (file) {
+    let resolvedFilename
+    stream.on("file", function (file) {
       resolvedFilename = file
     })
 
     const wrap = new PassThrough({
-      flush (cb) {
+      flush(cb) {
         this.finished = true
         if (reply.raw.statusCode === 304) {
-          reply.send('')
+          reply.send("")
         }
         cb()
       }
@@ -85,59 +104,88 @@ function fastifyStatic (fastify, opts, next) {
     wrap.setHeader = reply.header.bind(reply)
     wrap.finished = false
 
-    Object.defineProperty(wrap, 'filename', {
-      get () {
+    Object.defineProperty(wrap, "filename", {
+      get() {
         return resolvedFilename
       }
     })
-    Object.defineProperty(wrap, 'statusCode', {
-      get () {
+    Object.defineProperty(wrap, "statusCode", {
+      get() {
         return reply.raw.statusCode
       },
-      set (code) {
+      set(code) {
         reply.code(code)
       }
     })
 
-    wrap.on('pipe', function () {
+    wrap.on("pipe", function () {
       if (encodingExt) {
-        reply.header('content-encoding', encodingExt)
+        reply.header("content-encoding", encodingExt)
       }
       reply.send(wrap)
     })
 
     if (setHeaders !== undefined) {
-      stream.on('headers', setHeaders)
+      stream.on("headers", setHeaders)
     }
 
-    stream.on('directory', function (_, path) {
+    stream.on("directory", function (_, path) {
       if (opts.list) {
-        return dirList.send({ reply, dir: path, options: opts.list, route: pathname })
+        return dirList.send({
+          reply,
+          dir: path,
+          options: opts.list,
+          route: pathname
+        })
       }
 
       if (opts.redirect === true) {
         /* eslint node/no-deprecated-api: "off" */
         const parsed = url.parse(request.raw.url)
-        reply.redirect(301, parsed.pathname + '/' + (parsed.search || ''))
+        reply.redirect(301, parsed.pathname + "/" + (parsed.search || ""))
       } else {
         reply.callNotFound()
       }
     })
 
-    stream.on('error', function (err) {
+    stream.on("error", function (err) {
       if (err) {
-        if (err.code === 'ENOENT') {
+        if (err.code === "ENOENT") {
           // if file exists, send real file, otherwise send dir list if name match
           if (opts.list && dirList.handle(pathname, opts.list)) {
-            return dirList.send({ reply, dir: dirList.path(opts.root, pathname), options: opts.list, route: pathname })
+            return dirList.send({
+              reply,
+              dir: dirList.path(opts.root, pathname),
+              options: opts.list,
+              route: pathname
+            })
           }
 
-          if (opts.preCompressed && !(checkedExtensions.has(encodingExt))) {
+          if (opts.preCompressed && !checkedExtensions.has(encodingExt)) {
             checkedExtensions.add(encodingExt)
-            return pumpSendToReply(request, reply, pathname, rootPath, checkedExtensions)
-          } else {
-            return reply.callNotFound()
+            return pumpSendToReply(
+              request,
+              reply,
+              pathname,
+              rootPath,
+              undefined,
+              undefined,
+              checkedExtensions
+            )
           }
+
+          // root paths left to try?
+          if (Array.isArray(rootPath) && rootPathOffset < rootPath.length - 1) {
+            return pumpSendToReply(
+              request,
+              reply,
+              pathname,
+              rootPath,
+              rootPathOffset + 1
+            )
+          }
+
+          return reply.callNotFound()
         }
         reply.send(err)
       }
@@ -148,16 +196,19 @@ function fastifyStatic (fastify, opts, next) {
     stream.pipe(wrap)
   }
 
-  if (opts.prefix === undefined) opts.prefix = '/'
+  if (opts.prefix === undefined) opts.prefix = "/"
 
   let prefix = opts.prefix
 
   if (!opts.prefixAvoidTrailingSlash) {
-    prefix = opts.prefix[opts.prefix.length - 1] === '/' ? opts.prefix : (opts.prefix + '/')
+    prefix =
+      opts.prefix[opts.prefix.length - 1] === "/"
+        ? opts.prefix
+        : opts.prefix + "/"
   }
 
   const errorHandler = (error, request, reply) => {
-    if (error && error.code === 'ERR_STREAM_PREMATURE_CLOSE') {
+    if (error && error.code === "ERR_STREAM_PREMATURE_CLOSE") {
       reply.request.raw.destroy()
       return
     }
@@ -167,117 +218,183 @@ function fastifyStatic (fastify, opts, next) {
 
   // Set the schema hide property if defined in opts or true by default
   const routeOpts = {
-    schema: { hide: typeof opts.schemaHide !== 'undefined' ? opts.schemaHide : true },
+    schema: {
+      hide: typeof opts.schemaHide !== "undefined" ? opts.schemaHide : true
+    },
     errorHandler: fastify.errorHandler ? errorHandler : undefined
   }
 
   if (opts.decorateReply !== false) {
-    fastify.decorateReply('sendFile', function (filePath, rootPath) {
-      pumpSendToReply(this.request, this, filePath, rootPath)
+    fastify.decorateReply("sendFile", function (filePath, rootPath) {
+      pumpSendToReply(
+        this.request,
+        this,
+        filePath,
+        rootPath || sendOptions.root
+      )
       return this
     })
+
+    fastify.decorateReply(
+      "download",
+      function (filePath, fileName, options = {}) {
+        const { root, ...opts } =
+          typeof fileName === "object" ? fileName : options
+        fileName = typeof fileName === "string" ? fileName : filePath
+
+        // Set content disposition header
+        this.header("content-disposition", contentDisposition(fileName))
+
+        pumpSendToReply(this.request, this, filePath, root, 0, opts)
+
+        return this
+      }
+    )
   }
 
   if (opts.serve !== false) {
+    if (opts.wildcard && typeof opts.wildcard !== "boolean")
+      throw new Error('"wildcard" option must be a boolean')
     if (opts.wildcard === undefined || opts.wildcard === true) {
-      fastify.get(prefix + '*', routeOpts, function (req, reply) {
-        pumpSendToReply(req, reply, '/' + req.params['*'])
+      fastify.get(prefix + "*", routeOpts, function (req, reply) {
+        pumpSendToReply(req, reply, "/" + req.params["*"], sendOptions.root)
       })
       if (opts.redirect === true && prefix !== opts.prefix) {
         fastify.get(opts.prefix, routeOpts, function (req, reply) {
           /* eslint node/no-deprecated-api: "off" */
           const parsed = url.parse(req.raw.url)
-          reply.redirect(301, parsed.pathname + '/' + (parsed.search || ''))
+          reply.redirect(301, parsed.pathname + "/" + (parsed.search || ""))
         })
       }
     } else {
-      const globPattern = typeof opts.wildcard === 'string' ? opts.wildcard : '**/*'
-      glob(path.join(sendOptions.root, globPattern), { nodir: true }, function (err, files) {
-        if (err) {
-          return next(err)
-        }
+      const globPattern = "**/*"
+
+      async function addGlobRoutes(rootPath) {
+        const files = await globPromise(path.join(rootPath, globPattern), {
+          nodir: true
+        })
         const indexDirs = new Set()
-        const indexes = typeof opts.index === 'undefined' ? ['index.html'] : [].concat(opts.index || [])
+        const indexes =
+          typeof opts.index === "undefined"
+            ? ["index.html"]
+            : [].concat(opts.index || [])
+
         for (let file of files) {
-          file = file.replace(sendOptions.root.replace(/\\/g, '/'), '').replace(/^\//, '')
-          const route = (prefix + file).replace(/\/\//g, '/')
+          file = file
+            .replace(rootPath.replace(/\\/g, "/"), "")
+            .replace(/^\//, "")
+          const route = encodeURI(prefix + file).replace(/\/\//g, "/")
           fastify.get(route, routeOpts, function (req, reply) {
-            pumpSendToReply(req, reply, '/' + file)
+            pumpSendToReply(req, reply, "/" + file, rootPath)
           })
 
           if (indexes.includes(path.posix.basename(route))) {
             indexDirs.add(path.posix.dirname(route))
           }
         }
+
         indexDirs.forEach(function (dirname) {
-          const pathname = dirname + (dirname.endsWith('/') ? '' : '/')
-          const file = '/' + pathname.replace(prefix, '')
+          const pathname = dirname + (dirname.endsWith("/") ? "" : "/")
+          const file = "/" + pathname.replace(prefix, "")
 
           fastify.get(pathname, routeOpts, function (req, reply) {
-            pumpSendToReply(req, reply, file)
+            pumpSendToReply(req, reply, file, rootPath)
           })
 
           if (opts.redirect === true) {
-            fastify.get(pathname.replace(/\/$/, ''), routeOpts, function (req, reply) {
-              pumpSendToReply(req, reply, file.replace(/\/$/, ''))
-            })
+            fastify.get(
+              pathname.replace(/\/$/, ""),
+              routeOpts,
+              function (req, reply) {
+                pumpSendToReply(req, reply, file.replace(/\/$/, ""), rootPath)
+              }
+            )
           }
         })
-        next()
-      })
+      }
 
-      // return early to avoid calling next afterwards
-      return
+      if (Array.isArray(sendOptions.root)) {
+        await Promise.all(sendOptions.root.map(addGlobRoutes))
+      } else {
+        await addGlobRoutes(sendOptions.root)
+      }
     }
   }
-
-  next()
 }
 
-function checkRootPathForErrors (fastify, rootPath) {
+function checkRootPathForErrors(fastify, rootPath) {
   if (rootPath === undefined) {
-    return new Error('"root" option is required')
-  }
-  if (typeof rootPath !== 'string') {
-    return new Error('"root" option must be a string')
-  }
-  if (path.isAbsolute(rootPath) === false) {
-    return new Error('"root" option must be an absolute path')
+    throw new Error('"root" option is required')
   }
 
-  var pathStat
+  if (Array.isArray(rootPath)) {
+    if (!rootPath.length) {
+      throw new Error('"root" option array requires one or more paths')
+    }
+
+    if ([...new Set(rootPath)].length !== rootPath.length) {
+      throw new Error(
+        '"root" option array contains one or more duplicate paths'
+      )
+    }
+
+    // check each path and fail at first invalid
+    rootPath.map((path) => checkPath(fastify, path))
+    return
+  }
+
+  if (typeof rootPath === "string") {
+    return checkPath(fastify, rootPath)
+  }
+
+  throw new Error('"root" option must be a string or array of strings')
+}
+
+function checkPath(fastify, rootPath) {
+  if (typeof rootPath !== "string") {
+    throw new Error('"root" option must be a string')
+  }
+  if (path.isAbsolute(rootPath) === false) {
+    throw new Error('"root" option must be an absolute path')
+  }
+
+  let pathStat
 
   try {
     pathStat = statSync(rootPath)
   } catch (e) {
-    if (e.code === 'ENOENT') {
+    if (e.code === "ENOENT") {
       fastify.log.warn(`"root" path "${rootPath}" must exist`)
       return
     }
 
-    return e
+    throw e
   }
 
   if (pathStat.isDirectory() === false) {
-    return new Error('"root" option must point to a directory')
+    throw new Error('"root" option must point to a directory')
   }
 }
 
-function checkEncodingHeaders (headers, checked) {
-  if (!('accept-encoding' in headers)) return
+function checkEncodingHeaders(headers, checked) {
+  if (!("accept-encoding" in headers)) return
 
   let ext
-  const accepted = headers['accept-encoding'].split(', ')
-  const checkedForBr = checked.has('br')
+  const accepted = headers["accept-encoding"].split(", ")
+  const checkedForBr = checked.has("br")
 
   for (let index = 0; index < accepted.length; index++) {
     const acceptedEncoding = accepted[index]
 
-    if (acceptedEncoding === 'br' && !checkedForBr) {
-      ext = 'br'
+    if (acceptedEncoding === "br" && !checkedForBr) {
+      ext = "br"
       break
-    } else if (acceptedEncoding === 'gzip' && checkedForBr && !checked.has('gz')) {
-      ext = 'gz'
+    } else if (
+      acceptedEncoding === "gzip" &&
+      checkedForBr &&
+      !checked.has("gz")
+    ) {
+      ext = "gz"
       break
     }
   }
@@ -286,6 +403,6 @@ function checkEncodingHeaders (headers, checked) {
 }
 
 module.exports = fp(fastifyStatic, {
-  fastify: '3.x',
-  name: 'fastify-static'
+  fastify: "3.x",
+  name: "fastify-static"
 })

@@ -1,5 +1,9 @@
 # fastify-static
-![CI workflow](https://github.com/fastify/fastify-static/workflows/CI%20workflow/badge.svg) [![Known Vulnerabilities](https://snyk.io/test/github/fastify/fastify-static/badge.svg)](https://snyk.io/test/github/fastify/fastify-static)
+
+![CI](https://github.com/fastify/fastify-static/workflows/CI/badge.svg)
+[![NPM version](https://img.shields.io/npm/v/fastify-static.svg?style=flat)](https://www.npmjs.com/package/fastify-static)
+[![Known Vulnerabilities](https://snyk.io/test/github/fastify/fastify-static/badge.svg)](https://snyk.io/test/github/fastify/fastify-static)
+[![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat)](https://standardjs.com/)
 
 Plugin for serving static files as fast as possible. Supports Fastify version `3.x`.
 
@@ -51,6 +55,31 @@ fastify.register(fastifyStatic, {
 
 ```
 
+### Sending a file with `content-disposition` header
+
+```js
+const fastify = require('fastify')()
+const path = require('path')
+
+fastify.register(require('fastify-static'), {
+  root: path.join(__dirname, 'public'),
+  prefix: '/public/', // optional: default '/'
+})
+
+fastify.get('/another/path', function (req, reply) {
+  return reply.download('myHtml.html', 'custom-filename.html') // sending path.join(__dirname, 'public', 'myHtml.html') directly with custom filename
+})
+
+fastify.get('/path/without/cache/control', function (req, reply) {
+  return reply.sendFile('myHtml.html', { cacheControl: false }) // serving a file disabling cache-control headers
+})
+
+fastify.get('/path/without/cache/control', function (req, reply) {
+  return reply.sendFile('myHtml.html', 'custom-filename.html', { cacheControl: false })
+})
+
+```
+
 ### Options
 
 #### `root` (required)
@@ -58,6 +87,9 @@ fastify.register(fastifyStatic, {
 The absolute path of the directory that contains the files to serve.
 The file to serve will be determined by combining `req.url` with the
 provided root directory.
+
+You can also provide an array of directories containing files to serve.
+This is useful for serving multiple static directories under a single prefix. Files are served in a "first found, first served" manner, so the order in which you list the directories is important. For best performance, you should always list your main asset directory first. Duplicate paths will raise an error.
 
 #### `prefix`
 
@@ -104,6 +136,8 @@ The following options are also supported and will be passed directly to the
 - [`lastModified`](https://www.npmjs.com/package/send#lastmodified)
 - [`maxAge`](https://www.npmjs.com/package/send#maxage)
 
+You're able to alter this options when calling `reply.download('filename.html', options)` or `reply.download('filename.html', 'otherfilename.html', options)` on each response to a request.
+
 #### `redirect`
 
 Default: `false`
@@ -123,14 +157,21 @@ Default: `true`
 If set to `true`, `fastify-static` adds a wildcard route to serve files.
 If set to `false`, `fastify-static` globs the filesystem for all defined
 files in the served folder (`${root}/**/*`), and just creates the routes needed for
-those.
-If set to a glob `string` pattern, `fastify-static` will use the provided string when globing the filesystem (`${root}/${wildcard}`).
+those and it will not serve the newly added file on the filesystem.
 
 The default options of https://www.npmjs.com/package/glob are applied
 for getting the file list.
 
 This option cannot be set to `false` with `redirect` set to `true` on a server
 with `ignoreTrailingSlash` set to `true`.
+
+#### `allowedPath`
+
+Default: `(pathname, root) => true`
+
+This function allows filtering the served files.
+If the function returns `true`, the file will be served.
+If the function returns `false`, Fastify's 404 handler will be called.
 
 #### `list`
 
@@ -268,13 +309,13 @@ Assume this structure with the compressed asset as a sibling of the un-compresse
 
 #### Disable serving
 
-If you'd just like to use the reply decorator and not serve whole directories automatically, you can simply pass the option `{ serve: false }`. This will prevent the plugin from serving everything under `root`.
+If you would just like to use the reply decorator and not serve whole directories automatically, you can simply pass the option `{ serve: false }`. This will prevent the plugin from serving everything under `root`.
 
 #### Disabling reply decorator
 
 The reply object is decorated with a `sendFile` function by default.  If you want to
 disable this, pass the option `{ decorateReply: false }`.  If fastify-static is
-registers to multiple prefixes in the same route only one can initialize reply
+registered to multiple prefixes in the same route only one can initialize reply
 decorators.
 
 #### Handling 404s

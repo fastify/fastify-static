@@ -2,63 +2,84 @@
 //                 Leo <https://github.com/leomelzer>
 /// <reference types="node" />
 
-import { FastifyPlugin, FastifyReply, RawServerBase } from 'fastify'
+import { FastifyPluginCallback, FastifyReply } from "fastify"
 
 declare module "fastify" {
   interface FastifyReply {
-    sendFile(filename: string, rootPath?: string): FastifyReply;
+    sendFile(filename: string, rootPath?: string): FastifyReply
+    download(filepath: string, options?: SendOptions): FastifyReply
+    download(filepath: string, filename?: string): FastifyReply
+    download(
+      filepath: string,
+      filename?: string,
+      options?: SendOptions
+    ): FastifyReply
   }
 }
 
 interface ListDir {
-  href: string;
-  name: string;
+  href: string
+  name: string
 }
 
 interface ListFile {
-  href: string;
-  name: string;
+  href: string
+  name: string
 }
 
 interface ListRender {
-  (dirs: ListDir[], files: ListFile[]): string;
+  (dirs: ListDir[], files: ListFile[]): string
 }
 
 interface ListOptions {
-  format: 'json' | 'html';
-  names: string[];
-  render: ListRender;
+  format: "json" | "html"
+  names: string[]
+  render: ListRender
 }
 
-export interface FastifyStaticOptions {
-  root: string;
-  prefix?: string;
-  prefixAvoidTrailingSlash?: boolean;
-  serve?: boolean;
-  decorateReply?: boolean;
-  schemaHide?: boolean;
-  setHeaders?: (...args: any[]) => void;
-  redirect?: boolean;
-  wildcard?: boolean | string;
-  list?: boolean | ListOptions;
+// Passed on to `send`
+interface SendOptions {
+  acceptRanges?: boolean
+  cacheControl?: boolean
+  dotfiles?: "allow" | "deny" | "ignore"
+  etag?: boolean
+  extensions?: string[]
+  immutable?: boolean
+  index?: string[] | false
+  lastModified?: boolean
+  maxAge?: string | number
+}
+
+export interface FastifyStaticOptions extends SendOptions {
+  root: string | string[]
+  prefix?: string
+  prefixAvoidTrailingSlash?: boolean
+  serve?: boolean
+  decorateReply?: boolean
+  schemaHide?: boolean
+  setHeaders?: (...args: any[]) => void
+  redirect?: boolean
+  wildcard?: boolean
+  list?: boolean | ListOptions
   /**
    * @description
    * Opt-in to looking for pre-compressed files
    */
-  preCompressed?: boolean;
+  preCompressed?: boolean
+  allowedPath?: (pathName: string, root?: string) => boolean
 
   // Passed on to `send`
-  acceptRanges?: boolean;
-  cacheControl?: boolean;
-  dotfiles?: boolean;
-  etag?: boolean;
-  extensions?: string[];
-  immutable?: boolean;
-  index?: string[];
-  lastModified?: boolean;
-  maxAge?: string | number;
+  acceptRanges?: boolean
+  cacheControl?: boolean
+  dotfiles?: "allow" | "deny" | "ignore"
+  etag?: boolean
+  extensions?: string[]
+  immutable?: boolean
+  index?: string[] | false
+  lastModified?: boolean
+  maxAge?: string | number
 }
 
-declare const fastifyStatic: FastifyPlugin<FastifyStaticOptions>
+declare const fastifyStatic: FastifyPluginCallback<FastifyStaticOptions>
 
-export default fastifyStatic;
+export default fastifyStatic

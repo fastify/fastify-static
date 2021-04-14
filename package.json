@@ -1,11 +1,12 @@
 {
   "name": "fastify-static",
-  "version": "3.3.0",
+  "version": "4.0.1",
   "description": "Plugin for serving static files as fast as possible.",
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
     "lint": "standard | snazzy",
+    "lint:fix": "standard --fix",
     "unit": "tap test/*.test.js",
     "typescript": "tsd",
     "test": "npm run lint && npm run unit && npm run typescript",
@@ -28,6 +29,7 @@
   },
   "homepage": "https://github.com/fastify/fastify-static",
   "dependencies": {
+    "content-disposition": "^0.5.3",
     "fastify-plugin": "^3.0.0",
     "glob": "^7.1.4",
     "readable-stream": "^3.4.0",
@@ -47,9 +49,9 @@
     "proxyquire": "^2.1.0",
     "simple-get": "^4.0.0",
     "snazzy": "^9.0.0",
-    "standard": "^15.0.0",
+    "standard": "^16.0.2",
     "tap": "^14.10.8",
-    "tsd": "^0.13.1",
+    "tsd": "^0.14.0",
     "typescript": "^4.0.2"
   },
   "tsd": {
