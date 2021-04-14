@@ -1,25 +1,25 @@
-"use strict"
+'use strict'
 
-const path = require("path")
-const url = require("url")
-const statSync = require("fs").statSync
-const { PassThrough } = require("readable-stream")
-const glob = require("glob")
-const send = require("send")
-const contentDisposition = require("content-disposition")
-const fp = require("fastify-plugin")
-const util = require("util")
+const path = require('path')
+const url = require('url')
+const statSync = require('fs').statSync
+const { PassThrough } = require('readable-stream')
+const glob = require('glob')
+const send = require('send')
+const contentDisposition = require('content-disposition')
+const fp = require('fastify-plugin')
+const util = require('util')
 const globPromise = util.promisify(glob)
 
-const dirList = require("./lib/dirList")
+const dirList = require('./lib/dirList')
 
-async function fastifyStatic(fastify, opts) {
+async function fastifyStatic (fastify, opts) {
   checkRootPathForErrors(fastify, opts.root)
 
   const setHeaders = opts.setHeaders
 
-  if (setHeaders !== undefined && typeof setHeaders !== "function") {
-    throw new TypeError("The `setHeaders` option must be a function")
+  if (setHeaders !== undefined && typeof setHeaders !== 'function') {
+    throw new TypeError('The `setHeaders` option must be a function')
   }
 
   const invalidDirListOpts = dirList.validateOptions(opts.list)
@@ -42,7 +42,7 @@ async function fastifyStatic(fastify, opts) {
 
   const allowedPath = opts.allowedPath
 
-  function pumpSendToReply(
+  function pumpSendToReply (
     request,
     reply,
     pathname,
@@ -80,21 +80,21 @@ async function fastifyStatic(fastify, opts) {
       encodingExt = checkEncodingHeaders(request.headers, checkedExtensions)
 
       if (encodingExt) {
-        pathnameForSend = pathname + "." + encodingExt
+        pathnameForSend = pathname + '.' + encodingExt
       }
     }
 
     const stream = send(request.raw, pathnameForSend, options)
     let resolvedFilename
-    stream.on("file", function (file) {
+    stream.on('file', function (file) {
       resolvedFilename = file
     })
 
     const wrap = new PassThrough({
-      flush(cb) {
+      flush (cb) {
         this.finished = true
         if (reply.raw.statusCode === 304) {
-          reply.send("")
+          reply.send('')
         }
         cb()
       }
@@ -104,32 +104,32 @@ async function fastifyStatic(fastify, opts) {
     wrap.setHeader = reply.header.bind(reply)
     wrap.finished = false
 
-    Object.defineProperty(wrap, "filename", {
-      get() {
+    Object.defineProperty(wrap, 'filename', {
+      get () {
         return resolvedFilename
       }
     })
-    Object.defineProperty(wrap, "statusCode", {
-      get() {
+    Object.defineProperty(wrap, 'statusCode', {
+      get () {
         return reply.raw.statusCode
       },
-      set(code) {
+      set (code) {
         reply.code(code)
       }
     })
 
-    wrap.on("pipe", function () {
+    wrap.on('pipe', function () {
       if (encodingExt) {
-        reply.header("content-encoding", encodingExt)
+        reply.header('content-encoding', encodingExt)
       }
       reply.send(wrap)
     })
 
     if (setHeaders !== undefined) {
-      stream.on("headers", setHeaders)
+      stream.on('headers', setHeaders)
     }
 
-    stream.on("directory", function (_, path) {
+    stream.on('directory', function (_, path) {
       if (opts.list) {
         return dirList.send({
           reply,
@@ -142,15 +142,15 @@ async function fastifyStatic(fastify, opts) {
       if (opts.redirect === true) {
         /* eslint node/no-deprecated-api: "off" */
         const parsed = url.parse(request.raw.url)
-        reply.redirect(301, parsed.pathname + "/" + (parsed.search || ""))
+        reply.redirect(301, parsed.pathname + '/' + (parsed.search || ''))
       } else {
         reply.callNotFound()
       }
     })
 
-    stream.on("error", function (err) {
+    stream.on('error', function (err) {
       if (err) {
-        if (err.code === "ENOENT") {
+        if (err.code === 'ENOENT') {
           // if file exists, send real file, otherwise send dir list if name match
           if (opts.list && dirList.handle(pathname, opts.list)) {
             return dirList.send({
@@ -196,19 +196,19 @@ async function fastifyStatic(fastify, opts) {
     stream.pipe(wrap)
   }
 
-  if (opts.prefix === undefined) opts.prefix = "/"
+  if (opts.prefix === undefined) opts.prefix = '/'
 
   let prefix = opts.prefix
 
   if (!opts.prefixAvoidTrailingSlash) {
     prefix =
-      opts.prefix[opts.prefix.length - 1] === "/"
+      opts.prefix[opts.prefix.length - 1] === '/'
         ? opts.prefix
-        : opts.prefix + "/"
+        : opts.prefix + '/'
   }
 
   const errorHandler = (error, request, reply) => {
-    if (error && error.code === "ERR_STREAM_PREMATURE_CLOSE") {
+    if (error && error.code === 'ERR_STREAM_PREMATURE_CLOSE') {
       reply.request.raw.destroy()
       return
     }
@@ -219,13 +219,13 @@ async function fastifyStatic(fastify, opts) {
   // Set the schema hide property if defined in opts or true by default
   const routeOpts = {
     schema: {
-      hide: typeof opts.schemaHide !== "undefined" ? opts.schemaHide : true
+      hide: typeof opts.schemaHide !== 'undefined' ? opts.schemaHide : true
     },
     errorHandler: fastify.errorHandler ? errorHandler : undefined
   }
 
   if (opts.decorateReply !== false) {
-    fastify.decorateReply("sendFile", function (filePath, rootPath) {
+    fastify.decorateReply('sendFile', function (filePath, rootPath) {
       pumpSendToReply(
         this.request,
         this,
@@ -236,14 +236,14 @@ async function fastifyStatic(fastify, opts) {
     })
 
     fastify.decorateReply(
-      "download",
+      'download',
       function (filePath, fileName, options = {}) {
         const { root, ...opts } =
-          typeof fileName === "object" ? fileName : options
-        fileName = typeof fileName === "string" ? fileName : filePath
+          typeof fileName === 'object' ? fileName : options
+        fileName = typeof fileName === 'string' ? fileName : filePath
 
         // Set content disposition header
-        this.header("content-disposition", contentDisposition(fileName))
+        this.header('content-disposition', contentDisposition(fileName))
 
         pumpSendToReply(this.request, this, filePath, root, 0, opts)
 
@@ -253,39 +253,38 @@ async function fastifyStatic(fastify, opts) {
   }
 
   if (opts.serve !== false) {
-    if (opts.wildcard && typeof opts.wildcard !== "boolean")
-      throw new Error('"wildcard" option must be a boolean')
+    if (opts.wildcard && typeof opts.wildcard !== 'boolean') { throw new Error('"wildcard" option must be a boolean') }
     if (opts.wildcard === undefined || opts.wildcard === true) {
-      fastify.get(prefix + "*", routeOpts, function (req, reply) {
-        pumpSendToReply(req, reply, "/" + req.params["*"], sendOptions.root)
+      fastify.get(prefix + '*', routeOpts, function (req, reply) {
+        pumpSendToReply(req, reply, '/' + req.params['*'], sendOptions.root)
       })
       if (opts.redirect === true && prefix !== opts.prefix) {
         fastify.get(opts.prefix, routeOpts, function (req, reply) {
           /* eslint node/no-deprecated-api: "off" */
           const parsed = url.parse(req.raw.url)
-          reply.redirect(301, parsed.pathname + "/" + (parsed.search || ""))
+          reply.redirect(301, parsed.pathname + '/' + (parsed.search || ''))
         })
       }
     } else {
-      const globPattern = "**/*"
+      const globPattern = '**/*'
 
-      async function addGlobRoutes(rootPath) {
+      async function addGlobRoutes (rootPath) {
         const files = await globPromise(path.join(rootPath, globPattern), {
           nodir: true
         })
         const indexDirs = new Set()
         const indexes =
-          typeof opts.index === "undefined"
-            ? ["index.html"]
+          typeof opts.index === 'undefined'
+            ? ['index.html']
             : [].concat(opts.index || [])
 
         for (let file of files) {
           file = file
-            .replace(rootPath.replace(/\\/g, "/"), "")
-            .replace(/^\//, "")
-          const route = encodeURI(prefix + file).replace(/\/\//g, "/")
+            .replace(rootPath.replace(/\\/g, '/'), '')
+            .replace(/^\//, '')
+          const route = encodeURI(prefix + file).replace(/\/\//g, '/')
           fastify.get(route, routeOpts, function (req, reply) {
-            pumpSendToReply(req, reply, "/" + file, rootPath)
+            pumpSendToReply(req, reply, '/' + file, rootPath)
           })
 
           if (indexes.includes(path.posix.basename(route))) {
@@ -294,8 +293,8 @@ async function fastifyStatic(fastify, opts) {
         }
 
         indexDirs.forEach(function (dirname) {
-          const pathname = dirname + (dirname.endsWith("/") ? "" : "/")
-          const file = "/" + pathname.replace(prefix, "")
+          const pathname = dirname + (dirname.endsWith('/') ? '' : '/')
+          const file = '/' + pathname.replace(prefix, '')
 
           fastify.get(pathname, routeOpts, function (req, reply) {
             pumpSendToReply(req, reply, file, rootPath)
@@ -303,10 +302,10 @@ async function fastifyStatic(fastify, opts) {
 
           if (opts.redirect === true) {
             fastify.get(
-              pathname.replace(/\/$/, ""),
+              pathname.replace(/\/$/, ''),
               routeOpts,
               function (req, reply) {
-                pumpSendToReply(req, reply, file.replace(/\/$/, ""), rootPath)
+                pumpSendToReply(req, reply, file.replace(/\/$/, ''), rootPath)
               }
             )
           }
@@ -322,7 +321,7 @@ async function fastifyStatic(fastify, opts) {
   }
 }
 
-function checkRootPathForErrors(fastify, rootPath) {
+function checkRootPathForErrors (fastify, rootPath) {
   if (rootPath === undefined) {
     throw new Error('"root" option is required')
   }
@@ -343,15 +342,15 @@ function checkRootPathForErrors(fastify, rootPath) {
     return
   }
 
-  if (typeof rootPath === "string") {
+  if (typeof rootPath === 'string') {
     return checkPath(fastify, rootPath)
   }
 
   throw new Error('"root" option must be a string or array of strings')
 }
 
-function checkPath(fastify, rootPath) {
-  if (typeof rootPath !== "string") {
+function checkPath (fastify, rootPath) {
+  if (typeof rootPath !== 'string') {
     throw new Error('"root" option must be a string')
   }
   if (path.isAbsolute(rootPath) === false) {
@@ -363,7 +362,7 @@ function checkPath(fastify, rootPath) {
   try {
     pathStat = statSync(rootPath)
   } catch (e) {
-    if (e.code === "ENOENT") {
+    if (e.code === 'ENOENT') {
       fastify.log.warn(`"root" path "${rootPath}" must exist`)
       return
     }
@@ -376,25 +375,25 @@ function checkPath(fastify, rootPath) {
   }
 }
 
-function checkEncodingHeaders(headers, checked) {
-  if (!("accept-encoding" in headers)) return
+function checkEncodingHeaders (headers, checked) {
+  if (!('accept-encoding' in headers)) return
 
   let ext
-  const accepted = headers["accept-encoding"].split(", ")
-  const checkedForBr = checked.has("br")
+  const accepted = headers['accept-encoding'].split(', ')
+  const checkedForBr = checked.has('br')
 
   for (let index = 0; index < accepted.length; index++) {
     const acceptedEncoding = accepted[index]
 
-    if (acceptedEncoding === "br" && !checkedForBr) {
-      ext = "br"
+    if (acceptedEncoding === 'br' && !checkedForBr) {
+      ext = 'br'
       break
     } else if (
-      acceptedEncoding === "gzip" &&
+      acceptedEncoding === 'gzip' &&
       checkedForBr &&
-      !checked.has("gz")
+      !checked.has('gz')
     ) {
-      ext = "gz"
+      ext = 'gz'
       break
     }
   }
@@ -403,6 +402,6 @@ function checkEncodingHeaders(headers, checked) {
 }
 
 module.exports = fp(fastifyStatic, {
-  fastify: "3.x",
-  name: "fastify-static"
+  fastify: '3.x',
+  name: 'fastify-static'
 })
