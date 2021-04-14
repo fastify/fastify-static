@@ -22,6 +22,7 @@ const index2Content = fs.readFileSync('./test/static2/index.html').toString('utf
 const foobarContent = fs.readFileSync('./test/static/foobar.html').toString('utf8')
 const deepContent = fs.readFileSync('./test/static/deep/path/for/test/purpose/foo.html').toString('utf8')
 const innerIndex = fs.readFileSync('./test/static/deep/path/for/test/index.html').toString('utf8')
+const fooContent = fs.readFileSync('./test/static/foo.html').toString('utf8')
 const barContent = fs.readFileSync('./test/static2/bar.html').toString('utf8')
 
 const GENERIC_RESPONSE_CHECK_COUNT = 5
@@ -491,7 +492,7 @@ t.test('register /static/', t => {
 })
 
 t.test('register /static and /static2', t => {
-  t.plan(3)
+  t.plan(5)
 
   const pluginOptions = {
     root: [path.join(__dirname, '/static'), path.join(__dirname, '/static2')],
@@ -499,6 +500,14 @@ t.test('register /static and /static2', t => {
   }
   const fastify = Fastify()
   fastify.register(fastifyStatic, pluginOptions)
+
+  fastify.get('/foo', (req, rep) => {
+    rep.sendFile('foo.html')
+  })
+
+  fastify.get('/bar', (req, rep) => {
+    rep.sendFile('bar.html')
+  })
 
   t.tearDown(fastify.close.bind(fastify))
 
@@ -526,6 +535,32 @@ t.test('register /static and /static2', t => {
       simple.concat({
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static/bar.html'
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(body.toString(), barContent)
+        genericResponseChecks(t, response)
+      })
+    })
+
+    t.test('sendFile foo.html', t => {
+      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/foo'
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(body.toString(), fooContent)
+        genericResponseChecks(t, response)
+      })
+    })
+
+    t.test('sendFile bar.html', t => {
+      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/bar'
       }, (err, response, body) => {
         t.error(err)
         t.strictEqual(response.statusCode, 200)
