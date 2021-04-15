@@ -10,6 +10,7 @@ const contentDisposition = require('content-disposition')
 const fp = require('fastify-plugin')
 const util = require('util')
 const globPromise = util.promisify(glob)
+const encodingNegotiator = require('encoding-negotiator')
 
 const dirList = require('./lib/dirList')
 
@@ -161,6 +162,17 @@ async function fastifyStatic (fastify, opts) {
             })
           }
 
+          // root paths left to try?
+          if (Array.isArray(rootPath) && rootPathOffset < rootPath.length - 1) {
+            return pumpSendToReply(
+              request,
+              reply,
+              pathname,
+              rootPath,
+              rootPathOffset + 1
+            )
+          }
+
           if (opts.preCompressed && !checkedExtensions.has(encodingExt)) {
             checkedExtensions.add(encodingExt)
             return pumpSendToReply(
@@ -171,17 +183,6 @@ async function fastifyStatic (fastify, opts) {
               undefined,
               undefined,
               checkedExtensions
-            )
-          }
-
-          // root paths left to try?
-          if (Array.isArray(rootPath) && rootPathOffset < rootPath.length - 1) {
-            return pumpSendToReply(
-              request,
-              reply,
-              pathname,
-              rootPath,
-              rootPathOffset + 1
             )
           }
 
@@ -253,7 +254,9 @@ async function fastifyStatic (fastify, opts) {
   }
 
   if (opts.serve !== false) {
-    if (opts.wildcard && typeof opts.wildcard !== 'boolean') { throw new Error('"wildcard" option must be a boolean') }
+    if (opts.wildcard && typeof opts.wildcard !== 'boolean') {
+      throw new Error('"wildcard" option must be a boolean')
+    }
     if (opts.wildcard === undefined || opts.wildcard === true) {
       fastify.get(prefix + '*', routeOpts, function (req, reply) {
         pumpSendToReply(req, reply, '/' + req.params['*'], sendOptions.root)
@@ -375,27 +378,29 @@ function checkPath (fastify, rootPath) {
   }
 }
 
+const supportedEncodings = ['br', 'gzip', 'deflate']
+
+// Adapted from https://github.com/fastify/fastify-compress/blob/fa5c12a5394285c86d9f438cb39ff44f3d5cde79/index.js#L442
 function checkEncodingHeaders (headers, checked) {
   if (!('accept-encoding' in headers)) return
 
   let ext
-  const accepted = headers['accept-encoding'].split(', ')
-  const checkedForBr = checked.has('br')
+  const header = headers['accept-encoding'].toLowerCase().replace('*', 'gzip')
+  const accepted = encodingNegotiator.negotiate(
+    header,
+    supportedEncodings.filter((enc) => !checked.has(enc))
+  )
 
-  for (let index = 0; index < accepted.length; index++) {
-    const acceptedEncoding = accepted[index]
-
-    if (acceptedEncoding === 'br' && !checkedForBr) {
+  switch (accepted) {
+    case 'br':
       ext = 'br'
       break
-    } else if (
-      acceptedEncoding === 'gzip' &&
-      checkedForBr &&
-      !checked.has('gz')
-    ) {
-      ext = 'gz'
-      break
-    }
+
+    case 'gzip':
+      if (!checked.has('gz')) {
+        ext = 'gz'
+        break
+      }
   }
 
   return ext
