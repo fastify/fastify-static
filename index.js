@@ -91,13 +91,11 @@ async function fastifyStatic (fastify, opts) {
       }
     })
 
-    wrap.on('pipe', function () {
-      if (request.method !== 'HEAD') { reply.send(wrap) }
-    })
-
-    wrap.on('finish', function () {
-      if (request.method === 'HEAD') { reply.send() }
-    })
+    if (request.method === 'HEAD') {
+      wrap.on('finish', reply.send.bind(reply))
+    } else {
+      wrap.on('pipe', reply.send.bind(reply, wrap))
+    }
 
     if (setHeaders !== undefined) {
       stream.on('headers', setHeaders)
