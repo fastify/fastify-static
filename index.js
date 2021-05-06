@@ -92,7 +92,11 @@ async function fastifyStatic (fastify, opts) {
     })
 
     wrap.on('pipe', function () {
-      reply.send(wrap)
+      if (request.method !== 'HEAD') { reply.send(wrap) }
+    })
+
+    wrap.on('finish', function () {
+      if (request.method === 'HEAD') { reply.send() }
     })
 
     if (setHeaders !== undefined) {
@@ -182,6 +186,9 @@ async function fastifyStatic (fastify, opts) {
   if (opts.serve !== false) {
     if (opts.wildcard && typeof opts.wildcard !== 'boolean') throw new Error('"wildcard" option must be a boolean')
     if (opts.wildcard === undefined || opts.wildcard === true) {
+      fastify.head(prefix + '*', routeOpts, function (req, reply) {
+        pumpSendToReply(req, reply, '/' + req.params['*'], sendOptions.root)
+      })
       fastify.get(prefix + '*', routeOpts, function (req, reply) {
         pumpSendToReply(req, reply, '/' + req.params['*'], sendOptions.root)
       })
@@ -203,6 +210,10 @@ async function fastifyStatic (fastify, opts) {
         for (let file of files) {
           file = file.replace(rootPath.replace(/\\/g, '/'), '').replace(/^\//, '')
           const route = encodeURI(prefix + file).replace(/\/\//g, '/')
+          fastify.head(route, routeOpts, function (req, reply) {
+            pumpSendToReply(req, reply, '/' + file, rootPath)
+          })
+
           fastify.get(route, routeOpts, function (req, reply) {
             pumpSendToReply(req, reply, '/' + file, rootPath)
           })
@@ -216,11 +227,18 @@ async function fastifyStatic (fastify, opts) {
           const pathname = dirname + (dirname.endsWith('/') ? '' : '/')
           const file = '/' + pathname.replace(prefix, '')
 
+          fastify.head(pathname, routeOpts, function (req, reply) {
+            pumpSendToReply(req, reply, file, rootPath)
+          })
+
           fastify.get(pathname, routeOpts, function (req, reply) {
             pumpSendToReply(req, reply, file, rootPath)
           })
 
           if (opts.redirect === true) {
+            fastify.head(pathname.replace(/\/$/, ''), routeOpts, function (req, reply) {
+              pumpSendToReply(req, reply, file.replace(/\/$/, ''), rootPath)
+            })
             fastify.get(pathname.replace(/\/$/, ''), routeOpts, function (req, reply) {
               pumpSendToReply(req, reply, file.replace(/\/$/, ''), rootPath)
             })

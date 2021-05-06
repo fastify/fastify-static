@@ -41,7 +41,7 @@ function genericErrorResponseChecks (t, response) {
 }
 
 t.test('register /static prefixAvoidTrailingSlash', t => {
-  t.plan(11)
+  t.plan(12)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -183,6 +183,19 @@ t.test('register /static prefixAvoidTrailingSlash', t => {
       }, (err, response, body) => {
         t.error(err)
         t.strictEqual(response.statusCode, 404)
+      })
+    })
+
+    t.test('file not exposed outside of the plugin', t => {
+      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'HEAD',
+        url: 'http://localhost:' + fastify.server.address().port + '/static/index.html'
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(body.toString(), '')
+        genericResponseChecks(t, response)
       })
     })
   })
@@ -334,7 +347,7 @@ t.test('register /static', t => {
 })
 
 t.test('register /static/', t => {
-  t.plan(11)
+  t.plan(12)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -359,6 +372,19 @@ t.test('register /static/', t => {
         t.error(err)
         t.strictEqual(response.statusCode, 200)
         t.strictEqual(body.toString(), indexContent)
+        genericResponseChecks(t, response)
+      })
+    })
+
+    t.test('/static/index.html', t => {
+      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'HEAD',
+        url: 'http://localhost:' + fastify.server.address().port + '/static/index.html'
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(body.toString(), '')
         genericResponseChecks(t, response)
       })
     })
@@ -1507,7 +1533,7 @@ t.test('with fastify-compress', t => {
 })
 
 t.test('register /static/ with schemaHide true', t => {
-  t.plan(3)
+  t.plan(4)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -1547,7 +1573,7 @@ t.test('register /static/ with schemaHide true', t => {
 })
 
 t.test('register /static/ with schemaHide false', t => {
-  t.plan(3)
+  t.plan(4)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -1587,7 +1613,7 @@ t.test('register /static/ with schemaHide false', t => {
 })
 
 t.test('register /static/ without schemaHide', t => {
-  t.plan(3)
+  t.plan(4)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -1625,8 +1651,44 @@ t.test('register /static/ without schemaHide', t => {
   })
 })
 
+t.test('fastify with exposeHeadRoutes', t => {
+  t.plan(2)
+
+  const pluginOptions = {
+    root: path.join(__dirname, '/static'),
+    wildcard: false
+  }
+  const fastify = Fastify({ exposeHeadRoutes: true })
+  fastify.register(fastifyStatic, pluginOptions)
+
+  fastify.get('/*', (request, reply) => {
+    reply.send({ hello: 'world' })
+  })
+
+  t.tearDown(fastify.close.bind(fastify))
+
+  fastify.listen(0, err => {
+    t.error(err)
+
+    fastify.server.unref()
+
+    t.test('/index.html', t => {
+      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'HEAD',
+        url: 'http://localhost:' + fastify.server.address().port + '/index.html'
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(body.toString(), '')
+        genericResponseChecks(t, response)
+      })
+    })
+  })
+})
+
 t.test('register with wildcard false', t => {
-  t.plan(8)
+  t.plan(9)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -1734,6 +1796,19 @@ t.test('register with wildcard false', t => {
         t.deepEqual(JSON.parse(body), { hello: 'world' })
       })
     })
+
+    t.test('/index.css', t => {
+      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'HEAD',
+        url: 'http://localhost:' + fastify.server.address().port + '/index.css'
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(body.toString(), '')
+        genericResponseChecks(t, response)
+      })
+    })
   })
 })
 
@@ -1780,7 +1855,7 @@ t.test('register with wildcard string on multiple root paths', t => {
 })
 
 t.test('register with wildcard false and alternative index', t => {
-  t.plan(8)
+  t.plan(11)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -1814,6 +1889,19 @@ t.test('register with wildcard false and alternative index', t => {
       })
     })
 
+    t.test('/index.html', t => {
+      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'HEAD',
+        url: 'http://localhost:' + fastify.server.address().port + '/index.html'
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(body.toString(), '')
+        genericResponseChecks(t, response)
+      })
+    })
+
     t.test('/index.css', t => {
       t.plan(2 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
@@ -1835,6 +1923,19 @@ t.test('register with wildcard false and alternative index', t => {
         t.error(err)
         t.strictEqual(response.statusCode, 200)
         t.strictEqual(body.toString(), foobarContent)
+        genericResponseChecks(t, response)
+      })
+    })
+
+    t.test('/?a=b', t => {
+      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'HEAD',
+        url: 'http://localhost:' + fastify.server.address().port
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(body.toString(), '')
         genericResponseChecks(t, response)
       })
     })
@@ -1877,6 +1978,19 @@ t.test('register with wildcard false and alternative index', t => {
       })
     })
 
+    t.test('/deep/path/for/test/', t => {
+      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'HEAD',
+        url: 'http://localhost:' + fastify.server.address().port + '/deep/path/for/test/'
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(body.toString(), '')
+        genericResponseChecks(t, response)
+      })
+    })
+
     t.test('/../index.js', t => {
       t.plan(3)
       simple.concat({
@@ -1893,7 +2007,7 @@ t.test('register with wildcard false and alternative index', t => {
 })
 
 t.test('register /static with wildcard false and alternative index', t => {
-  t.plan(9)
+  t.plan(11)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -1924,6 +2038,19 @@ t.test('register /static with wildcard false and alternative index', t => {
         t.error(err)
         t.strictEqual(response.statusCode, 200)
         t.strictEqual(body.toString(), indexContent)
+        genericResponseChecks(t, response)
+      })
+    })
+
+    t.test('/static/index.html', t => {
+      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'HEAD',
+        url: 'http://localhost:' + fastify.server.address().port + '/static/index.html'
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(body.toString(), '')
         genericResponseChecks(t, response)
       })
     })
@@ -1969,6 +2096,19 @@ t.test('register /static with wildcard false and alternative index', t => {
         t.error(err)
         t.strictEqual(response.statusCode, 200)
         t.strictEqual(body.toString(), foobarContent)
+        genericResponseChecks(t, response)
+      })
+    })
+
+    t.test('/static/', t => {
+      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'HEAD',
+        url: 'http://localhost:' + fastify.server.address().port + '/static/'
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(body.toString(), '')
         genericResponseChecks(t, response)
       })
     })
@@ -2138,7 +2278,7 @@ t.test('register /static with redirect true', t => {
 })
 
 t.test('register /static with redirect true and wildcard false', t => {
-  t.plan(6)
+  t.plan(8)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -2196,6 +2336,20 @@ t.test('register /static with redirect true and wildcard false', t => {
       })
     })
 
+    t.test('/static/?a=b', t => {
+      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+
+      simple.concat({
+        method: 'HEAD',
+        url: 'http://localhost:' + fastify.server.address().port + '/static/?a=b'
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(body.toString(), '')
+        genericResponseChecks(t, response)
+      })
+    })
+
     t.test('/static/deep', t => {
       t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
 
@@ -2243,6 +2397,20 @@ t.test('register /static with redirect true and wildcard false', t => {
         t.error(err)
         t.strictEqual(response.statusCode, 200)
         t.strictEqual(body.toString(), innerIndex)
+        genericResponseChecks(t, response)
+      })
+    })
+
+    t.test('/static/deep/path/for/test', t => {
+      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+
+      simple.concat({
+        method: 'HEAD',
+        url: 'http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test'
+      }, (err, response, body) => {
+        t.error(err)
+        t.strictEqual(response.statusCode, 200)
+        t.strictEqual(body.toString(), '')
         genericResponseChecks(t, response)
       })
     })
@@ -2476,7 +2644,7 @@ t.test('inject support', async (t) => {
 })
 
 t.test('routes should use custom errorHandler premature stream close', t => {
-  t.plan(3)
+  t.plan(4)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -2508,7 +2676,7 @@ t.test('routes should use custom errorHandler premature stream close', t => {
 })
 
 t.test('routes should fallback to default errorHandler', t => {
-  t.plan(3)
+  t.plan(4)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -2545,7 +2713,7 @@ t.test('routes should fallback to default errorHandler', t => {
 })
 
 t.test('routes use default errorHandler when fastify.errorHandler is not defined', t => {
-  t.plan(3)
+  t.plan(4)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
