@@ -192,7 +192,6 @@ async function fastifyStatic (fastify, opts) {
         fastify.get(opts.prefix, routeOpts, function (req, reply) {
           /* eslint node/no-deprecated-api: "off" */
           const parsed = url.parse(req.raw.url)
-          /* istanbul ignore next */
           reply.redirect(301, parsed.pathname + '/' + (parsed.search || ''))
         })
       }
