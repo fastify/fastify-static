@@ -200,7 +200,7 @@ async function fastifyStatic (fastify, opts) {
       const indexDirs = new Map()
       const routes = new Set()
 
-      async function addGlobRoutes (rootPath) {
+      for (const rootPath of Array.isArray(sendOptions.root) ? sendOptions.root : [sendOptions.root]) {
         const files = await globPromise(path.join(rootPath, globPattern), { nodir: true })
         const indexes = typeof opts.index === 'undefined' ? ['index.html'] : [].concat(opts.index)
 
@@ -224,14 +224,6 @@ async function fastifyStatic (fastify, opts) {
             indexDirs.set(path.posix.dirname(route), rootPath)
           }
         }
-      }
-
-      if (Array.isArray(sendOptions.root)) {
-        for (const root of sendOptions.root) {
-          await addGlobRoutes(root)
-        }
-      } else {
-        await addGlobRoutes(sendOptions.root)
       }
 
       for (const [dirname, rootPath] of indexDirs.entries()) {
