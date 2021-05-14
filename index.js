@@ -119,12 +119,16 @@ async function fastifyStatic (fastify, opts) {
       }
     })
 
-    wrap.on('pipe', function () {
-      if (encodingExt) {
-        reply.header('content-encoding', encodingExt)
-      }
-      reply.send(wrap)
-    })
+    if (request.method === 'HEAD') {
+      wrap.on('finish', reply.send.bind(reply))
+    } else {
+      wrap.on('pipe', function () {
+        if (encodingExt) {
+          reply.header('content-encoding', encodingExt)
+        }
+        reply.send(wrap)
+      })
+    }
 
     if (setHeaders !== undefined) {
       stream.on('headers', setHeaders)
@@ -150,46 +154,33 @@ async function fastifyStatic (fastify, opts) {
     })
 
     stream.on('error', function (err) {
-      if (err) {
-        if (err.code === 'ENOENT') {
-          // if file exists, send real file, otherwise send dir list if name match
-          if (opts.list && dirList.handle(pathname, opts.list)) {
-            return dirList.send({
-              reply,
-              dir: dirList.path(opts.root, pathname),
-              options: opts.list,
-              route: pathname
-            })
-          }
-
-          // root paths left to try?
-          if (Array.isArray(rootPath) && rootPathOffset < rootPath.length - 1) {
-            return pumpSendToReply(
-              request,
-              reply,
-              pathname,
-              rootPath,
-              rootPathOffset + 1
-            )
-          }
-
-          if (opts.preCompressed && !checkedExtensions.has(encodingExt)) {
-            checkedExtensions.add(encodingExt)
-            return pumpSendToReply(
-              request,
-              reply,
-              pathname,
-              rootPath,
-              undefined,
-              undefined,
-              checkedExtensions
-            )
-          }
-
-          return reply.callNotFound()
+      if (err.code === 'ENOENT') {
+        // if file exists, send real file, otherwise send dir list if name match
+        if (opts.list && dirList.handle(pathname, opts.list)) {
+          return dirList.send({ reply, dir: dirList.path(opts.root, pathname), options: opts.list, route: pathname })
         }
-        reply.send(err)
+
+        // root paths left to try?
+        if (Array.isArray(rootPath) && rootPathOffset < (rootPath.length - 1)) {
+          return pumpSendToReply(request, reply, pathname, rootPath, rootPathOffset + 1)
+        }
+
+        if (opts.preCompressed && !checkedExtensions.has(encodingExt)) {
+          checkedExtensions.add(encodingExt)
+          return pumpSendToReply(
+            request,
+            reply,
+            pathname,
+            rootPath,
+            undefined,
+            undefined,
+            checkedExtensions
+          )
+        }
+
+        return reply.callNotFound()
       }
+      reply.send(err)
     })
 
     // we cannot use pump, because send error
@@ -258,6 +249,9 @@ async function fastifyStatic (fastify, opts) {
       throw new Error('"wildcard" option must be a boolean')
     }
     if (opts.wildcard === undefined || opts.wildcard === true) {
+      fastify.head(prefix + '*', routeOpts, function (req, reply) {
+        pumpSendToReply(req, reply, '/' + req.params['*'], sendOptions.root)
+      })
       fastify.get(prefix + '*', routeOpts, function (req, reply) {
         pumpSendToReply(req, reply, '/' + req.params['*'], sendOptions.root)
       })
@@ -270,55 +264,57 @@ async function fastifyStatic (fastify, opts) {
       }
     } else {
       const globPattern = '**/*'
+      const indexDirs = new Map()
+      const routes = new Set()
 
-      async function addGlobRoutes (rootPath) {
-        const files = await globPromise(path.join(rootPath, globPattern), {
-          nodir: true
-        })
-        const indexDirs = new Set()
-        const indexes =
-          typeof opts.index === 'undefined'
-            ? ['index.html']
-            : [].concat(opts.index || [])
+      for (const rootPath of Array.isArray(sendOptions.root) ? sendOptions.root : [sendOptions.root]) {
+        const files = await globPromise(path.join(rootPath, globPattern), { nodir: true })
+        const indexes = typeof opts.index === 'undefined' ? ['index.html'] : [].concat(opts.index)
 
         for (let file of files) {
           file = file
             .replace(rootPath.replace(/\\/g, '/'), '')
             .replace(/^\//, '')
           const route = encodeURI(prefix + file).replace(/\/\//g, '/')
+          if (routes.has(route)) {
+            continue
+          }
+          routes.add(route)
+          fastify.head(route, routeOpts, function (req, reply) {
+            pumpSendToReply(req, reply, '/' + file, rootPath)
+          })
+
           fastify.get(route, routeOpts, function (req, reply) {
             pumpSendToReply(req, reply, '/' + file, rootPath)
           })
 
-          if (indexes.includes(path.posix.basename(route))) {
-            indexDirs.add(path.posix.dirname(route))
+          const key = path.posix.basename(route)
+          if (indexes.includes(key) && !indexDirs.has(key)) {
+            indexDirs.set(path.posix.dirname(route), rootPath)
           }
         }
-
-        indexDirs.forEach(function (dirname) {
-          const pathname = dirname + (dirname.endsWith('/') ? '' : '/')
-          const file = '/' + pathname.replace(prefix, '')
-
-          fastify.get(pathname, routeOpts, function (req, reply) {
-            pumpSendToReply(req, reply, file, rootPath)
-          })
-
-          if (opts.redirect === true) {
-            fastify.get(
-              pathname.replace(/\/$/, ''),
-              routeOpts,
-              function (req, reply) {
-                pumpSendToReply(req, reply, file.replace(/\/$/, ''), rootPath)
-              }
-            )
-          }
-        })
       }
 
-      if (Array.isArray(sendOptions.root)) {
-        await Promise.all(sendOptions.root.map(addGlobRoutes))
-      } else {
-        await addGlobRoutes(sendOptions.root)
+      for (const [dirname, rootPath] of indexDirs.entries()) {
+        const pathname = dirname + (dirname.endsWith('/') ? '' : '/')
+        const file = '/' + pathname.replace(prefix, '')
+
+        fastify.head(pathname, routeOpts, function (req, reply) {
+          pumpSendToReply(req, reply, file, rootPath)
+        })
+
+        fastify.get(pathname, routeOpts, function (req, reply) {
+          pumpSendToReply(req, reply, file, rootPath)
+        })
+
+        if (opts.redirect === true) {
+          fastify.head(pathname.replace(/\/$/, ''), routeOpts, function (req, reply) {
+            pumpSendToReply(req, reply, file.replace(/\/$/, ''), rootPath)
+          })
+          fastify.get(pathname.replace(/\/$/, ''), routeOpts, function (req, reply) {
+            pumpSendToReply(req, reply, file.replace(/\/$/, ''), rootPath)
+          })
+        }
       }
     }
   }

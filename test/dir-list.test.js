@@ -14,7 +14,7 @@ const helper = {
   arrange: function (t, options, f) {
     const fastify = Fastify()
     fastify.register(fastifyStatic, options)
-    t.tearDown(fastify.close.bind(fastify))
+    t.teardown(fastify.close.bind(fastify))
     fastify.listen(0, err => {
       t.error(err)
       fastify.server.unref()
@@ -92,8 +92,8 @@ t.test('dir list default options', t => {
         url: url + route
       }, (err, response, body) => {
         t.error(err)
-        t.strictEqual(response.statusCode, 200)
-        t.strictEqual(body.toString(), JSON.stringify(content))
+        t.equal(response.statusCode, 200)
+        t.equal(body.toString(), JSON.stringify(content))
       })
     })
   })
@@ -120,8 +120,8 @@ t.test('dir list, custom options', t => {
         url: url + route
       }, (err, response, body) => {
         t.error(err)
-        t.strictEqual(response.statusCode, 200)
-        t.strictEqual(body.toString(), JSON.stringify(content))
+        t.equal(response.statusCode, 200)
+        t.equal(body.toString(), JSON.stringify(content))
       })
     })
   })
@@ -228,8 +228,8 @@ t.test('dir list html format', t => {
             url: url + route
           }, (err, response, body) => {
             t.error(err)
-            t.strictEqual(response.statusCode, 200)
-            t.strictEqual(body.toString(), template.output)
+            t.equal(response.statusCode, 200)
+            t.equal(body.toString(), template.output)
           })
         })
       }
@@ -262,8 +262,8 @@ t.test('dir list json format', t => {
           url: url + route
         }, (err, response, body) => {
           t.error(err)
-          t.strictEqual(response.statusCode, 200)
-          t.strictEqual(body.toString(), JSON.stringify(content))
+          t.equal(response.statusCode, 200)
+          t.equal(body.toString(), JSON.stringify(content))
         })
       })
     }
@@ -289,8 +289,8 @@ t.test('dir list on empty dir', t => {
         url: url + route
       }, (err, response, body) => {
         t.error(err)
-        t.strictEqual(response.statusCode, 200)
-        t.strictEqual(body.toString(), JSON.stringify(content))
+        t.equal(response.statusCode, 200)
+        t.equal(body.toString(), JSON.stringify(content))
       })
     })
   })
@@ -321,8 +321,8 @@ t.test('dir list serve index.html on index option', t => {
         url: url + route
       }, (err, response, body) => {
         t.error(err)
-        t.strictEqual(response.statusCode, 200)
-        t.strictEqual(body.toString(), '<html>\n  <body>\n    the body\n  </body>\n</html>\n')
+        t.equal(response.statusCode, 200)
+        t.equal(body.toString(), '<html>\n  <body>\n    the body\n  </body>\n</html>\n')
       })
 
       route = '/public/index'
@@ -331,8 +331,8 @@ t.test('dir list serve index.html on index option', t => {
         url: url + route
       }, (err, response, body) => {
         t.error(err)
-        t.strictEqual(response.statusCode, 200)
-        t.strictEqual(body.toString(), 'dir list index')
+        t.equal(response.statusCode, 200)
+        t.equal(body.toString(), 'dir list index')
       })
     })
   })
@@ -356,7 +356,7 @@ t.test('serve a non existent dir and get error', t => {
         url: url + route
       }, (err, response, body) => {
         t.error(err)
-        t.strictEqual(response.statusCode, 404)
+        t.equal(response.statusCode, 404)
       })
     })
   })
@@ -382,7 +382,7 @@ t.test('serve a non existent dir and get error', t => {
         url: url + route
       }, (err, response, body) => {
         t.error(err)
-        t.strictEqual(response.statusCode, 404)
+        t.equal(response.statusCode, 404)
       })
     })
   })
