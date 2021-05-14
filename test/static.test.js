@@ -3065,3 +3065,29 @@ t.test(
     t.end()
   }
 )
+
+t.test(
+  'will serve uncompressed files the accept-encoding header is missing',
+  async (t) => {
+    const pluginOptions = {
+      root: path.join(__dirname, '/static-pre-compressed'),
+      prefix: '/static-pre-compressed/',
+      preCompressed: true
+    }
+
+    const fastify = Fastify()
+
+    fastify.register(fastifyStatic, pluginOptions)
+    t.teardown(fastify.close.bind(fastify))
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '/static-pre-compressed/uncompressed.html'
+    })
+
+    t.equal(response.headers['content-encoding'], undefined)
+    t.equal(response.statusCode, 200)
+    t.equal(response.body, uncompressedStatic)
+    t.end()
+  }
+)
