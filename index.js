@@ -81,6 +81,12 @@ async function fastifyStatic (fastify, opts) {
       encodingExt = checkEncodingHeaders(request.headers, checkedExtensions)
 
       if (encodingExt) {
+        if (pathname.endsWith('/')) {
+          pathname = findIndexFile(pathname, options.root, options.index)
+          if (!pathname) {
+            return reply.callNotFound()
+          }
+        }
         pathnameForSend = pathname + '.' + encodingExt
       }
     }
@@ -375,6 +381,14 @@ function checkPath (fastify, rootPath) {
 }
 
 const supportedEncodings = ['br', 'gzip', 'deflate']
+
+function findIndexFile (pathname, root, indexFiles = ['index.html']) {
+  return indexFiles.find(filename => {
+    const p = path.join(root, pathname, filename)
+    const stats = statSync(p, { throwIfNoEntry: false })
+    return stats && !stats.isDirectory()
+  })
+}
 
 // Adapted from https://github.com/fastify/fastify-compress/blob/fa5c12a5394285c86d9f438cb39ff44f3d5cde79/index.js#L442
 function checkEncodingHeaders (headers, checked) {
