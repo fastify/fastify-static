@@ -3123,3 +3123,33 @@ t.test(
     t.end()
   }
 )
+
+t.test(
+  'will serve precompressed index with alternative index option',
+  async (t) => {
+    const pluginOptions = {
+      root: path.join(__dirname, '/static-pre-compressed'),
+      prefix: '/static-pre-compressed/',
+      preCompressed: true,
+      index: ['all-three.html']
+    }
+
+    const fastify = Fastify()
+
+    fastify.register(fastifyStatic, pluginOptions)
+    t.teardown(fastify.close.bind(fastify))
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '/static-pre-compressed/',
+      headers: {
+        'accept-encoding': 'gzip, deflate, br'
+      }
+    })
+
+    t.equal(response.headers['content-encoding'], 'br')
+    t.equal(response.statusCode, 200)
+    t.same(response.rawPayload, allThreeBr)
+    t.end()
+  }
+)
