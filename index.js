@@ -130,6 +130,7 @@ async function fastifyStatic (fastify, opts) {
     } else {
       wrap.on('pipe', function () {
         if (encodingExt) {
+          reply.header('content-type', getContentType(pathname))
           reply.header('content-encoding', encodingExt)
         }
         reply.send(wrap)
@@ -381,6 +382,18 @@ function checkPath (fastify, rootPath) {
 }
 
 const supportedEncodings = ['br', 'gzip', 'deflate']
+
+function getContentType (path) {
+  const type = send.mime.lookup(path)
+  if (!type) {
+    return
+  }
+  const charset = send.mime.charsets.lookup(type)
+  if (!charset) {
+    return type
+  }
+  return `${type}; charset=${charset}`
+}
 
 function findIndexFile (pathname, root, indexFiles = ['index.html']) {
   return indexFiles.find(filename => {
