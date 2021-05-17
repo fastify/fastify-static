@@ -58,6 +58,11 @@ export interface FastifyStaticOptions extends SendOptions {
   wildcard?: boolean;
   list?: boolean | ListOptions;
   allowedPath?: (pathName: string, root?: string) => boolean;
+  /**
+   * @description
+   * Opt-in to looking for pre-compressed files
+   */
+  preCompressed?: boolean;
 
   // Passed on to `send`
   acceptRanges?: boolean;

@@ -10,6 +10,7 @@ const contentDisposition = require('content-disposition')
 const fp = require('fastify-plugin')
 const util = require('util')
 const globPromise = util.promisify(glob)
+const encodingNegotiator = require('encoding-negotiator')
 
 const dirList = require('./lib/dirList')
 
@@ -42,7 +43,15 @@ async function fastifyStatic (fastify, opts) {
 
   const allowedPath = opts.allowedPath
 
-  function pumpSendToReply (request, reply, pathname, rootPath, rootPathOffset = 0, pumpOptions = {}) {
+  function pumpSendToReply (
+    request,
+    reply,
+    pathname,
+    rootPath,
+    rootPathOffset = 0,
+    pumpOptions = {},
+    checkedExtensions
+  ) {
     const options = Object.assign({}, sendOptions, pumpOptions)
 
     if (rootPath) {
@@ -57,7 +66,26 @@ async function fastifyStatic (fastify, opts) {
       return reply.callNotFound()
     }
 
-    const stream = send(request.raw, pathname, options)
+    let encodingExt
+    let pathnameForSend = pathname
+
+    if (opts.preCompressed) {
+      /**
+       * We conditionally create this structure to track our attempts
+       * at sending pre-compressed assets
+       */
+      if (!checkedExtensions) {
+        checkedExtensions = new Set()
+      }
+
+      encodingExt = checkEncodingHeaders(request.headers, checkedExtensions)
+
+      if (encodingExt) {
+        pathnameForSend = pathname + '.' + encodingExt
+      }
+    }
+
+    const stream = send(request.raw, pathnameForSend, options)
     let resolvedFilename
     stream.on('file', function (file) {
       resolvedFilename = file
@@ -94,7 +122,12 @@ async function fastifyStatic (fastify, opts) {
     if (request.method === 'HEAD') {
       wrap.on('finish', reply.send.bind(reply))
     } else {
-      wrap.on('pipe', reply.send.bind(reply, wrap))
+      wrap.on('pipe', function () {
+        if (encodingExt) {
+          reply.header('content-encoding', encodingExt)
+        }
+        reply.send(wrap)
+      })
     }
 
     if (setHeaders !== undefined) {
@@ -103,7 +136,12 @@ async function fastifyStatic (fastify, opts) {
 
     stream.on('directory', function (_, path) {
       if (opts.list) {
-        return dirList.send({ reply, dir: path, options: opts.list, route: pathname })
+        return dirList.send({
+          reply,
+          dir: path,
+          options: opts.list,
+          route: pathname
+        })
       }
 
       if (opts.redirect === true) {
@@ -127,6 +165,19 @@ async function fastifyStatic (fastify, opts) {
           return pumpSendToReply(request, reply, pathname, rootPath, rootPathOffset + 1)
         }
 
+        if (opts.preCompressed && !checkedExtensions.has(encodingExt)) {
+          checkedExtensions.add(encodingExt)
+          return pumpSendToReply(
+            request,
+            reply,
+            pathname,
+            rootPath,
+            undefined,
+            undefined,
+            checkedExtensions
+          )
+        }
+
         return reply.callNotFound()
       }
       reply.send(err)
@@ -142,7 +193,10 @@ async function fastifyStatic (fastify, opts) {
   let prefix = opts.prefix
 
   if (!opts.prefixAvoidTrailingSlash) {
-    prefix = opts.prefix[opts.prefix.length - 1] === '/' ? opts.prefix : (opts.prefix + '/')
+    prefix =
+      opts.prefix[opts.prefix.length - 1] === '/'
+        ? opts.prefix
+        : opts.prefix + '/'
   }
 
   const errorHandler = (error, request, reply) => {
@@ -156,31 +210,44 @@ async function fastifyStatic (fastify, opts) {
 
   // Set the schema hide property if defined in opts or true by default
   const routeOpts = {
-    schema: { hide: typeof opts.schemaHide !== 'undefined' ? opts.schemaHide : true },
+    schema: {
+      hide: typeof opts.schemaHide !== 'undefined' ? opts.schemaHide : true
+    },
     errorHandler: fastify.errorHandler ? errorHandler : undefined
   }
 
   if (opts.decorateReply !== false) {
     fastify.decorateReply('sendFile', function (filePath, rootPath) {
-      pumpSendToReply(this.request, this, filePath, rootPath || sendOptions.root)
+      pumpSendToReply(
+        this.request,
+        this,
+        filePath,
+        rootPath || sendOptions.root
+      )
       return this
     })
 
-    fastify.decorateReply('download', function (filePath, fileName, options = {}) {
-      const { root, ...opts } = typeof fileName === 'object' ? fileName : options
-      fileName = typeof fileName === 'string' ? fileName : filePath
+    fastify.decorateReply(
+      'download',
+      function (filePath, fileName, options = {}) {
+        const { root, ...opts } =
+          typeof fileName === 'object' ? fileName : options
+        fileName = typeof fileName === 'string' ? fileName : filePath
 
-      // Set content disposition header
-      this.header('content-disposition', contentDisposition(fileName))
+        // Set content disposition header
+        this.header('content-disposition', contentDisposition(fileName))
 
-      pumpSendToReply(this.request, this, filePath, root, 0, opts)
+        pumpSendToReply(this.request, this, filePath, root, 0, opts)
 
-      return this
-    })
+        return this
+      }
+    )
   }
 
   if (opts.serve !== false) {
-    if (opts.wildcard && typeof opts.wildcard !== 'boolean') throw new Error('"wildcard" option must be a boolean')
+    if (opts.wildcard && typeof opts.wildcard !== 'boolean') {
+      throw new Error('"wildcard" option must be a boolean')
+    }
     if (opts.wildcard === undefined || opts.wildcard === true) {
       fastify.head(prefix + '*', routeOpts, function (req, reply) {
         pumpSendToReply(req, reply, '/' + req.params['*'], sendOptions.root)
@@ -205,7 +272,9 @@ async function fastifyStatic (fastify, opts) {
         const indexes = typeof opts.index === 'undefined' ? ['index.html'] : [].concat(opts.index)
 
         for (let file of files) {
-          file = file.replace(rootPath.replace(/\\/g, '/'), '').replace(/^\//, '')
+          file = file
+            .replace(rootPath.replace(/\\/g, '/'), '')
+            .replace(/^\//, '')
           const route = encodeURI(prefix + file).replace(/\/\//g, '/')
           if (routes.has(route)) {
             continue
@@ -257,14 +326,18 @@ function checkRootPathForErrors (fastify, rootPath) {
   }
 
   if (Array.isArray(rootPath)) {
-    if (!rootPath.length) { throw new Error('"root" option array requires one or more paths') }
+    if (!rootPath.length) {
+      throw new Error('"root" option array requires one or more paths')
+    }
 
     if ([...new Set(rootPath)].length !== rootPath.length) {
-      throw new Error('"root" option array contains one or more duplicate paths')
+      throw new Error(
+        '"root" option array contains one or more duplicate paths'
+      )
     }
 
     // check each path and fail at first invalid
-    rootPath.map(path => checkPath(fastify, path))
+    rootPath.map((path) => checkPath(fastify, path))
     return
   }
 
@@ -299,6 +372,34 @@ function checkPath (fastify, rootPath) {
   if (pathStat.isDirectory() === false) {
     throw new Error('"root" option must point to a directory')
   }
+}
+
+const supportedEncodings = ['br', 'gzip', 'deflate']
+
+// Adapted from https://github.com/fastify/fastify-compress/blob/fa5c12a5394285c86d9f438cb39ff44f3d5cde79/index.js#L442
+function checkEncodingHeaders (headers, checked) {
+  if (!('accept-encoding' in headers)) return
+
+  let ext
+  const header = headers['accept-encoding'].toLowerCase().replace('*', 'gzip')
+  const accepted = encodingNegotiator.negotiate(
+    header,
+    supportedEncodings.filter((enc) => !checked.has(enc))
+  )
+
+  switch (accepted) {
+    case 'br':
+      ext = 'br'
+      break
+
+    case 'gzip':
+      if (!checked.has('gz')) {
+        ext = 'gz'
+        break
+      }
+  }
+
+  return ext
 }
 
 module.exports = fp(fastifyStatic, {

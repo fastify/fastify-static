@@ -147,7 +147,7 @@ If set to `true`, `fastify-static` redirects to the directory with a trailing sl
 This option cannot be set to `true` with `wildcard` set to `false` on a server
 with `ignoreTrailingSlash` set to `true`.
 
-If this option is set to `false`, then requesting directories without trailing 
+If this option is set to `false`, then requesting directories without trailing
 slash will trigger your app's 404 handler using `reply.callNotFound()`.
 
 #### `wildcard`
@@ -287,6 +287,24 @@ GET .../public
 GET .../public/
 GET .../public/index
 GET .../public/index.json
+```
+
+#### `preCompressed`
+
+Default: `false`
+
+Try to send the brotli encoded asset first (when supported within the `Accept-Encoding` headers), retry for gzip, then the fall back to the original `pathname`. You may choose to skip compression for smaller files that don't benefit from it.
+
+Assume this structure with the compressed asset as a sibling of the un-compressed counterpart:
+
+```
+./public
+├── main.js
+├── main.js.br
+├── main.js.gz
+├── crit.css
+├── crit.css.gz
+└── index.html
 ```
 
 #### Disable serving

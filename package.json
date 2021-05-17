@@ -30,6 +30,7 @@
   "homepage": "https://github.com/fastify/fastify-static",
   "dependencies": {
     "content-disposition": "^0.5.3",
+    "encoding-negotiator": "^2.0.1",
     "fastify-plugin": "^3.0.0",
     "glob": "^7.1.4",
     "readable-stream": "^3.4.0",

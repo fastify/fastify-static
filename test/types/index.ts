@@ -24,6 +24,7 @@ const options: FastifyStaticOptions = {
   setHeaders: (res: any, pathName: any) => {
     res.setHeader('test', pathName)
   },
+  preCompressed: false
 }
 
 expectError<FastifyStaticOptions>({

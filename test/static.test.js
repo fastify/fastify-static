@@ -17,11 +17,30 @@ const proxyquire = require('proxyquire')
 
 const fastifyStatic = require('../')
 
-const indexContent = fs.readFileSync('./test/static/index.html').toString('utf8')
-const index2Content = fs.readFileSync('./test/static2/index.html').toString('utf8')
-const foobarContent = fs.readFileSync('./test/static/foobar.html').toString('utf8')
-const deepContent = fs.readFileSync('./test/static/deep/path/for/test/purpose/foo.html').toString('utf8')
-const innerIndex = fs.readFileSync('./test/static/deep/path/for/test/index.html').toString('utf8')
+const indexContent = fs
+  .readFileSync('./test/static/index.html')
+  .toString('utf8')
+const index2Content = fs
+  .readFileSync('./test/static2/index.html')
+  .toString('utf8')
+const foobarContent = fs
+  .readFileSync('./test/static/foobar.html')
+  .toString('utf8')
+const deepContent = fs
+  .readFileSync('./test/static/deep/path/for/test/purpose/foo.html')
+  .toString('utf8')
+const innerIndex = fs
+  .readFileSync('./test/static/deep/path/for/test/index.html')
+  .toString('utf8')
+const allThreeBr = fs.readFileSync(
+  './test/static-pre-compressed/all-three.html.br'
+)
+const gzipOnly = fs.readFileSync(
+  './test/static-pre-compressed/gzip-only.html.gz'
+)
+const uncompressedStatic = fs
+  .readFileSync('./test/static-pre-compressed/uncompressed.html')
+  .toString('utf8')
 const fooContent = fs.readFileSync('./test/static/foo.html').toString('utf8')
 const barContent = fs.readFileSync('./test/static2/bar.html').toString('utf8')
 
@@ -53,12 +72,12 @@ t.test('register /static prefixAvoidTrailingSlash', t => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, err => {
+  fastify.listen(0, (err) => {
     t.error(err)
 
     fastify.server.unref()
 
-    t.test('/static/index.html', t => {
+    t.test('/static/index.html', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -71,7 +90,7 @@ t.test('register /static prefixAvoidTrailingSlash', t => {
       })
     })
 
-    t.test('/static/index.css', t => {
+    t.test('/static/index.css', (t) => {
       t.plan(2 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -83,7 +102,7 @@ t.test('register /static prefixAvoidTrailingSlash', t => {
       })
     })
 
-    t.test('/static/', t => {
+    t.test('/static/', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -96,7 +115,7 @@ t.test('register /static prefixAvoidTrailingSlash', t => {
       })
     })
 
-    t.test('/static', t => {
+    t.test('/static', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -109,7 +128,7 @@ t.test('register /static prefixAvoidTrailingSlash', t => {
       })
     })
 
-    t.test('/static/deep/path/for/test/purpose/foo.html', t => {
+    t.test('/static/deep/path/for/test/purpose/foo.html', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -122,7 +141,7 @@ t.test('register /static prefixAvoidTrailingSlash', t => {
       })
     })
 
-    t.test('/static/deep/path/for/test/', t => {
+    t.test('/static/deep/path/for/test/', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -135,7 +154,7 @@ t.test('register /static prefixAvoidTrailingSlash', t => {
       })
     })
 
-    t.test('/static/this/path/for/test', t => {
+    t.test('/static/this/path/for/test', (t) => {
       t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -148,7 +167,7 @@ t.test('register /static prefixAvoidTrailingSlash', t => {
       })
     })
 
-    t.test('/static/this/path/doesnt/exist.html', t => {
+    t.test('/static/this/path/doesnt/exist.html', (t) => {
       t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -161,7 +180,7 @@ t.test('register /static prefixAvoidTrailingSlash', t => {
       })
     })
 
-    t.test('/static/../index.js', t => {
+    t.test('/static/../index.js', (t) => {
       t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -174,7 +193,7 @@ t.test('register /static prefixAvoidTrailingSlash', t => {
       })
     })
 
-    t.test('file not exposed outside of the plugin', t => {
+    t.test('file not exposed outside of the plugin', (t) => {
       t.plan(2)
       simple.concat({
         method: 'GET',
@@ -201,7 +220,7 @@ t.test('register /static prefixAvoidTrailingSlash', t => {
   })
 })
 
-t.test('register /static', t => {
+t.test('register /static', (t) => {
   t.plan(11)
 
   const pluginOptions = {
@@ -213,12 +232,12 @@ t.test('register /static', t => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, err => {
+  fastify.listen(0, (err) => {
     t.error(err)
 
     fastify.server.unref()
 
-    t.test('/static/index.html', t => {
+    t.test('/static/index.html', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -231,7 +250,7 @@ t.test('register /static', t => {
       })
     })
 
-    t.test('/static/index.css', t => {
+    t.test('/static/index.css', (t) => {
       t.plan(2 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -243,7 +262,7 @@ t.test('register /static', t => {
       })
     })
 
-    t.test('/static/', t => {
+    t.test('/static/', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -256,7 +275,7 @@ t.test('register /static', t => {
       })
     })
 
-    t.test('/static', t => {
+    t.test('/static', (t) => {
       t.plan(2)
       simple.concat({
         method: 'GET',
@@ -267,7 +286,7 @@ t.test('register /static', t => {
       })
     })
 
-    t.test('/static/deep/path/for/test/purpose/foo.html', t => {
+    t.test('/static/deep/path/for/test/purpose/foo.html', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -280,7 +299,7 @@ t.test('register /static', t => {
       })
     })
 
-    t.test('/static/deep/path/for/test/', t => {
+    t.test('/static/deep/path/for/test/', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -293,7 +312,7 @@ t.test('register /static', t => {
       })
     })
 
-    t.test('/static/this/path/for/test', t => {
+    t.test('/static/this/path/for/test', (t) => {
       t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -306,7 +325,7 @@ t.test('register /static', t => {
       })
     })
 
-    t.test('/static/this/path/doesnt/exist.html', t => {
+    t.test('/static/this/path/doesnt/exist.html', (t) => {
       t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -319,7 +338,7 @@ t.test('register /static', t => {
       })
     })
 
-    t.test('/static/../index.js', t => {
+    t.test('/static/../index.js', (t) => {
       t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -332,7 +351,7 @@ t.test('register /static', t => {
       })
     })
 
-    t.test('file not exposed outside of the plugin', t => {
+    t.test('file not exposed outside of the plugin', (t) => {
       t.plan(2)
       simple.concat({
         method: 'GET',
@@ -358,12 +377,12 @@ t.test('register /static/', t => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, err => {
+  fastify.listen(0, (err) => {
     t.error(err)
 
     fastify.server.unref()
 
-    t.test('/static/index.html', t => {
+    t.test('/static/index.html', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -389,7 +408,7 @@ t.test('register /static/', t => {
       })
     })
 
-    t.test('/static/index.css', t => {
+    t.test('/static/index.css', (t) => {
       t.plan(2 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -401,7 +420,7 @@ t.test('register /static/', t => {
       })
     })
 
-    t.test('/static/', t => {
+    t.test('/static/', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -414,7 +433,7 @@ t.test('register /static/', t => {
       })
     })
 
-    t.test('/static', t => {
+    t.test('/static', (t) => {
       t.plan(2)
       simple.concat({
         method: 'GET',
@@ -425,7 +444,7 @@ t.test('register /static/', t => {
       })
     })
 
-    t.test('/static/deep/path/for/test/purpose/foo.html', t => {
+    t.test('/static/deep/path/for/test/purpose/foo.html', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -438,7 +457,7 @@ t.test('register /static/', t => {
       })
     })
 
-    t.test('/static/deep/path/for/test/', t => {
+    t.test('/static/deep/path/for/test/', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -451,7 +470,7 @@ t.test('register /static/', t => {
       })
     })
 
-    t.test('/static/this/path/for/test', t => {
+    t.test('/static/this/path/for/test', (t) => {
       t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -464,7 +483,7 @@ t.test('register /static/', t => {
       })
     })
 
-    t.test('/static/this/path/doesnt/exist.html', t => {
+    t.test('/static/this/path/doesnt/exist.html', (t) => {
       t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -477,7 +496,7 @@ t.test('register /static/', t => {
       })
     })
 
-    t.test('/static/../index.js', t => {
+    t.test('/static/../index.js', (t) => {
       t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -517,7 +536,7 @@ t.test('register /static/', t => {
   })
 })
 
-t.test('register /static and /static2', t => {
+t.test('register /static and /static2', (t) => {
   t.plan(5)
 
   const pluginOptions = {
@@ -537,12 +556,12 @@ t.test('register /static and /static2', t => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, err => {
+  fastify.listen(0, (err) => {
     t.error(err)
 
     fastify.server.unref()
 
-    t.test('/static/index.html', t => {
+    t.test('/static/index.html', (t) => {
       t.plan(4 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -556,7 +575,7 @@ t.test('register /static and /static2', t => {
       })
     })
 
-    t.test('/static/bar.html', t => {
+    t.test('/static/bar.html', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -569,7 +588,7 @@ t.test('register /static and /static2', t => {
       })
     })
 
-    t.test('sendFile foo.html', t => {
+    t.test('sendFile foo.html', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -582,7 +601,7 @@ t.test('register /static and /static2', t => {
       })
     })
 
-    t.test('sendFile bar.html', t => {
+    t.test('sendFile bar.html', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -597,7 +616,7 @@ t.test('register /static and /static2', t => {
   })
 })
 
-t.test('payload.filename is set', t => {
+t.test('payload.filename is set', (t) => {
   t.plan(3)
 
   const pluginOptions = {
@@ -614,12 +633,12 @@ t.test('payload.filename is set', t => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, err => {
+  fastify.listen(0, (err) => {
     t.error(err)
 
     fastify.server.unref()
 
-    t.test('/static/index.html', t => {
+    t.test('/static/index.html', (t) => {
       t.plan(5 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -634,7 +653,7 @@ t.test('payload.filename is set', t => {
       })
     })
 
-    t.test('/static/this/path/doesnt/exist.html', t => {
+    t.test('/static/this/path/doesnt/exist.html', (t) => {
       t.plan(3 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -726,7 +745,7 @@ t.test('not found responses can be customized with fastify.setNotFoundHandler()'
   })
 })
 
-t.test('serving disabled', t => {
+t.test('serving disabled', (t) => {
   t.plan(3)
 
   const pluginOptions = {
@@ -743,12 +762,12 @@ t.test('serving disabled', t => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, err => {
+  fastify.listen(0, (err) => {
     t.error(err)
 
     fastify.server.unref()
 
-    t.test('/static/index.html not found', t => {
+    t.test('/static/index.html not found', (t) => {
       t.plan(2)
       simple.concat({
         method: 'GET',
@@ -759,7 +778,7 @@ t.test('serving disabled', t => {
       })
     })
 
-    t.test('/static/index.html via sendFile found', t => {
+    t.test('/static/index.html via sendFile found', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -774,7 +793,7 @@ t.test('serving disabled', t => {
   })
 })
 
-t.test('sendFile', t => {
+t.test('sendFile', (t) => {
   t.plan(4)
 
   const pluginOptions = {
@@ -789,15 +808,18 @@ t.test('sendFile', t => {
   })
 
   fastify.get('/root/path/override/test', (request, reply) => {
-    return reply.sendFile('/foo.html', path.join(__dirname, 'static', 'deep', 'path', 'for', 'test', 'purpose'))
+    return reply.sendFile(
+      '/foo.html',
+      path.join(__dirname, 'static', 'deep', 'path', 'for', 'test', 'purpose')
+    )
   })
 
-  fastify.listen(0, err => {
+  fastify.listen(0, (err) => {
     t.error(err)
 
     fastify.server.unref()
 
-    t.test('reply.sendFile()', t => {
+    t.test('reply.sendFile()', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -811,7 +833,7 @@ t.test('sendFile', t => {
       })
     })
 
-    t.test('reply.sendFile() with rootPath', t => {
+    t.test('reply.sendFile() with rootPath', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -825,7 +847,7 @@ t.test('sendFile', t => {
       })
     })
 
-    t.test('reply.sendFile() again without root path', t => {
+    t.test('reply.sendFile() again without root path', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -841,7 +863,7 @@ t.test('sendFile', t => {
   })
 })
 
-t.test('sendFile disabled', t => {
+t.test('sendFile disabled', (t) => {
   t.plan(2)
 
   const pluginOptions = {
@@ -860,12 +882,12 @@ t.test('sendFile disabled', t => {
     }
   })
 
-  fastify.listen(0, err => {
+  fastify.listen(0, (err) => {
     t.error(err)
 
     fastify.server.unref()
 
-    t.test('reply.sendFile undefined', t => {
+    t.test('reply.sendFile undefined', (t) => {
       t.plan(3)
       simple.concat({
         method: 'GET',
@@ -880,7 +902,7 @@ t.test('sendFile disabled', t => {
   })
 })
 
-t.test('allowedPath option', t => {
+t.test('allowedPath option', (t) => {
   t.plan(3)
 
   const pluginOptions = {
@@ -889,12 +911,12 @@ t.test('allowedPath option', t => {
   }
   const fastify = Fastify()
   fastify.register(fastifyStatic, pluginOptions)
-  fastify.listen(0, err => {
+  fastify.listen(0, (err) => {
     t.error(err)
 
     fastify.server.unref()
 
-    t.test('/foobar.html not found', t => {
+    t.test('/foobar.html not found', (t) => {
       t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -907,7 +929,7 @@ t.test('allowedPath option', t => {
       })
     })
 
-    t.test('/index.css found', t => {
+    t.test('/index.css found', (t) => {
       t.plan(2)
       simple.concat({
         method: 'GET',
@@ -921,7 +943,7 @@ t.test('allowedPath option', t => {
   })
 })
 
-t.test('download', t => {
+t.test('download', (t) => {
   t.plan(7)
 
   const pluginOptions = {
@@ -940,7 +962,10 @@ t.test('download', t => {
   })
 
   fastify.get('/foo/bar/override', function (req, reply) {
-    return reply.download('/index.html', 'hello-world.html', { maxAge: '2 hours', immutable: true })
+    return reply.download('/index.html', 'hello-world.html', {
+      maxAge: '2 hours',
+      immutable: true
+    })
   })
 
   fastify.get('/foo/bar/override/2', function (req, reply) {
@@ -948,19 +973,39 @@ t.test('download', t => {
   })
 
   fastify.get('/root/path/override/test', (request, reply) => {
-    return reply.download('/foo.html', { root: path.join(__dirname, 'static', 'deep', 'path', 'for', 'test', 'purpose') })
+    return reply.download('/foo.html', {
+      root: path.join(
+        __dirname,
+        'static',
+        'deep',
+        'path',
+        'for',
+        'test',
+        'purpose'
+      )
+    })
   })
 
   fastify.get('/root/path/override/test/change', (request, reply) => {
-    return reply.download('/foo.html', 'hello-world.html', { root: path.join(__dirname, 'static', 'deep', 'path', 'for', 'test', 'purpose') })
+    return reply.download('/foo.html', 'hello-world.html', {
+      root: path.join(
+        __dirname,
+        'static',
+        'deep',
+        'path',
+        'for',
+        'test',
+        'purpose'
+      )
+    })
   })
 
-  fastify.listen(0, err => {
+  fastify.listen(0, (err) => {
     t.error(err)
 
     fastify.server.unref()
 
-    t.test('reply.download()', t => {
+    t.test('reply.download()', (t) => {
       t.plan(4 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -990,7 +1035,7 @@ t.test('download', t => {
       })
     })
 
-    t.test('reply.download() with rootPath', t => {
+    t.test('reply.download() with fileName', (t) => {
       t.plan(4 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -1005,7 +1050,7 @@ t.test('download', t => {
       })
     })
 
-    t.test('reply.download() with custom opts', t => {
+    t.test('reply.download() with custom opts', (t) => {
       t.plan(5 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -1021,7 +1066,7 @@ t.test('download', t => {
       })
     })
 
-    t.test('reply.download() with custom opts (2)', t => {
+    t.test('reply.download() with custom opts (2)', (t) => {
       t.plan(5 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -1037,7 +1082,7 @@ t.test('download', t => {
       })
     })
 
-    t.test('reply.download() with rootPath and fileName', t => {
+    t.test('reply.download() with rootPath and fileName', (t) => {
       t.plan(4 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -1054,7 +1099,7 @@ t.test('download', t => {
   })
 })
 
-t.test('sendFile disabled', t => {
+t.test('sendFile disabled', (t) => {
   t.plan(2)
 
   const pluginOptions = {
@@ -1073,12 +1118,12 @@ t.test('sendFile disabled', t => {
     }
   })
 
-  fastify.listen(0, err => {
+  fastify.listen(0, (err) => {
     t.error(err)
 
     fastify.server.unref()
 
-    t.test('reply.sendFile undefined', t => {
+    t.test('reply.sendFile undefined', (t) => {
       t.plan(3)
       simple.concat({
         method: 'GET',
@@ -1093,7 +1138,7 @@ t.test('sendFile disabled', t => {
   })
 })
 
-t.test('download disabled', t => {
+t.test('download disabled', (t) => {
   t.plan(3)
 
   const pluginOptions = {
@@ -1113,12 +1158,12 @@ t.test('download disabled', t => {
     }
   })
 
-  fastify.listen(0, err => {
+  fastify.listen(0, (err) => {
     t.error(err)
 
     fastify.server.unref()
 
-    t.test('reply.sendFile undefined', t => {
+    t.test('reply.sendFile undefined', (t) => {
       t.plan(3)
       simple.concat({
         method: 'GET',
@@ -1133,33 +1178,36 @@ t.test('download disabled', t => {
   })
 })
 
-t.test('prefix default', t => {
+t.test('prefix default', (t) => {
   t.plan(1)
   const pluginOptions = { root: path.join(__dirname, 'static') }
   const fastify = Fastify({ logger: false })
   t.doesNotThrow(() => fastify.register(fastifyStatic, pluginOptions))
 })
 
-t.test('root not found warning', t => {
+t.test('root not found warning', (t) => {
   t.plan(2)
   const rootPath = path.join(__dirname, 'does-not-exist')
   const pluginOptions = { root: rootPath }
-  const destination = concat(data => {
+  const destination = concat((data) => {
     t.equal(JSON.parse(data).msg, `"root" path "${rootPath}" must exist`)
   })
-  const logger = pino({
-    level: 'warn'
-  }, destination)
+  const logger = pino(
+    {
+      level: 'warn'
+    },
+    destination
+  )
   const fastify = Fastify({ logger: logger })
   fastify.register(fastifyStatic, pluginOptions)
-  fastify.listen(0, err => {
+  fastify.listen(0, (err) => {
     t.error(err)
     fastify.server.unref()
     destination.end()
   })
 })
 
-t.test('send options', t => {
+t.test('send options', (t) => {
   t.plan(11)
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -1194,7 +1242,7 @@ t.test('send options', t => {
   fastify.inject({ url: '/index.html' })
 })
 
-t.test('setHeaders option', t => {
+t.test('setHeaders option', (t) => {
   t.plan(6 + GENERIC_RESPONSE_CHECK_COUNT)
 
   const pluginOptions = {
@@ -1209,7 +1257,7 @@ t.test('setHeaders option', t => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, err => {
+  fastify.listen(0, (err) => {
     t.error(err)
 
     fastify.server.unref()
@@ -1228,7 +1276,7 @@ t.test('setHeaders option', t => {
   })
 })
 
-t.test('maxAge option', t => {
+t.test('maxAge option', (t) => {
   t.plan(5 + GENERIC_RESPONSE_CHECK_COUNT)
 
   const pluginOptions = {
@@ -1240,7 +1288,7 @@ t.test('maxAge option', t => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, err => {
+  fastify.listen(0, (err) => {
     t.error(err)
 
     fastify.server.unref()
@@ -1259,121 +1307,112 @@ t.test('maxAge option', t => {
   })
 })
 
-t.test('errors', t => {
+t.test('errors', (t) => {
   t.plan(11)
 
-  t.test('no root', t => {
+  t.test('no root', (t) => {
     t.plan(1)
     const pluginOptions = {}
     const fastify = Fastify({ logger: false })
-    fastify.register(fastifyStatic, pluginOptions)
-      .ready(err => {
-        t.equal(err.constructor, Error)
-      })
+    fastify.register(fastifyStatic, pluginOptions).ready((err) => {
+      t.equal(err.constructor, Error)
+    })
   })
 
-  t.test('root is not a string', t => {
+  t.test('root is not a string', (t) => {
     t.plan(1)
     const pluginOptions = { root: 42 }
     const fastify = Fastify({ logger: false })
-    fastify.register(fastifyStatic, pluginOptions)
-      .ready(err => {
-        t.equal(err.constructor, Error)
-      })
+    fastify.register(fastifyStatic, pluginOptions).ready((err) => {
+      t.equal(err.constructor, Error)
+    })
   })
 
-  t.test('root is not an absolute path', t => {
+  t.test('root is not an absolute path', (t) => {
     t.plan(1)
     const pluginOptions = { root: './my/path' }
     const fastify = Fastify({ logger: false })
-    fastify.register(fastifyStatic, pluginOptions)
-      .ready(err => {
-        t.equal(err.constructor, Error)
-      })
+    fastify.register(fastifyStatic, pluginOptions).ready((err) => {
+      t.equal(err.constructor, Error)
+    })
   })
 
-  t.test('root is not a directory', t => {
+  t.test('root is not a directory', (t) => {
     t.plan(1)
     const pluginOptions = { root: __filename }
     const fastify = Fastify({ logger: false })
-    fastify.register(fastifyStatic, pluginOptions)
-      .ready(err => {
-        t.equal(err.constructor, Error)
-      })
+    fastify.register(fastifyStatic, pluginOptions).ready((err) => {
+      t.equal(err.constructor, Error)
+    })
   })
 
-  t.test('root is an empty array', t => {
+  t.test('root is an empty array', (t) => {
     t.plan(1)
     const pluginOptions = { root: [] }
     const fastify = Fastify({ logger: false })
-    fastify.register(fastifyStatic, pluginOptions)
-      .ready(err => {
-        t.equal(err.constructor, Error)
-      })
+    fastify.register(fastifyStatic, pluginOptions).ready((err) => {
+      t.equal(err.constructor, Error)
+    })
   })
 
-  t.test('root array does not contain strings', t => {
+  t.test('root array does not contain strings', (t) => {
     t.plan(1)
     const pluginOptions = { root: [1] }
     const fastify = Fastify({ logger: false })
-    fastify.register(fastifyStatic, pluginOptions)
-      .ready(err => {
-        t.equal(err.constructor, Error)
-      })
+    fastify.register(fastifyStatic, pluginOptions).ready((err) => {
+      t.equal(err.constructor, Error)
+    })
   })
 
-  t.test('root array does not contain an absolute path', t => {
+  t.test('root array does not contain an absolute path', (t) => {
     t.plan(1)
     const pluginOptions = { root: ['./my/path'] }
     const fastify = Fastify({ logger: false })
-    fastify.register(fastifyStatic, pluginOptions)
-      .ready(err => {
-        t.equal(err.constructor, Error)
-      })
+    fastify.register(fastifyStatic, pluginOptions).ready((err) => {
+      t.equal(err.constructor, Error)
+    })
   })
 
-  t.test('root array path is not a directory', t => {
+  t.test('root array path is not a directory', (t) => {
     t.plan(1)
     const pluginOptions = { root: [__filename] }
     const fastify = Fastify({ logger: false })
-    fastify.register(fastifyStatic, pluginOptions)
-      .ready(err => {
-        t.equal(err.constructor, Error)
-      })
+    fastify.register(fastifyStatic, pluginOptions).ready((err) => {
+      t.equal(err.constructor, Error)
+    })
   })
 
-  t.test('all root array paths must be valid', t => {
+  t.test('all root array paths must be valid', (t) => {
     t.plan(1)
     const pluginOptions = { root: [path.join(__dirname, '/static'), 1] }
     const fastify = Fastify({ logger: false })
-    fastify.register(fastifyStatic, pluginOptions)
-      .ready(err => {
-        t.equal(err.constructor, Error)
-      })
+    fastify.register(fastifyStatic, pluginOptions).ready((err) => {
+      t.equal(err.constructor, Error)
+    })
   })
 
-  t.test('duplicate root paths are not allowed', t => {
+  t.test('duplicate root paths are not allowed', (t) => {
     t.plan(1)
-    const pluginOptions = { root: [path.join(__dirname, '/static'), path.join(__dirname, '/static')] }
+    const pluginOptions = {
+      root: [path.join(__dirname, '/static'), path.join(__dirname, '/static')]
+    }
     const fastify = Fastify({ logger: false })
-    fastify.register(fastifyStatic, pluginOptions)
-      .ready(err => {
-        t.equal(err.constructor, Error)
-      })
+    fastify.register(fastifyStatic, pluginOptions).ready((err) => {
+      t.equal(err.constructor, Error)
+    })
   })
 
-  t.test('setHeaders is not a function', t => {
+  t.test('setHeaders is not a function', (t) => {
     t.plan(1)
     const pluginOptions = { root: __dirname, setHeaders: 'headers' }
     const fastify = Fastify({ logger: false })
-    fastify.register(fastifyStatic, pluginOptions)
-      .ready(err => {
-        t.equal(err.constructor, TypeError)
-      })
+    fastify.register(fastifyStatic, pluginOptions).ready((err) => {
+      t.equal(err.constructor, TypeError)
+    })
   })
 })
 
-t.test('register no prefix', t => {
+t.test('register no prefix', (t) => {
   t.plan(8)
 
   const pluginOptions = {
@@ -1388,12 +1427,12 @@ t.test('register no prefix', t => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, err => {
+  fastify.listen(0, (err) => {
     t.error(err)
 
     fastify.server.unref()
 
-    t.test('/index.html', t => {
+    t.test('/index.html', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -1406,7 +1445,7 @@ t.test('register no prefix', t => {
       })
     })
 
-    t.test('/index.css', t => {
+    t.test('/index.css', (t) => {
       t.plan(2 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -1418,7 +1457,7 @@ t.test('register no prefix', t => {
       })
     })
 
-    t.test('/', t => {
+    t.test('/', (t) => {
       t.plan(3)
       simple.concat({
         method: 'GET',
@@ -1430,7 +1469,7 @@ t.test('register no prefix', t => {
       })
     })
 
-    t.test('/deep/path/for/test/purpose/foo.html', t => {
+    t.test('/deep/path/for/test/purpose/foo.html', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -1443,7 +1482,7 @@ t.test('register no prefix', t => {
       })
     })
 
-    t.test('/deep/path/for/test/', t => {
+    t.test('/deep/path/for/test/', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -1456,7 +1495,7 @@ t.test('register no prefix', t => {
       })
     })
 
-    t.test('/this/path/doesnt/exist.html', t => {
+    t.test('/this/path/doesnt/exist.html', (t) => {
       t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -1469,7 +1508,7 @@ t.test('register no prefix', t => {
       })
     })
 
-    t.test('/../index.js', t => {
+    t.test('/../index.js', (t) => {
       t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -1531,7 +1570,6 @@ t.test('with fastify-compress', t => {
     })
   })
 })
-
 t.test('register /static/ with schemaHide true', t => {
   t.plan(4)
 
@@ -1551,12 +1589,12 @@ t.test('register /static/ with schemaHide true', t => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, err => {
+  fastify.listen(0, (err) => {
     t.error(err)
 
     fastify.server.unref()
 
-    t.test('/static/index.html', t => {
+    t.test('/static/index.html', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
 
       simple.concat({
@@ -1591,12 +1629,12 @@ t.test('register /static/ with schemaHide false', t => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, err => {
+  fastify.listen(0, (err) => {
     t.error(err)
 
     fastify.server.unref()
 
-    t.test('/static/index.html', t => {
+    t.test('/static/index.html', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
 
       simple.concat({
@@ -1630,12 +1668,12 @@ t.test('register /static/ without schemaHide', t => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, err => {
+  fastify.listen(0, (err) => {
     t.error(err)
 
     fastify.server.unref()
 
-    t.test('/static/index.html', t => {
+    t.test('/static/index.html', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
 
       simple.concat({
@@ -1703,7 +1741,7 @@ t.test('register with wildcard false', t => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, err => {
+  fastify.listen(0, (err) => {
     t.error(err)
 
     fastify.server.unref()
@@ -1721,7 +1759,7 @@ t.test('register with wildcard false', t => {
       })
     })
 
-    t.test('/index.css', t => {
+    t.test('/index.css', (t) => {
       t.plan(2 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -1733,7 +1771,7 @@ t.test('register with wildcard false', t => {
       })
     })
 
-    t.test('/', t => {
+    t.test('/', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -1746,7 +1784,7 @@ t.test('register with wildcard false', t => {
       })
     })
 
-    t.test('/not-defined', t => {
+    t.test('/not-defined', (t) => {
       t.plan(3)
       simple.concat({
         method: 'GET',
@@ -1758,7 +1796,7 @@ t.test('register with wildcard false', t => {
       })
     })
 
-    t.test('/deep/path/for/test/purpose/foo.html', t => {
+    t.test('/deep/path/for/test/purpose/foo.html', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -1771,7 +1809,7 @@ t.test('register with wildcard false', t => {
       })
     })
 
-    t.test('/deep/path/for/test/', t => {
+    t.test('/deep/path/for/test/', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -1784,7 +1822,7 @@ t.test('register with wildcard false', t => {
       })
     })
 
-    t.test('/../index.js', t => {
+    t.test('/../index.js', (t) => {
       t.plan(3)
       simple.concat({
         method: 'GET',
@@ -1812,7 +1850,7 @@ t.test('register with wildcard false', t => {
   })
 })
 
-t.test('register with wildcard string', t => {
+t.test('register with wildcard string', (t) => {
   t.plan(1)
 
   const pluginOptions = {
@@ -1831,7 +1869,7 @@ t.test('register with wildcard string', t => {
   })
 })
 
-t.test('register with wildcard string on multiple root paths', t => {
+t.test('register with wildcard string on multiple root paths', (t) => {
   t.plan(1)
 
   const pluginOptions = {
@@ -1847,7 +1885,7 @@ t.test('register with wildcard string on multiple root paths', t => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, err => {
+  fastify.listen(0, (err) => {
     t.ok(err)
 
     fastify.server.unref()
@@ -1871,12 +1909,12 @@ t.test('register with wildcard false and alternative index', t => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, err => {
+  fastify.listen(0, (err) => {
     t.error(err)
 
     fastify.server.unref()
 
-    t.test('/index.html', t => {
+    t.test('/index.html', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -1902,7 +1940,7 @@ t.test('register with wildcard false and alternative index', t => {
       })
     })
 
-    t.test('/index.css', t => {
+    t.test('/index.css', (t) => {
       t.plan(2 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -1914,7 +1952,7 @@ t.test('register with wildcard false and alternative index', t => {
       })
     })
 
-    t.test('/?a=b', t => {
+    t.test('/?a=b', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -1940,7 +1978,7 @@ t.test('register with wildcard false and alternative index', t => {
       })
     })
 
-    t.test('/not-defined', t => {
+    t.test('/not-defined', (t) => {
       t.plan(3)
       simple.concat({
         method: 'GET',
@@ -1952,7 +1990,7 @@ t.test('register with wildcard false and alternative index', t => {
       })
     })
 
-    t.test('/deep/path/for/test/purpose/', t => {
+    t.test('/deep/path/for/test/purpose/', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -1965,7 +2003,7 @@ t.test('register with wildcard false and alternative index', t => {
       })
     })
 
-    t.test('/deep/path/for/test/', t => {
+    t.test('/deep/path/for/test/', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -1991,7 +2029,7 @@ t.test('register with wildcard false and alternative index', t => {
       })
     })
 
-    t.test('/../index.js', t => {
+    t.test('/../index.js', (t) => {
       t.plan(3)
       simple.concat({
         method: 'GET',
@@ -2024,12 +2062,12 @@ t.test('register /static with wildcard false and alternative index', t => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, err => {
+  fastify.listen(0, (err) => {
     t.error(err)
 
     fastify.server.unref()
 
-    t.test('/static/index.html', t => {
+    t.test('/static/index.html', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -2055,7 +2093,7 @@ t.test('register /static with wildcard false and alternative index', t => {
       })
     })
 
-    t.test('/static/index.css', t => {
+    t.test('/static/index.css', (t) => {
       t.plan(2 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -2067,7 +2105,7 @@ t.test('register /static with wildcard false and alternative index', t => {
       })
     })
 
-    t.test('/static', t => {
+    t.test('/static', (t) => {
       t.plan(2)
 
       // simple-get doesn't tell us about redirects so use http.request directly
@@ -2076,18 +2114,18 @@ t.test('register /static with wildcard false and alternative index', t => {
       const req = http.request(url.parse(testurl), res => {
         t.equal(res.statusCode, 200)
         let body = ''
-        res.on('data', chunk => {
+        res.on('data', (chunk) => {
           body += chunk.toString()
         })
         res.on('end', () => {
           t.same(JSON.parse(body.toString()), { hello: 'world' })
         })
       })
-      req.on('error', err => console.error(err))
+      req.on('error', (err) => console.error(err))
       req.end()
     })
 
-    t.test('/static/', t => {
+    t.test('/static/', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -2113,7 +2151,7 @@ t.test('register /static with wildcard false and alternative index', t => {
       })
     })
 
-    t.test('/static/not-defined', t => {
+    t.test('/static/not-defined', (t) => {
       t.plan(3)
       simple.concat({
         method: 'GET',
@@ -2125,7 +2163,7 @@ t.test('register /static with wildcard false and alternative index', t => {
       })
     })
 
-    t.test('/static/deep/path/for/test/purpose/', t => {
+    t.test('/static/deep/path/for/test/purpose/', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -2138,7 +2176,7 @@ t.test('register /static with wildcard false and alternative index', t => {
       })
     })
 
-    t.test('/static/deep/path/for/test/', t => {
+    t.test('/static/deep/path/for/test/', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
@@ -2151,7 +2189,7 @@ t.test('register /static with wildcard false and alternative index', t => {
       })
     })
 
-    t.test('/static/../index.js', t => {
+    t.test('/static/../index.js', (t) => {
       t.plan(3)
       simple.concat({
         method: 'GET',
@@ -2182,12 +2220,12 @@ t.test('register /static with redirect true', t => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(3001, err => {
+  fastify.listen(3001, (err) => {
     t.error(err)
 
     fastify.server.unref()
 
-    t.test('/static?a=b', t => {
+    t.test('/static?a=b', (t) => {
       t.plan(5 + GENERIC_RESPONSE_CHECK_COUNT)
 
       // simple-get doesn't tell us about redirects so use http.request directly
@@ -2196,7 +2234,7 @@ t.test('register /static with redirect true', t => {
         t.equal(res.statusCode, 301)
         t.equal(res.headers.location, '/static/?a=b')
       })
-      req.on('error', err => console.error(err))
+      req.on('error', (err) => console.error(err))
       req.end()
 
       simple.concat({
@@ -2237,7 +2275,7 @@ t.test('register /static with redirect true', t => {
       })
     })
 
-    t.test('/static/deep', t => {
+    t.test('/static/deep', (t) => {
       t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
 
       simple.concat({
@@ -2250,7 +2288,7 @@ t.test('register /static with redirect true', t => {
       })
     })
 
-    t.test('/static/deep/path/for/test?a=b', t => {
+    t.test('/static/deep/path/for/test?a=b', (t) => {
       t.plan(5 + GENERIC_RESPONSE_CHECK_COUNT)
 
       // simple-get doesn't tell us about redirects so use http.request directly
@@ -2259,7 +2297,7 @@ t.test('register /static with redirect true', t => {
         t.equal(res.statusCode, 301)
         t.equal(res.headers.location, '/static/deep/path/for/test/?a=b')
       })
-      req.on('error', err => console.error(err))
+      req.on('error', (err) => console.error(err))
       req.end()
 
       // verify the redirect with query parameters works
@@ -2274,7 +2312,7 @@ t.test('register /static with redirect true', t => {
       })
     })
 
-    t.test('/static/deep/path/for/test', t => {
+    t.test('/static/deep/path/for/test', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
 
       simple.concat({
@@ -2430,7 +2468,7 @@ t.test('register /static with redirect true and wildcard false', t => {
   })
 })
 
-t.test('trailing slash behavior with redirect = false', t => {
+t.test('trailing slash behavior with redirect = false', (t) => {
   t.plan(6)
 
   const fastify = Fastify()
@@ -2443,12 +2481,12 @@ t.test('trailing slash behavior with redirect = false', t => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, err => {
+  fastify.listen(0, (err) => {
     t.error(err)
 
     const host = 'http://localhost:' + fastify.server.address().port
 
-    t.test('prefix with no trailing slash => 404', t => {
+    t.test('prefix with no trailing slash => 404', (t) => {
       t.plan(2)
       simple.concat({
         method: 'GET',
@@ -2459,7 +2497,7 @@ t.test('trailing slash behavior with redirect = false', t => {
       })
     })
 
-    t.test('prefix with trailing trailing slash => 200', t => {
+    t.test('prefix with trailing trailing slash => 200', (t) => {
       t.plan(2)
       simple.concat({
         method: 'GET',
@@ -2470,7 +2508,7 @@ t.test('trailing slash behavior with redirect = false', t => {
       })
     })
 
-    t.test('deep path with no index.html or trailing slash => 404', t => {
+    t.test('deep path with no index.html or trailing slash => 404', (t) => {
       t.plan(2)
       simple.concat({
         method: 'GET',
@@ -2481,7 +2519,7 @@ t.test('trailing slash behavior with redirect = false', t => {
       })
     })
 
-    t.test('deep path with index.html but no trailing slash => 404', t => {
+    t.test('deep path with index.html but no trailing slash => 404', (t) => {
       t.plan(2)
       simple.concat({
         method: 'GET',
@@ -2492,7 +2530,7 @@ t.test('trailing slash behavior with redirect = false', t => {
       })
     })
 
-    t.test('deep path with index.html and trailing slash => 200', t => {
+    t.test('deep path with index.html and trailing slash => 200', (t) => {
       t.plan(2)
       simple.concat({
         method: 'GET',
@@ -2505,9 +2543,13 @@ t.test('trailing slash behavior with redirect = false', t => {
   })
 })
 
-t.test('if dotfiles are properly served according to plugin options', t => {
+t.test('if dotfiles are properly served according to plugin options', (t) => {
   t.plan(3)
-  const exampleContents = fs.readFileSync(path.join(__dirname, 'static', '.example'), { encoding: 'utf8' }).toString()
+  const exampleContents = fs
+    .readFileSync(path.join(__dirname, 'static', '.example'), {
+      encoding: 'utf8'
+    })
+    .toString()
 
   t.test('freely serve dotfiles', (t) => {
     t.plan(4)
@@ -2589,7 +2631,7 @@ t.test('if dotfiles are properly served according to plugin options', t => {
   })
 })
 
-t.test('register with failing glob handler', t => {
+t.test('register with failing glob handler', (t) => {
   const fastifyStatic = proxyquire.noCallThru()('../', {
     glob: function globStub (pattern, options, cb) {
       process.nextTick(function () {
@@ -2608,36 +2650,39 @@ t.test('register with failing glob handler', t => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, err => {
+  fastify.listen(0, (err) => {
     fastify.server.unref()
     t.ok(err)
     t.end()
   })
 })
 
-t.test('register with rootpath that causes statSync to fail with non-ENOENT code', t => {
-  const fastifyStatic = proxyquire('../', {
-    fs: {
-      statSync: function statSyncStub (path) {
-        throw new Error({ code: 'MOCK' })
+t.test(
+  'register with rootpath that causes statSync to fail with non-ENOENT code',
+  (t) => {
+    const fastifyStatic = proxyquire('../', {
+      fs: {
+        statSync: function statSyncStub (path) {
+          throw new Error({ code: 'MOCK' })
+        }
       }
+    })
+
+    const pluginOptions = {
+      root: path.join(__dirname, '/static'),
+      wildcard: true
     }
-  })
+    const fastify = Fastify()
+    fastify.register(fastifyStatic, pluginOptions)
 
-  const pluginOptions = {
-    root: path.join(__dirname, '/static'),
-    wildcard: true
+    t.teardown(fastify.close.bind(fastify))
+    fastify.listen(0, (err) => {
+      fastify.server.unref()
+      t.ok(err)
+      t.end()
+    })
   }
-  const fastify = Fastify()
-  fastify.register(fastifyStatic, pluginOptions)
-
-  t.teardown(fastify.close.bind(fastify))
-  fastify.listen(0, err => {
-    fastify.server.unref()
-    t.ok(err)
-    t.end()
-  })
-})
+)
 
 t.test('inject support', async (t) => {
   const pluginOptions = {
@@ -2679,13 +2724,16 @@ t.test('routes should use custom errorHandler premature stream close', t => {
   fastify.register(fastifyStatic, pluginOptions)
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.inject({
-    method: 'GET',
-    url: '/static/index.html'
-  }, (err, response) => {
-    t.error(err)
-    t.equal(response, null)
-  })
+  fastify.inject(
+    {
+      method: 'GET',
+      url: '/static/index.html'
+    },
+    (err, response) => {
+      t.error(err)
+      t.equal(response, null)
+    }
+  )
 })
 
 t.test('routes should fallback to default errorHandler', t => {
@@ -2763,7 +2811,7 @@ t.test('routes use default errorHandler when fastify.errorHandler is not defined
   })
 })
 
-t.test('precent encoded URLs in glob mode', t => {
+t.test('precent encoded URLs in glob mode', (t) => {
   t.plan(4)
 
   const fastify = Fastify({})
@@ -2840,3 +2888,206 @@ t.test('register /static and /static2 without wildcard', t => {
     })
   })
 })
+
+t.test(
+  'will serve pre-compressed files with .br at the highest priority',
+  async (t) => {
+    const pluginOptions = {
+      root: path.join(__dirname, '/static-pre-compressed'),
+      prefix: '/static-pre-compressed/',
+      preCompressed: true
+    }
+
+    const fastify = Fastify()
+
+    fastify.register(fastifyStatic, pluginOptions)
+    t.teardown(fastify.close.bind(fastify))
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '/static-pre-compressed/all-three.html',
+      headers: {
+        'accept-encoding': 'gzip, deflate, br'
+      }
+    })
+
+    t.equal(response.headers['content-encoding'], 'br')
+    t.equal(response.statusCode, 200)
+    t.same(response.rawPayload, allThreeBr)
+    t.end()
+  }
+)
+
+t.test(
+  'will serve pre-compressed files and fallback to .gz if .br is not on disk',
+  async (t) => {
+    const pluginOptions = {
+      root: path.join(__dirname, '/static-pre-compressed'),
+      prefix: '/static-pre-compressed/',
+      preCompressed: true
+    }
+
+    const fastify = Fastify()
+
+    fastify.register(fastifyStatic, pluginOptions)
+    t.teardown(fastify.close.bind(fastify))
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '/static-pre-compressed/gzip-only.html',
+      headers: {
+        'accept-encoding': 'gzip, deflate, br'
+      }
+    })
+
+    t.equal(response.headers['content-encoding'], 'gz')
+    t.equal(response.statusCode, 200)
+    t.same(response.rawPayload, gzipOnly)
+    t.end()
+  }
+)
+
+t.test(
+  'will serve uncompressed files if there are no compressed variants on disk',
+  async (t) => {
+    const pluginOptions = {
+      root: path.join(__dirname, '/static-pre-compressed'),
+      prefix: '/static-pre-compressed/',
+      preCompressed: true
+    }
+
+    const fastify = Fastify()
+
+    fastify.register(fastifyStatic, pluginOptions)
+    t.teardown(fastify.close.bind(fastify))
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '/static-pre-compressed/uncompressed.html',
+      headers: {
+        'accept-encoding': 'gzip, deflate, br'
+      }
+    })
+
+    t.equal(response.headers['content-encoding'], undefined)
+    t.equal(response.statusCode, 200)
+    t.equal(response.body, uncompressedStatic)
+    t.end()
+  }
+)
+
+t.test(
+  'will serve pre-compressed files with .br at the highest priority (with wildcard: false)',
+  async (t) => {
+    const pluginOptions = {
+      root: path.join(__dirname, '/static-pre-compressed'),
+      prefix: '/static-pre-compressed/',
+      preCompressed: true,
+      wildcard: false
+    }
+
+    const fastify = Fastify()
+
+    fastify.register(fastifyStatic, pluginOptions)
+    t.teardown(fastify.close.bind(fastify))
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '/static-pre-compressed/all-three.html',
+      headers: {
+        'accept-encoding': 'gzip, deflate, br'
+      }
+    })
+
+    t.equal(response.headers['content-encoding'], 'br')
+    t.equal(response.statusCode, 200)
+    t.same(response.rawPayload, allThreeBr)
+    t.end()
+  }
+)
+
+t.test(
+  'will serve pre-compressed files and fallback to .gz if .br is not on disk  (with wildcard: false) ',
+  async (t) => {
+    const pluginOptions = {
+      root: path.join(__dirname, '/static-pre-compressed'),
+      prefix: '/static-pre-compressed/',
+      preCompressed: true,
+      wildcard: false
+    }
+
+    const fastify = Fastify()
+
+    fastify.register(fastifyStatic, pluginOptions)
+    t.teardown(fastify.close.bind(fastify))
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '/static-pre-compressed/gzip-only.html',
+      headers: {
+        'accept-encoding': 'gzip, deflate, br'
+      }
+    })
+
+    t.equal(response.headers['content-encoding'], 'gz')
+    t.equal(response.statusCode, 200)
+    t.same(response.rawPayload, gzipOnly)
+    t.end()
+  }
+)
+
+t.test(
+  'will serve uncompressed files if there are no compressed variants on disk  (with wildcard: false)',
+  async (t) => {
+    const pluginOptions = {
+      root: path.join(__dirname, '/static-pre-compressed'),
+      prefix: '/static-pre-compressed/',
+      preCompressed: true,
+      wildcard: false
+    }
+
+    const fastify = Fastify()
+
+    fastify.register(fastifyStatic, pluginOptions)
+    t.teardown(fastify.close.bind(fastify))
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '/static-pre-compressed/uncompressed.html',
+      headers: {
+        'accept-encoding': 'gzip, deflate, br'
+      }
+    })
+
+    t.equal(response.headers['content-encoding'], undefined)
+    t.equal(response.statusCode, 200)
+    t.equal(response.body, uncompressedStatic)
+    t.end()
+  }
+)
+
+t.test(
+  'will serve uncompressed files the accept-encoding header is missing',
+  async (t) => {
+    const pluginOptions = {
+      root: path.join(__dirname, '/static-pre-compressed'),
+      prefix: '/static-pre-compressed/',
+      preCompressed: true
+    }
+
+    const fastify = Fastify()
+
+    fastify.register(fastifyStatic, pluginOptions)
+    t.teardown(fastify.close.bind(fastify))
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '/static-pre-compressed/uncompressed.html'
+    })
+
+    t.equal(response.headers['content-encoding'], undefined)
+    t.equal(response.statusCode, 200)
+    t.equal(response.body, uncompressedStatic)
+    t.end()
+  }
+)
