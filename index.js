@@ -124,6 +124,7 @@ async function fastifyStatic (fastify, opts) {
     } else {
       wrap.on('pipe', function () {
         if (encodingExt) {
+          reply.header('content-type', getContentType(pathname))
           reply.header('content-encoding', encodingExt)
         }
         reply.send(wrap)
@@ -375,6 +376,18 @@ function checkPath (fastify, rootPath) {
 }
 
 const supportedEncodings = ['br', 'gzip', 'deflate']
+
+function getContentType (path) {
+  const type = send.mime.lookup(path)
+  if (!type) {
+    return
+  }
+  const charset = send.mime.charsets.lookup(type)
+  if (!charset) {
+    return type
+  }
+  return `${type}; charset=${charset}`
+}
 
 // Adapted from https://github.com/fastify/fastify-compress/blob/fa5c12a5394285c86d9f438cb39ff44f3d5cde79/index.js#L442
 function checkEncodingHeaders (headers, checked) {

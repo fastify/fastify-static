@@ -2911,6 +2911,7 @@ t.test(
       }
     })
 
+    genericResponseChecks(t, response)
     t.equal(response.headers['content-encoding'], 'br')
     t.equal(response.statusCode, 200)
     t.same(response.rawPayload, allThreeBr)
@@ -2940,6 +2941,7 @@ t.test(
       }
     })
 
+    genericResponseChecks(t, response)
     t.equal(response.headers['content-encoding'], 'gz')
     t.equal(response.statusCode, 200)
     t.same(response.rawPayload, gzipOnly)
@@ -2969,6 +2971,7 @@ t.test(
       }
     })
 
+    genericResponseChecks(t, response)
     t.equal(response.headers['content-encoding'], undefined)
     t.equal(response.statusCode, 200)
     t.equal(response.body, uncompressedStatic)
@@ -2999,6 +3002,7 @@ t.test(
       }
     })
 
+    genericResponseChecks(t, response)
     t.equal(response.headers['content-encoding'], 'br')
     t.equal(response.statusCode, 200)
     t.same(response.rawPayload, allThreeBr)
@@ -3029,6 +3033,7 @@ t.test(
       }
     })
 
+    genericResponseChecks(t, response)
     t.equal(response.headers['content-encoding'], 'gz')
     t.equal(response.statusCode, 200)
     t.same(response.rawPayload, gzipOnly)
@@ -3059,6 +3064,7 @@ t.test(
       }
     })
 
+    genericResponseChecks(t, response)
     t.equal(response.headers['content-encoding'], undefined)
     t.equal(response.statusCode, 200)
     t.equal(response.body, uncompressedStatic)
@@ -3085,6 +3091,7 @@ t.test(
       url: '/static-pre-compressed/uncompressed.html'
     })
 
+    genericResponseChecks(t, response)
     t.equal(response.headers['content-encoding'], undefined)
     t.equal(response.statusCode, 200)
     t.equal(response.body, uncompressedStatic)
