@@ -3162,3 +3162,31 @@ t.test(
     t.end()
   }
 )
+
+t.test(
+  'nonexistent index with precompressed option',
+  async (t) => {
+    const pluginOptions = {
+      root: path.join(__dirname, '/static-pre-compressed'),
+      prefix: '/static-pre-compressed/',
+      preCompressed: true
+    }
+
+    const fastify = Fastify()
+
+    fastify.register(fastifyStatic, pluginOptions)
+    t.teardown(fastify.close.bind(fastify))
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '/static-pre-compressed/empty/',
+      headers: {
+        'accept-encoding': 'gzip, deflate, br'
+      }
+    })
+
+    t.equal(response.statusCode, 404)
+    genericErrorResponseChecks(t, response)
+    t.end()
+  }
+)

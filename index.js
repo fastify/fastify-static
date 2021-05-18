@@ -398,8 +398,12 @@ function getContentType (path) {
 function findIndexFile (pathname, root, indexFiles = ['index.html']) {
   return indexFiles.find(filename => {
     const p = path.join(root, pathname, filename)
-    const stats = statSync(p, { throwIfNoEntry: false })
-    return stats && !stats.isDirectory()
+    try {
+      const stats = statSync(p)
+      return !stats.isDirectory()
+    } catch (e) {
+      return false
+    }
   })
 }
 
