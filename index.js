@@ -385,9 +385,6 @@ const supportedEncodings = ['br', 'gzip', 'deflate']
 
 function getContentType (path) {
   const type = send.mime.lookup(path)
-  if (!type) {
-    return
-  }
   const charset = send.mime.charsets.lookup(type)
   if (!charset) {
     return type

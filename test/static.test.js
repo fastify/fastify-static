@@ -3164,6 +3164,35 @@ t.test(
 )
 
 t.test(
+  'will serve precompressed file without content-type charset',
+  async (t) => {
+    const pluginOptions = {
+      root: path.join(__dirname, '/static-pre-compressed'),
+      prefix: '/static-pre-compressed/',
+      preCompressed: true
+    }
+
+    const fastify = Fastify()
+
+    fastify.register(fastifyStatic, pluginOptions)
+    t.teardown(fastify.close.bind(fastify))
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '/static-pre-compressed/sample.jpg',
+      headers: {
+        'accept-encoding': 'gzip, deflate, br'
+      }
+    })
+
+    t.equal(response.headers['content-type'], 'image/jpeg')
+    t.equal(response.headers['content-encoding'], 'br')
+    t.equal(response.statusCode, 200)
+    t.end()
+  }
+)
+
+t.test(
   'nonexistent index with precompressed option',
   async (t) => {
     const pluginOptions = {
