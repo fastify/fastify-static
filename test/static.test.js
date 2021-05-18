@@ -38,6 +38,9 @@ const allThreeBr = fs.readFileSync(
 const gzipOnly = fs.readFileSync(
   './test/static-pre-compressed/gzip-only.html.gz'
 )
+const indexBr = fs.readFileSync(
+  './test/static-pre-compressed/index.html.br'
+)
 const uncompressedStatic = fs
   .readFileSync('./test/static-pre-compressed/uncompressed.html')
   .toString('utf8')
@@ -3095,6 +3098,124 @@ t.test(
     t.equal(response.headers['content-encoding'], undefined)
     t.equal(response.statusCode, 200)
     t.equal(response.body, uncompressedStatic)
+    t.end()
+  }
+)
+
+t.test(
+  'will serve precompressed index',
+  async (t) => {
+    const pluginOptions = {
+      root: path.join(__dirname, '/static-pre-compressed'),
+      prefix: '/static-pre-compressed/',
+      preCompressed: true
+    }
+
+    const fastify = Fastify()
+
+    fastify.register(fastifyStatic, pluginOptions)
+    t.teardown(fastify.close.bind(fastify))
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '/static-pre-compressed/',
+      headers: {
+        'accept-encoding': 'gzip, deflate, br'
+      }
+    })
+
+    genericResponseChecks(t, response)
+    t.equal(response.headers['content-encoding'], 'br')
+    t.equal(response.statusCode, 200)
+    t.same(response.rawPayload, indexBr)
+    t.end()
+  }
+)
+
+t.test(
+  'will serve precompressed index with alternative index option',
+  async (t) => {
+    const pluginOptions = {
+      root: path.join(__dirname, '/static-pre-compressed'),
+      prefix: '/static-pre-compressed/',
+      preCompressed: true,
+      index: ['all-three.html']
+    }
+
+    const fastify = Fastify()
+
+    fastify.register(fastifyStatic, pluginOptions)
+    t.teardown(fastify.close.bind(fastify))
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '/static-pre-compressed/',
+      headers: {
+        'accept-encoding': 'gzip, deflate, br'
+      }
+    })
+
+    genericResponseChecks(t, response)
+    t.equal(response.headers['content-encoding'], 'br')
+    t.equal(response.statusCode, 200)
+    t.same(response.rawPayload, allThreeBr)
+    t.end()
+  }
+)
+
+t.test(
+  'will serve precompressed file without content-type charset',
+  async (t) => {
+    const pluginOptions = {
+      root: path.join(__dirname, '/static-pre-compressed'),
+      prefix: '/static-pre-compressed/',
+      preCompressed: true
+    }
+
+    const fastify = Fastify()
+
+    fastify.register(fastifyStatic, pluginOptions)
+    t.teardown(fastify.close.bind(fastify))
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '/static-pre-compressed/sample.jpg',
+      headers: {
+        'accept-encoding': 'gzip, deflate, br'
+      }
+    })
+
+    t.equal(response.headers['content-type'], 'image/jpeg')
+    t.equal(response.headers['content-encoding'], 'br')
+    t.equal(response.statusCode, 200)
+    t.end()
+  }
+)
+
+t.test(
+  'nonexistent index with precompressed option',
+  async (t) => {
+    const pluginOptions = {
+      root: path.join(__dirname, '/static-pre-compressed'),
+      prefix: '/static-pre-compressed/',
+      preCompressed: true
+    }
+
+    const fastify = Fastify()
+
+    fastify.register(fastifyStatic, pluginOptions)
+    t.teardown(fastify.close.bind(fastify))
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '/static-pre-compressed/empty/',
+      headers: {
+        'accept-encoding': 'gzip, deflate, br'
+      }
+    })
+
+    t.equal(response.statusCode, 404)
+    genericErrorResponseChecks(t, response)
     t.end()
   }
 )

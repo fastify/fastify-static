@@ -81,6 +81,12 @@ async function fastifyStatic (fastify, opts) {
       encodingExt = checkEncodingHeaders(request.headers, checkedExtensions)
 
       if (encodingExt) {
+        if (pathname.endsWith('/')) {
+          pathname = findIndexFile(pathname, options.root, options.index)
+          if (!pathname) {
+            return reply.callNotFound()
+          }
+        }
         pathnameForSend = pathname + '.' + encodingExt
       }
     }
@@ -379,14 +385,23 @@ const supportedEncodings = ['br', 'gzip', 'deflate']
 
 function getContentType (path) {
   const type = send.mime.lookup(path)
-  if (!type) {
-    return
-  }
   const charset = send.mime.charsets.lookup(type)
   if (!charset) {
     return type
   }
   return `${type}; charset=${charset}`
+}
+
+function findIndexFile (pathname, root, indexFiles = ['index.html']) {
+  return indexFiles.find(filename => {
+    const p = path.join(root, pathname, filename)
+    try {
+      const stats = statSync(p)
+      return !stats.isDirectory()
+    } catch (e) {
+      return false
+    }
+  })
 }
 
 // Adapted from https://github.com/fastify/fastify-compress/blob/fa5c12a5394285c86d9f438cb39ff44f3d5cde79/index.js#L442
