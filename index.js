@@ -50,7 +50,7 @@ async function fastifyStatic (fastify, opts) {
     rootPath,
     rootPathOffset = 0,
     pumpOptions = {},
-    checkedExtensions
+    checkedEncodings
   ) {
     const options = Object.assign({}, sendOptions, pumpOptions)
 
@@ -66,7 +66,7 @@ async function fastifyStatic (fastify, opts) {
       return reply.callNotFound()
     }
 
-    let encodingExt
+    let encoding
     let pathnameForSend = pathname
 
     if (opts.preCompressed) {
@@ -74,20 +74,20 @@ async function fastifyStatic (fastify, opts) {
        * We conditionally create this structure to track our attempts
        * at sending pre-compressed assets
        */
-      if (!checkedExtensions) {
-        checkedExtensions = new Set()
+      if (!checkedEncodings) {
+        checkedEncodings = new Set()
       }
 
-      encodingExt = checkEncodingHeaders(request.headers, checkedExtensions)
+      encoding = getEncodingHeader(request.headers, checkedEncodings)
 
-      if (encodingExt) {
+      if (encoding) {
         if (pathname.endsWith('/')) {
           pathname = findIndexFile(pathname, options.root, options.index)
           if (!pathname) {
             return reply.callNotFound()
           }
         }
-        pathnameForSend = pathname + '.' + encodingExt
+        pathnameForSend = pathname + '.' + getEncodingExtension(encoding)
       }
     }
 
@@ -129,9 +129,9 @@ async function fastifyStatic (fastify, opts) {
       wrap.on('finish', reply.send.bind(reply))
     } else {
       wrap.on('pipe', function () {
-        if (encodingExt) {
+        if (encoding) {
           reply.header('content-type', getContentType(pathname))
-          reply.header('content-encoding', encodingExt)
+          reply.header('content-encoding', encoding)
         }
         reply.send(wrap)
       })
@@ -172,8 +172,8 @@ async function fastifyStatic (fastify, opts) {
           return pumpSendToReply(request, reply, pathname, rootPath, rootPathOffset + 1)
         }
 
-        if (opts.preCompressed && !checkedExtensions.has(encodingExt)) {
-          checkedExtensions.add(encodingExt)
+        if (opts.preCompressed && !checkedEncodings.has(encoding)) {
+          checkedEncodings.add(encoding)
           return pumpSendToReply(
             request,
             reply,
@@ -181,7 +181,7 @@ async function fastifyStatic (fastify, opts) {
             rootPath,
             undefined,
             undefined,
-            checkedExtensions
+            checkedEncodings
           )
         }
 
@@ -405,29 +405,24 @@ function findIndexFile (pathname, root, indexFiles = ['index.html']) {
 }
 
 // Adapted from https://github.com/fastify/fastify-compress/blob/fa5c12a5394285c86d9f438cb39ff44f3d5cde79/index.js#L442
-function checkEncodingHeaders (headers, checked) {
+function getEncodingHeader (headers, checked) {
   if (!('accept-encoding' in headers)) return
 
-  let ext
   const header = headers['accept-encoding'].toLowerCase().replace('*', 'gzip')
-  const accepted = encodingNegotiator.negotiate(
+  return encodingNegotiator.negotiate(
     header,
     supportedEncodings.filter((enc) => !checked.has(enc))
   )
+}
 
-  switch (accepted) {
+function getEncodingExtension (encoding) {
+  switch (encoding) {
     case 'br':
-      ext = 'br'
-      break
+      return 'br'
 
     case 'gzip':
-      if (!checked.has('gz')) {
-        ext = 'gz'
-        break
-      }
+      return 'gz'
   }
-
-  return ext
 }
 
 module.exports = fp(fastifyStatic, {

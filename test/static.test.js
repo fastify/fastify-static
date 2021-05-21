@@ -2945,7 +2945,7 @@ t.test(
     })
 
     genericResponseChecks(t, response)
-    t.equal(response.headers['content-encoding'], 'gz')
+    t.equal(response.headers['content-encoding'], 'gzip')
     t.equal(response.statusCode, 200)
     t.same(response.rawPayload, gzipOnly)
     t.end()
@@ -3037,7 +3037,7 @@ t.test(
     })
 
     genericResponseChecks(t, response)
-    t.equal(response.headers['content-encoding'], 'gz')
+    t.equal(response.headers['content-encoding'], 'gzip')
     t.equal(response.statusCode, 200)
     t.same(response.rawPayload, gzipOnly)
     t.end()
