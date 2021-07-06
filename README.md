@@ -97,7 +97,7 @@ Default: `'/'`
 
 A URL path prefix used to create a virtual mount path for the static directory.
 
-### `prefixAvoidTrailingSlash`
+#### `prefixAvoidTrailingSlash`
 
 Default: `false`
 
