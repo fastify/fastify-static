@@ -187,6 +187,12 @@ async function fastifyStatic (fastify, opts) {
 
         return reply.callNotFound()
       }
+
+      // err is an object created by `http-errors`
+      if (err.status === 404) {
+        return reply.callNotFound()
+      }
+
       reply.send(err)
     })
 
