@@ -748,6 +748,49 @@ t.test('not found responses can be customized with fastify.setNotFoundHandler()'
   })
 })
 
+t.test('fastify.setNotFoundHandler() is called for dotfiles when when send is configured to ignore dotfiles', t => {
+  t.plan(2)
+
+  const pluginOptions = {
+    root: path.join(__dirname, '/static'),
+    send: {
+      dotfiles: 'ignore'
+    }
+  }
+  const fastify = Fastify()
+
+  fastify.setNotFoundHandler(function notFoundHandler (request, reply) {
+    reply.code(404).type('text/plain').send(request.raw.url + ' Not Found')
+  })
+
+  fastify.register(fastifyStatic, pluginOptions)
+
+  t.teardown(fastify.close.bind(fastify))
+
+  fastify.listen(0, err => {
+    t.error(err)
+
+    fastify.server.unref()
+
+    // Requesting files with a leading dot doesn't follow the same code path as
+    // other 404 errors
+    t.test('/path/does/not/.exist.html', t => {
+      t.plan(4)
+
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/path/does/not/.exist.html',
+        followRedirect: false
+      }, (err, response, body) => {
+        t.error(err)
+        t.equal(response.statusCode, 404)
+        t.equal(response.headers['content-type'], 'text/plain')
+        t.equal(body.toString(), '/path/does/not/.exist.html Not Found')
+      })
+    })
+  })
+})
+
 t.test('serving disabled', (t) => {
   t.plan(3)
 

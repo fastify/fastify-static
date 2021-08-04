@@ -188,7 +188,12 @@ async function fastifyStatic (fastify, opts) {
         return reply.callNotFound()
       }
 
-      // err is an object created by `http-errors`
+      // The `send` library terminates the request with a 404 if the requested
+      // path contains a dotfile and `send` is initialized with `{dotfiles:
+      // 'ignore'}`. `send` aborts the request before getting far enough to
+      // check if the file exists (hence, a 404 `NotFoundError` instead of
+      // `ENOENT`).
+      // https://github.com/pillarjs/send/blob/de073ed3237ade9ff71c61673a34474b30e5d45b/index.js#L582
       if (err.status === 404) {
         return reply.callNotFound()
       }
