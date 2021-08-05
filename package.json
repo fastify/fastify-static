@@ -1,6 +1,6 @@
 {
   "name": "fastify-static",
-  "version": "4.2.2",
+  "version": "4.2.3",
   "description": "Plugin for serving static files as fast as possible.",
   "main": "index.js",
   "types": "index.d.ts",
