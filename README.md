@@ -173,6 +173,13 @@ This function allows filtering the served files.
 If the function returns `true`, the file will be served.
 If the function returns `false`, Fastify's 404 handler will be called.
 
+#### `index`
+
+Default: `undefined`
+
+Under the hood we use [send](https://github.com/pillarjs/send#index) lib that by default supports "index.html" files. 
+To disable this set false or to supply a new index pass a string or an array in preferred order.
+
 #### `list`
 
 Default: `undefined`
@@ -187,6 +194,7 @@ Default response is json.
 fastify.register(require('fastify-static'), {
   root: path.join(__dirname, 'public'),
   prefix: '/public/',
+  index: false
   list: true
 })
 ```
