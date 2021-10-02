@@ -71,11 +71,11 @@ fastify.get('/another/path', function (req, reply) {
 })
 
 fastify.get('/path/without/cache/control', function (req, reply) {
-  return reply.sendFile('myHtml.html', { cacheControl: false }) // serving a file disabling cache-control headers
+  return reply.download('myHtml.html', { cacheControl: false }) // serving a file disabling cache-control headers
 })
 
 fastify.get('/path/without/cache/control', function (req, reply) {
-  return reply.sendFile('myHtml.html', 'custom-filename.html', { cacheControl: false })
+  return reply.download('myHtml.html', 'custom-filename.html', { cacheControl: false })
 })
 
 ```
