@@ -921,7 +921,7 @@ t.test('sendFile', (t) => {
       }, (err, response, body) => {
         t.error(err)
         t.equal(response.statusCode, 200)
-        t.equal(response.headers['cache-control'], `public, max-age=${ maxAge / 1000 }`)
+        t.equal(response.headers['cache-control'], `public, max-age=${maxAge / 1000}`)
         t.equal(body.toString(), indexContent)
         genericResponseChecks(t, response)
       })

@@ -71,6 +71,14 @@ multiRootAppWithImplicitHttp
       reply.sendFile('some-file-name')
     })
 
+    multiRootAppWithImplicitHttp.get('/', (request, reply) => {
+      reply.sendFile('some-file-name', { cacheControl: false, acceptRanges: true })
+    })
+
+    multiRootAppWithImplicitHttp.get('/', (request, reply) => {
+      reply.sendFile('some-file-name', 'some-root-name', { cacheControl: false, acceptRanges: true })
+    })
+
     multiRootAppWithImplicitHttp.get('/download', (request, reply) => {
       reply.download('some-file-name')
     })
