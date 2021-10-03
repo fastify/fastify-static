@@ -288,13 +288,20 @@ t.test('dir list html format - extended info', t => {
       format: 'html',
       extendedFolderInfo: true,
       render (dirs, files) {
-        t.ok(dirs.every(every))
+        t.test('dirs', t => {
+          t.plan(dirs.length * 7)
 
-        function every (value) {
-          const attrs = ['fileCount', 'totalFileCount', 'folderCount', 'totalFolderCount', 'totalSize']
-          return value.extendedInfo &&
-            attrs.every(attr => typeof value.extendedInfo[attr] === 'number')
-        }
+          for (const value of dirs) {
+            t.ok(value.extendedInfo)
+
+            t.equal(typeof value.extendedInfo.fileCount, 'number')
+            t.equal(typeof value.extendedInfo.totalFileCount, 'number')
+            t.equal(typeof value.extendedInfo.folderCount, 'number')
+            t.equal(typeof value.extendedInfo.totalFolderCount, 'number')
+            t.equal(typeof value.extendedInfo.totalSize, 'number')
+            t.equal(typeof value.extendedInfo.lastModified, 'number')
+          }
+        })
       }
     }
   }

@@ -20,6 +20,7 @@ interface ExtendedInformation {
   folderCount: number;
   totalFolderCount: number;
   totalSize: number;
+  lastModified: number;
 }
 
 interface ListDir {
