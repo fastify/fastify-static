@@ -387,6 +387,55 @@ t.test('dir list json format - extended info', t => {
   })
 })
 
+t.test('dir list - url parameter format', t => {
+  t.plan(13)
+
+  const options = {
+    root: path.join(__dirname, '/static'),
+    prefix: '/public',
+    index: false,
+    list: {
+      format: 'html',
+      render (dirs, files) {
+        return 'html'
+      }
+    }
+  }
+  const route = '/public/'
+
+  helper.arrange(t, options, (url) => {
+    simple.concat({
+      method: 'GET',
+      url: url + route
+    }, (err, response, body) => {
+      t.error(err)
+      t.equal(response.statusCode, 200)
+      t.equal(body.toString(), 'html')
+      t.ok(response.headers['content-type'].includes('text/html'))
+    })
+
+    simple.concat({
+      method: 'GET',
+      url: url + route + '?format=html'
+    }, (err, response, body) => {
+      t.error(err)
+      t.equal(response.statusCode, 200)
+      t.equal(body.toString(), 'html')
+      t.ok(response.headers['content-type'].includes('text/html'))
+    })
+
+    simple.concat({
+      method: 'GET',
+      url: url + route + '?format=json'
+    }, (err, response, body) => {
+      t.error(err)
+      t.equal(response.statusCode, 200)
+      t.ok(body.toString())
+      t.ok(response.headers['content-type'].includes('application/json'))
+    })
+  })
+})
+
 t.test('dir list on empty dir', t => {
   t.plan(2)
 

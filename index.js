@@ -144,6 +144,7 @@ async function fastifyStatic (fastify, opts) {
     stream.on('directory', function (_, path) {
       if (opts.list) {
         return dirList.send({
+          request,
           reply,
           dir: path,
           options: opts.list,
@@ -164,7 +165,7 @@ async function fastifyStatic (fastify, opts) {
       if (err.code === 'ENOENT') {
         // if file exists, send real file, otherwise send dir list if name match
         if (opts.list && dirList.handle(pathname, opts.list)) {
-          return dirList.send({ reply, dir: dirList.path(opts.root, pathname), options: opts.list, route: pathname })
+          return dirList.send({ request, reply, dir: dirList.path(opts.root, pathname), options: opts.list, route: pathname })
         }
 
         // root paths left to try?
