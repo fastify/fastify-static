@@ -3,6 +3,7 @@
 /// <reference types="node" />
 
 import { FastifyPluginCallback, FastifyReply } from 'fastify';
+import { Stats } from 'fs';
 
 declare module "fastify" {
   interface FastifyReply {
@@ -13,14 +14,25 @@ declare module "fastify" {
   }
 }
 
+interface ExtendedInformation {
+  fileCount: number;
+  totalFileCount: number;
+  folderCount: number;
+  totalFolderCount: number;
+  totalSize: number;
+}
+
 interface ListDir {
   href: string;
   name: string;
+  stats: Stats;
+  extendedInfo?: ExtendedInformation;
 }
 
 interface ListFile {
   href: string;
   name: string;
+  stats: Stats;
 }
 
 interface ListRender {
@@ -31,6 +43,8 @@ interface ListOptions {
   format: 'json' | 'html';
   names: string[];
   render: ListRender;
+  extendedFolderInfo?: boolean;
+  jsonFormat?: 'names' | 'extended';
 }
 
 // Passed on to `send`
