@@ -33,6 +33,7 @@
     "encoding-negotiator": "^2.0.1",
     "fastify-plugin": "^3.0.0",
     "glob": "^7.1.4",
+    "p-map": "^4.0.0",
     "readable-stream": "^3.4.0",
     "send": "^0.17.1"
   },
