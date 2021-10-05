@@ -1,7 +1,6 @@
 'use strict'
 
 const path = require('path')
-const url = require('url')
 const statSync = require('fs').statSync
 const { PassThrough } = require('readable-stream')
 const glob = require('glob')
@@ -152,9 +151,7 @@ async function fastifyStatic (fastify, opts) {
       }
 
       if (opts.redirect === true) {
-        /* eslint node/no-deprecated-api: "off" */
-        const parsed = url.parse(request.raw.url)
-        reply.redirect(301, parsed.pathname + '/' + (parsed.search || ''))
+        reply.redirect(301, getRedirectUrl(request.raw.url))
       } else {
         reply.callNotFound()
       }
@@ -275,9 +272,7 @@ async function fastifyStatic (fastify, opts) {
       })
       if (opts.redirect === true && prefix !== opts.prefix) {
         fastify.get(opts.prefix, routeOpts, function (req, reply) {
-          /* eslint node/no-deprecated-api: "off" */
-          const parsed = url.parse(req.raw.url)
-          reply.redirect(301, parsed.pathname + '/' + (parsed.search || ''))
+          reply.redirect(301, getRedirectUrl(req.raw.url))
         })
       }
     } else {
@@ -434,6 +429,11 @@ function getEncodingExtension (encoding) {
     case 'gzip':
       return 'gz'
   }
+}
+
+function getRedirectUrl (url) {
+  const parsed = new URL(url, 'http://localhost.com/')
+  return parsed.pathname + (parsed.pathname[parsed.pathname.length - 1] !== '/' ? '/' : '') + (parsed.search || '')
 }
 
 module.exports = fp(fastifyStatic, {

@@ -3262,3 +3262,35 @@ t.test(
     t.end()
   }
 )
+
+t.test('should not redirect to protocol-relative locations', { only: 1 }, (t) => {
+  const urls = [
+    ['//google.com/%2e%2e', '/', 301],
+    ['//users/%2e%2e', '/', 301],
+    ['//users', null, 404]
+  ]
+
+  t.plan(1 + urls.length * 2)
+  const fastify = Fastify()
+  fastify.register(fastifyStatic, {
+    root: path.join(__dirname, '/static'),
+    redirect: true
+  })
+  t.teardown(fastify.close.bind(fastify))
+  fastify.listen(0, (err, address) => {
+    t.error(err)
+    urls.forEach(([testUrl, expected, status]) => {
+      const req = http.request(url.parse(address + testUrl), res => {
+        t.equal(res.statusCode, status, `status ${testUrl}`)
+
+        if (expected) {
+          t.equal(res.headers.location, expected)
+        } else {
+          t.notOk(res.headers.location)
+        }
+      })
+      req.on('error', t.error)
+      req.end()
+    })
+  })
+})
