@@ -840,13 +840,14 @@ t.test('serving disabled', (t) => {
 })
 
 t.test('sendFile', (t) => {
-  t.plan(4)
+  t.plan(5)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
     prefix: '/static'
   }
   const fastify = Fastify()
+  const maxAge = Math.round(Math.random() * 10) * 10000
   fastify.register(fastifyStatic, pluginOptions)
 
   fastify.get('/foo/bar', function (req, reply) {
@@ -858,6 +859,10 @@ t.test('sendFile', (t) => {
       '/foo.html',
       path.join(__dirname, 'static', 'deep', 'path', 'for', 'test', 'purpose')
     )
+  })
+
+  fastify.get('/foo/bar/options/override/test', function (req, reply) {
+    return reply.sendFile('/index.html', { maxAge })
   })
 
   fastify.listen(0, (err) => {
@@ -902,6 +907,21 @@ t.test('sendFile', (t) => {
       }, (err, response, body) => {
         t.error(err)
         t.equal(response.statusCode, 200)
+        t.equal(body.toString(), indexContent)
+        genericResponseChecks(t, response)
+      })
+    })
+
+    t.test('reply.sendFile() with options', (t) => {
+      t.plan(4 + GENERIC_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/foo/bar/options/override/test',
+        followRedirect: false
+      }, (err, response, body) => {
+        t.error(err)
+        t.equal(response.statusCode, 200)
+        t.equal(response.headers['cache-control'], `public, max-age=${maxAge / 1000}`)
         t.equal(body.toString(), indexContent)
         genericResponseChecks(t, response)
       })

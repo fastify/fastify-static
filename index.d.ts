@@ -7,6 +7,8 @@ import { FastifyPluginCallback, FastifyReply } from 'fastify';
 declare module "fastify" {
   interface FastifyReply {
     sendFile(filename: string, rootPath?: string): FastifyReply;
+    sendFile(filename: string, options?: SendOptions): FastifyReply;
+    sendFile(filename: string, rootPath?: string, options?: SendOptions): FastifyReply;
     download(filepath: string, options?: SendOptions): FastifyReply;
     download(filepath: string, filename?: string): FastifyReply;
     download(filepath: string, filename?: string, options?: SendOptions): FastifyReply;

@@ -33,6 +33,9 @@ fastify.get('/path/with/different/root', function (req, reply) {
   return reply.sendFile('myHtml.html', path.join(__dirname, 'build')) // serving a file from a different root location
 })
 
+fastify.get('/another/path', function (req, reply) {
+  return reply.sendFile('myHtml.html', { cacheControl: false }) // overriding the options disabling cache-control headers
+})
 ```
 
 ### Multiple prefixed roots
