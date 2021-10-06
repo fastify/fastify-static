@@ -12,8 +12,11 @@ const fastifyStatic = require('..')
 
 const helper = {
   arrange: function (t, options, f) {
+    return helper.arrangeModule(t, options, fastifyStatic, f)
+  },
+  arrangeModule: function (t, options, mock, f) {
     const fastify = Fastify()
-    fastify.register(fastifyStatic, options)
+    fastify.register(mock, options)
     t.teardown(fastify.close.bind(fastify))
     fastify.listen(0, err => {
       t.error(err)
@@ -551,5 +554,42 @@ t.test('serve a non existent dir and get error', t => {
         t.equal(response.statusCode, 404)
       })
     })
+  })
+})
+
+t.test('dir list error', t => {
+  t.plan(5)
+
+  const options = {
+    root: path.join(__dirname, '/static'),
+    prefix: '/public',
+    prefixAvoidTrailingSlash: true,
+    index: false,
+    list: {
+      format: 'html',
+      names: ['index', 'index.htm'],
+      render: () => ''
+    }
+  }
+
+  const dirList = require('../lib/dirList')
+  dirList.send = async () => { throw new Error() }
+
+  const mock = t.mock('..', {
+    '../lib/dirList.js': dirList
+  })
+
+  const routes = ['/public/', '/public/index.htm']
+
+  helper.arrangeModule(t, options, mock, (url) => {
+    for (const route of routes) {
+      simple.concat({
+        method: 'GET',
+        url: url + route
+      }, (err, response, body) => {
+        t.error(err)
+        t.equal(response.statusCode, 500)
+      })
+    }
   })
 })
