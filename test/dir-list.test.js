@@ -558,7 +558,7 @@ t.test('serve a non existent dir and get error', t => {
 })
 
 t.test('dir list error', t => {
-  t.plan(5)
+  t.plan(7)
 
   const options = {
     root: path.join(__dirname, '/static'),
@@ -572,8 +572,9 @@ t.test('dir list error', t => {
     }
   }
 
+  const errorMessage = 'mocking send'
   const dirList = require('../lib/dirList')
-  dirList.send = async () => { throw new Error() }
+  dirList.send = async () => { throw new Error(errorMessage) }
 
   const mock = t.mock('..', {
     '../lib/dirList.js': dirList
@@ -588,6 +589,7 @@ t.test('dir list error', t => {
         url: url + route
       }, (err, response, body) => {
         t.error(err)
+        t.equal(JSON.parse(body.toString()).message, errorMessage)
         t.equal(response.statusCode, 500)
       })
     }
