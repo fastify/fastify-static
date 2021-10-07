@@ -222,6 +222,14 @@ Options: `html`, `json`
 
 Directory list can be also in `html` format; in that case, `list.render` function is required.
 
+You can override the option with URL parameter `format`. Options are `html` and `json`.
+
+```bash
+GET .../public/assets?format=json
+```
+
+will return the response as json independent of `list.format`.
+
 **Example:**
 
 ```js
@@ -298,6 +306,79 @@ GET .../public
 GET .../public/
 GET .../public/index
 GET .../public/index.json
+```
+
+#### `list.extendedFolderInfo`
+
+Default: `undefined`
+
+If `true` some extended information for folders will be accessible in `list.render` and in the json response.
+
+```js
+render(dirs, files) {
+  const dir = dirs[0];
+  dir.fileCount // number of files in this folder
+  dir.totalFileCount // number of files in this folder (recursive)
+  dir.folderCount // number of folders in this folder
+  dir.totalFolderCount // number of folders in this folder (recursive)
+  dir.totalSize // size of all files in this folder (recursive)
+  dir.lastModified // most recent last modified timestamp of all files in this folder (recursive)
+}
+```
+
+Warning: This will slightly decrease the performance, especially for deeply nested file structures.
+
+#### `list.jsonFormat`
+
+Default: `names`
+
+Options: `names`, `extended`
+
+This option determines the output format when `json` is selected.
+
+`names`:
+```json
+{
+  "dirs": [
+    "dir1",
+    "dir2"
+  ],
+  "files": [
+    "file1.txt",
+    "file2.txt"
+  ]
+}
+```
+
+`extended`:
+```json
+{
+  "dirs": [
+    {
+      "name": "dir1",
+      "stats": {
+        "dev": 2100,
+        "size": 4096,
+        ...
+      },
+      "extendedInfo": {
+        "fileCount": 4,
+        "totalSize": 51233,
+        ...
+      }
+    }
+  ],
+  "files": [
+    {
+      "name": "file1.txt",
+      "stats": {
+        "dev": 2200,
+        "size": 554,
+        ...
+      }
+    }
+  ]
+}
 ```
 
 #### `preCompressed`

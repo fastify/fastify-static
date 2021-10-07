@@ -12,8 +12,11 @@ const fastifyStatic = require('..')
 
 const helper = {
   arrange: function (t, options, f) {
+    return helper.arrangeModule(t, options, fastifyStatic, f)
+  },
+  arrangeModule: function (t, options, mock, f) {
     const fastify = Fastify()
-    fastify.register(fastifyStatic, options)
+    fastify.register(mock, options)
     t.teardown(fastify.close.bind(fastify))
     fastify.listen(0, err => {
       t.error(err)
@@ -237,6 +240,86 @@ t.test('dir list html format', t => {
   }
 })
 
+t.test('dir list html format - stats', t => {
+  t.plan(7)
+
+  const options1 = {
+    root: path.join(__dirname, '/static'),
+    prefix: '/public',
+    index: false,
+    list: {
+      format: 'html',
+      render (dirs, files) {
+        t.ok(dirs.length > 0)
+        t.ok(files.length > 0)
+
+        t.ok(dirs.every(every))
+        t.ok(files.every(every))
+
+        function every (value) {
+          return value.stats &&
+            value.stats.atime &&
+            !value.extendedInfo
+        }
+      }
+    }
+  }
+
+  const route = '/public/'
+
+  helper.arrange(t, options1, (url) => {
+    simple.concat({
+      method: 'GET',
+      url: url + route
+    }, (err, response, body) => {
+      t.error(err)
+      t.equal(response.statusCode, 200)
+    })
+  })
+})
+
+t.test('dir list html format - extended info', t => {
+  t.plan(4)
+
+  const route = '/public/'
+
+  const options = {
+    root: path.join(__dirname, '/static'),
+    prefix: '/public',
+    index: false,
+    list: {
+      format: 'html',
+      extendedFolderInfo: true,
+      render (dirs, files) {
+        t.test('dirs', t => {
+          t.plan(dirs.length * 7)
+
+          for (const value of dirs) {
+            t.ok(value.extendedInfo)
+
+            t.equal(typeof value.extendedInfo.fileCount, 'number')
+            t.equal(typeof value.extendedInfo.totalFileCount, 'number')
+            t.equal(typeof value.extendedInfo.folderCount, 'number')
+            t.equal(typeof value.extendedInfo.totalFolderCount, 'number')
+            t.equal(typeof value.extendedInfo.totalSize, 'number')
+            t.equal(typeof value.extendedInfo.lastModified, 'number')
+          }
+        })
+      }
+    }
+  }
+
+  helper.arrange(t, options, (url) => {
+    simple.concat({
+      method: 'GET',
+      url: url + route
+    }, (err, response, body) => {
+      t.error(err)
+      t.equal(response.statusCode, 200)
+    })
+  })
+})
+
 t.test('dir list json format', t => {
   t.plan(2)
 
@@ -267,6 +350,92 @@ t.test('dir list json format', t => {
         })
       })
     }
+  })
+})
+
+t.test('dir list json format - extended info', t => {
+  t.plan(2)
+
+  const options = {
+    root: path.join(__dirname, '/static'),
+    prefix: '/public',
+    prefixAvoidTrailingSlash: true,
+    list: {
+      format: 'json',
+      names: ['index', 'index.json', '/'],
+      extendedFolderInfo: true,
+      jsonFormat: 'extended'
+
+    }
+  }
+  const routes = ['/public/shallow/']
+
+  helper.arrange(t, options, (url) => {
+    for (const route of routes) {
+      t.test(route, t => {
+        t.plan(5)
+        simple.concat({
+          method: 'GET',
+          url: url + route
+        }, (err, response, body) => {
+          t.error(err)
+          t.equal(response.statusCode, 200)
+          const bodyObject = JSON.parse(body.toString())
+          t.equal(bodyObject.dirs[0].name, 'empty')
+          t.equal(typeof bodyObject.dirs[0].stats.atime, 'string')
+          t.equal(typeof bodyObject.dirs[0].extendedInfo.totalSize, 'number')
+        })
+      })
+    }
+  })
+})
+
+t.test('dir list - url parameter format', t => {
+  t.plan(13)
+
+  const options = {
+    root: path.join(__dirname, '/static'),
+    prefix: '/public',
+    index: false,
+    list: {
+      format: 'html',
+      render (dirs, files) {
+        return 'html'
+      }
+    }
+  }
+  const route = '/public/'
+
+  helper.arrange(t, options, (url) => {
+    simple.concat({
+      method: 'GET',
+      url: url + route
+    }, (err, response, body) => {
+      t.error(err)
+      t.equal(response.statusCode, 200)
+      t.equal(body.toString(), 'html')
+      t.ok(response.headers['content-type'].includes('text/html'))
+    })
+
+    simple.concat({
+      method: 'GET',
+      url: url + route + '?format=html'
+    }, (err, response, body) => {
+      t.error(err)
+      t.equal(response.statusCode, 200)
+      t.equal(body.toString(), 'html')
+      t.ok(response.headers['content-type'].includes('text/html'))
+    })
+
+    simple.concat({
+      method: 'GET',
+      url: url + route + '?format=json'
+    }, (err, response, body) => {
+      t.error(err)
+      t.equal(response.statusCode, 200)
+      t.ok(body.toString())
+      t.ok(response.headers['content-type'].includes('application/json'))
+    })
   })
 })
 
@@ -385,5 +554,44 @@ t.test('serve a non existent dir and get error', t => {
         t.equal(response.statusCode, 404)
       })
     })
+  })
+})
+
+t.test('dir list error', t => {
+  t.plan(7)
+
+  const options = {
+    root: path.join(__dirname, '/static'),
+    prefix: '/public',
+    prefixAvoidTrailingSlash: true,
+    index: false,
+    list: {
+      format: 'html',
+      names: ['index', 'index.htm'],
+      render: () => ''
+    }
+  }
+
+  const errorMessage = 'mocking send'
+  const dirList = require('../lib/dirList')
+  dirList.send = async () => { throw new Error(errorMessage) }
+
+  const mock = t.mock('..', {
+    '../lib/dirList.js': dirList
+  })
+
+  const routes = ['/public/', '/public/index.htm']
+
+  helper.arrangeModule(t, options, mock, (url) => {
+    for (const route of routes) {
+      simple.concat({
+        method: 'GET',
+        url: url + route
+      }, (err, response, body) => {
+        t.error(err)
+        t.equal(JSON.parse(body.toString()).message, errorMessage)
+        t.equal(response.statusCode, 500)
+      })
+    }
   })
 })
