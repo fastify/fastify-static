@@ -42,6 +42,17 @@ async function fastifyStatic (fastify, opts) {
 
   const allowedPath = opts.allowedPath
 
+  if (opts.prefix === undefined) opts.prefix = '/'
+
+  let prefix = opts.prefix
+
+  if (!opts.prefixAvoidTrailingSlash) {
+    prefix =
+      opts.prefix[opts.prefix.length - 1] === '/'
+        ? opts.prefix
+        : opts.prefix + '/'
+  }
+
   function pumpSendToReply (
     request,
     reply,
@@ -146,7 +157,8 @@ async function fastifyStatic (fastify, opts) {
           reply,
           dir: path,
           options: opts.list,
-          route: pathname
+          route: pathname,
+          prefix
         }).catch((err) => reply.send(err))
         return
       }
@@ -166,7 +178,8 @@ async function fastifyStatic (fastify, opts) {
             reply,
             dir: dirList.path(opts.root, pathname),
             options: opts.list,
-            route: pathname
+            route: pathname,
+            prefix
           }).catch((err) => reply.send(err))
           return
         }
@@ -208,17 +221,6 @@ async function fastifyStatic (fastify, opts) {
     // we cannot use pump, because send error
     // handling is not compatible
     stream.pipe(wrap)
-  }
-
-  if (opts.prefix === undefined) opts.prefix = '/'
-
-  let prefix = opts.prefix
-
-  if (!opts.prefixAvoidTrailingSlash) {
-    prefix =
-      opts.prefix[opts.prefix.length - 1] === '/'
-        ? opts.prefix
-        : opts.prefix + '/'
   }
 
   const errorHandler = (error, request, reply) => {

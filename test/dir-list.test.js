@@ -50,7 +50,7 @@ t.test('dir list wrong options', t => {
         root: path.join(__dirname, '/static'),
         list: {
           format: 'html'
-        // no render function
+          // no render function
         }
       },
       error: new TypeError('The `list.render` option must be a function and is required with html format')
@@ -159,16 +159,16 @@ t.test('dir list html format', t => {
       output: `
 <html><body>
 <ul>
-  <li><a href="/deep">deep</a></li>
-  <li><a href="/shallow">shallow</a></li>
+  <li><a href="/public/deep">deep</a></li>
+  <li><a href="/public/shallow">shallow</a></li>
 </ul>
 <ul>
-  <li><a href="/.example" target="_blank">.example</a></li>
-  <li><a href="/a .md" target="_blank">a .md</a></li>
-  <li><a href="/foo.html" target="_blank">foo.html</a></li>
-  <li><a href="/foobar.html" target="_blank">foobar.html</a></li>
-  <li><a href="/index.css" target="_blank">index.css</a></li>
-  <li><a href="/index.html" target="_blank">index.html</a></li>
+  <li><a href="/public/.example" target="_blank">.example</a></li>
+  <li><a href="/public/a .md" target="_blank">a .md</a></li>
+  <li><a href="/public/foo.html" target="_blank">foo.html</a></li>
+  <li><a href="/public/foobar.html" target="_blank">foobar.html</a></li>
+  <li><a href="/public/index.css" target="_blank">index.css</a></li>
+  <li><a href="/public/index.html" target="_blank">index.html</a></li>
 </ul>
 </body></html>
 `
@@ -190,16 +190,16 @@ t.test('dir list html format', t => {
       output: `
 <html><body>
 <ul>
-  <li><a href="/deep">deep</a></li>
-  <li><a href="/shallow">shallow</a></li>
+  <li><a href="/public/deep">deep</a></li>
+  <li><a href="/public/shallow">shallow</a></li>
 </ul>
 <ul>
-  <li><a href="/.example" target="_blank">.example</a></li>
-  <li><a href="/a .md" target="_blank">a .md</a></li>
-  <li><a href="/foo.html" target="_blank">foo.html</a></li>
-  <li><a href="/foobar.html" target="_blank">foobar.html</a></li>
-  <li><a href="/index.css" target="_blank">index.css</a></li>
-  <li><a href="/index.html" target="_blank">index.html</a></li>
+  <li><a href="/public/.example" target="_blank">.example</a></li>
+  <li><a href="/public/a .md" target="_blank">a .md</a></li>
+  <li><a href="/public/foo.html" target="_blank">foo.html</a></li>
+  <li><a href="/public/foobar.html" target="_blank">foobar.html</a></li>
+  <li><a href="/public/index.css" target="_blank">index.css</a></li>
+  <li><a href="/public/index.html" target="_blank">index.html</a></li>
 </ul>
 </body></html>
 `
@@ -238,6 +238,53 @@ t.test('dir list html format', t => {
       }
     })
   }
+})
+
+t.test('dir list href nested structure', t => {
+  t.plan(6)
+
+  const options = {
+    root: path.join(__dirname, '/static'),
+    prefix: '/public',
+    index: false,
+    list: {
+      format: 'html',
+      names: ['index', 'index.htm'],
+      render (dirs, files) {
+        return dirs[0].href
+      }
+    }
+  }
+
+  const routes = [
+    { path: '/public/', response: '/public/deep' },
+    { path: '/public/index', response: '/public/deep' },
+    { path: '/public/deep/', response: '/public/deep/path' },
+    { path: '/public/deep/index.htm', response: '/public/deep/path' },
+    { path: '/public/deep/path/', response: '/public/deep/path/for' }
+  ]
+  helper.arrange(t, options, (url) => {
+    for (const route of routes) {
+      t.test(route.path, t => {
+        t.plan(5)
+        simple.concat({
+          method: 'GET',
+          url: url + route.path
+        }, (err, response, body) => {
+          t.error(err)
+          t.equal(response.statusCode, 200)
+          t.equal(body.toString(), route.response)
+          simple.concat({
+            method: 'GET',
+            url: url + body.toString()
+          }, (err, response, body) => {
+            t.error(err)
+            t.equal(response.statusCode, 200)
+          })
+        })
+      })
+    }
+  })
 })
 
 t.test('dir list html format - stats', t => {
