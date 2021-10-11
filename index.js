@@ -152,7 +152,11 @@ async function fastifyStatic (fastify, opts) {
       }
 
       if (opts.redirect === true) {
-        reply.redirect(301, getRedirectUrl(request.raw.url))
+        try {
+          reply.redirect(301, getRedirectUrl(request.raw.url))
+        } catch (error) {
+          reply.send(error)
+        }
       } else {
         reply.callNotFound()
       }
@@ -443,8 +447,18 @@ function getEncodingExtension (encoding) {
 }
 
 function getRedirectUrl (url) {
-  const parsed = new URL(url, 'http://localhost.com/')
-  return parsed.pathname + (parsed.pathname[parsed.pathname.length - 1] !== '/' ? '/' : '') + (parsed.search || '')
+  if (url.startsWith('//') || url.startsWith('/\\')) {
+    // malicous redirect
+    return '/'
+  }
+  try {
+    const parsed = new URL(url, 'http://localhost.com/')
+    return parsed.pathname + (parsed.pathname[parsed.pathname.length - 1] !== '/' ? '/' : '') + (parsed.search || '')
+  } catch (error) {
+    const err = new Error(`Invalid redirect URL: ${url}`)
+    err.statusCode = 400
+    throw err
+  }
 }
 
 module.exports = fp(fastifyStatic, {

@@ -3283,8 +3283,14 @@ t.test(
   }
 )
 
-t.test('should not redirect to protocol-relative locations', { only: 1 }, (t) => {
+t.test('should not redirect to protocol-relative locations', (t) => {
   const urls = [
+    ['//^/..', '/', 301],
+    ['//^/.', null, 404], // it is NOT recognized as a directory by pillarjs/send
+    ['//:/..', '/', 301],
+    ['/\\\\a//google.com/%2e%2e%2f%2e%2e', '/', 301],
+    ['//a//youtube.com/%2e%2e%2f%2e%2e', '/', 301],
+    ['/^', null, 404], // it is NOT recognized as a directory by pillarjs/send
     ['//google.com/%2e%2e', '/', 301],
     ['//users/%2e%2e', '/', 301],
     ['//users', null, 404]
