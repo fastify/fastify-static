@@ -447,12 +447,21 @@ function getEncodingExtension (encoding) {
 }
 
 function getRedirectUrl (url) {
-  if (url.startsWith('//') || url.startsWith('/\\')) {
-    // malicous redirect
-    return '/'
+  // malicous redirect detection
+  // we stripe it into a single slash
+  while (url.startsWith('//') || url.startsWith('/\\')) {
+    if (url.startsWith('//')) {
+      // we replace the first two slash only
+      url = url.replace('//', '/')
+    }
+    if (url.startsWith('/\\')) {
+      // we replace the leading malicous part only
+      url = url.replace('/\\', '/')
+    }
   }
   try {
     const parsed = new URL(url, 'http://localhost.com/')
+    console.log(url, parsed.href)
     return parsed.pathname + (parsed.pathname[parsed.pathname.length - 1] !== '/' ? '/' : '') + (parsed.search || '')
   } catch (error) {
     const err = new Error(`Invalid redirect URL: ${url}`)

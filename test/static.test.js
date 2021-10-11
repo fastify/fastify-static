@@ -3288,12 +3288,13 @@ t.test('should not redirect to protocol-relative locations', (t) => {
     ['//^/..', '/', 301],
     ['//^/.', null, 404], // it is NOT recognized as a directory by pillarjs/send
     ['//:/..', '/', 301],
-    ['/\\\\a//google.com/%2e%2e%2f%2e%2e', '/', 301],
-    ['//a//youtube.com/%2e%2e%2f%2e%2e', '/', 301],
+    ['/\\\\a//google.com/%2e%2e%2f%2e%2e', '/a//google.com/%2e%2e%2f%2e%2e/', 301],
+    ['//a//youtube.com/%2e%2e%2f%2e%2e', '/a//youtube.com/%2e%2e%2f%2e%2e/', 301],
     ['/^', null, 404], // it is NOT recognized as a directory by pillarjs/send
     ['//google.com/%2e%2e', '/', 301],
     ['//users/%2e%2e', '/', 301],
-    ['//users', null, 404]
+    ['//users', null, 404],
+    ['///deep/path//for//test//index.html', null, 200]
   ]
 
   t.plan(1 + urls.length * 2)
