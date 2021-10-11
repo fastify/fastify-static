@@ -446,19 +446,16 @@ function getEncodingExtension (encoding) {
   }
 }
 
+// in here the url is already santitize once
+// all the / and \ are equal to /
 function getRedirectUrl (url) {
-  // malicous redirect detection
-  // we stripe it into a single slash
-  while (url.startsWith('//') || url.startsWith('/\\')) {
-    if (url.startsWith('//')) {
-      // we replace the first two slash only
-      url = url.replace('//', '/')
-    }
-    if (url.startsWith('/\\')) {
-      // we replace the leading malicous part only
-      url = url.replace('/\\', '/')
-    }
+  let i = 0
+  // we detech how many slash before a valid path
+  for (i; i < url.length; i++) {
+    if (url[i] !== '/') break
   }
+  // turns all leading / to a single /
+  url = '/' + url.substr(i)
   try {
     const parsed = new URL(url, 'http://localhost.com/')
     return parsed.pathname + (parsed.pathname[parsed.pathname.length - 1] !== '/' ? '/' : '') + (parsed.search || '')
