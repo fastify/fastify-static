@@ -1,17 +1,17 @@
 {
   "name": "fastify-static",
-  "version": "4.4.0",
+  "version": "4.4.1",
   "description": "Plugin for serving static files as fast as possible.",
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
     "lint": "standard | snazzy",
     "lint:fix": "standard --fix",
-    "unit": "tap test/*.test.js",
+    "unit": "tap --no-check-coverage test/*.test.js",
     "typescript": "tsd",
     "test": "npm run lint && npm run unit && npm run typescript",
     "example": "node example/server.js",
-    "coverage": "tap --cov --coverage-report=html test",
+    "coverage": "tap --cov --coverage-report=html --no-check-coverage test",
     "coveralls": "tap test/*test.js  test/*/*.test.js --cov"
   },
   "repository": {
