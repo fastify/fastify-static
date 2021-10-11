@@ -446,15 +446,13 @@ function getEncodingExtension (encoding) {
   }
 }
 
-// in here the url is already santitize once
-// all the / and \ are equal to /
 function getRedirectUrl (url) {
   let i = 0
   // we detech how many slash before a valid path
   for (i; i < url.length; i++) {
-    if (url[i] !== '/') break
+    if (url[i] !== '/' && url[i] !== '\\') break
   }
-  // turns all leading / to a single /
+  // turns all leading / or \ into a single /
   url = '/' + url.substr(i)
   try {
     const parsed = new URL(url, 'http://localhost.com/')
