@@ -155,6 +155,8 @@ async function fastifyStatic (fastify, opts) {
         try {
           reply.redirect(301, getRedirectUrl(request.raw.url))
         } catch (error) {
+          // the try-catch here is actually unreachable, but we keep it for safety and prevent DoS attack
+          /* istanbul ignore next */
           reply.send(error)
         }
       } else {
@@ -447,16 +449,23 @@ function getEncodingExtension (encoding) {
 }
 
 function getRedirectUrl (url) {
-  if (url.startsWith('//') || url.startsWith('/\\')) {
-    // malicous redirect
-    return '/'
+  let i = 0
+  // we detech how many slash before a valid path
+  for (i; i < url.length; i++) {
+    if (url[i] !== '/' && url[i] !== '\\') break
   }
+  // turns all leading / or \ into a single /
+  url = '/' + url.substr(i)
   try {
     const parsed = new URL(url, 'http://localhost.com/')
     return parsed.pathname + (parsed.pathname[parsed.pathname.length - 1] !== '/' ? '/' : '') + (parsed.search || '')
   } catch (error) {
+    // the try-catch here is actually unreachable, but we keep it for safety and prevent DoS attack
+    /* istanbul ignore next */
     const err = new Error(`Invalid redirect URL: ${url}`)
+    /* istanbul ignore next */
     err.statusCode = 400
+    /* istanbul ignore next */
     throw err
   }
 }
