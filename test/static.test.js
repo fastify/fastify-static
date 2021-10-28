@@ -35,6 +35,9 @@ const innerIndex = fs
 const allThreeBr = fs.readFileSync(
   './test/static-pre-compressed/all-three.html.br'
 )
+const allThreeGzip = fs.readFileSync(
+  './test/static-pre-compressed/all-three.html.gz'
+)
 const gzipOnly = fs.readFileSync(
   './test/static-pre-compressed/gzip-only.html.gz'
 )
@@ -3016,6 +3019,66 @@ t.test(
 )
 
 t.test(
+  'will serve pre-compressed files with .gzip if * directive used',
+  async (t) => {
+    const pluginOptions = {
+      root: path.join(__dirname, '/static-pre-compressed'),
+      prefix: '/static-pre-compressed/',
+      preCompressed: true
+    }
+
+    const fastify = Fastify()
+
+    fastify.register(fastifyStatic, pluginOptions)
+    t.teardown(fastify.close.bind(fastify))
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '/static-pre-compressed/all-three.html',
+      headers: {
+        'accept-encoding': '*'
+      }
+    })
+
+    genericResponseChecks(t, response)
+    t.equal(response.headers['content-encoding'], 'gzip')
+    t.equal(response.statusCode, 200)
+    t.same(response.rawPayload, allThreeGzip)
+    t.end()
+  }
+)
+
+t.test(
+  'will serve pre-compressed files with .gzip if multiple * directives used',
+  async (t) => {
+    const pluginOptions = {
+      root: path.join(__dirname, '/static-pre-compressed'),
+      prefix: '/static-pre-compressed/',
+      preCompressed: true
+    }
+
+    const fastify = Fastify()
+
+    fastify.register(fastifyStatic, pluginOptions)
+    t.teardown(fastify.close.bind(fastify))
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '/static-pre-compressed/all-three.html',
+      headers: {
+        'accept-encoding': '*, *'
+      }
+    })
+
+    genericResponseChecks(t, response)
+    t.equal(response.headers['content-encoding'], 'gzip')
+    t.equal(response.statusCode, 200)
+    t.same(response.rawPayload, allThreeGzip)
+    t.end()
+  }
+)
+
+t.test(
   'will serve uncompressed files if there are no compressed variants on disk',
   async (t) => {
     const pluginOptions = {
@@ -3077,7 +3140,7 @@ t.test(
 )
 
 t.test(
-  'will serve pre-compressed files and fallback to .gz if .br is not on disk  (with wildcard: false) ',
+  'will serve pre-compressed files and fallback to .gz if .br is not on disk (with wildcard: false)',
   async (t) => {
     const pluginOptions = {
       root: path.join(__dirname, '/static-pre-compressed'),
@@ -3108,7 +3171,69 @@ t.test(
 )
 
 t.test(
-  'will serve uncompressed files if there are no compressed variants on disk  (with wildcard: false)',
+  'will serve pre-compressed files with .gzip if * directive used (with wildcard: false)',
+  async (t) => {
+    const pluginOptions = {
+      root: path.join(__dirname, '/static-pre-compressed'),
+      prefix: '/static-pre-compressed/',
+      preCompressed: true,
+      wildcard: false
+    }
+
+    const fastify = Fastify()
+
+    fastify.register(fastifyStatic, pluginOptions)
+    t.teardown(fastify.close.bind(fastify))
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '/static-pre-compressed/all-three.html',
+      headers: {
+        'accept-encoding': '*'
+      }
+    })
+
+    genericResponseChecks(t, response)
+    t.equal(response.headers['content-encoding'], 'gzip')
+    t.equal(response.statusCode, 200)
+    t.same(response.rawPayload, allThreeGzip)
+    t.end()
+  }
+)
+
+t.test(
+  'will serve pre-compressed files with .gzip if multiple * directives used (with wildcard: false)',
+  async (t) => {
+    const pluginOptions = {
+      root: path.join(__dirname, '/static-pre-compressed'),
+      prefix: '/static-pre-compressed/',
+      preCompressed: true,
+      wildcard: false
+    }
+
+    const fastify = Fastify()
+
+    fastify.register(fastifyStatic, pluginOptions)
+    t.teardown(fastify.close.bind(fastify))
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '/static-pre-compressed/all-three.html',
+      headers: {
+        'accept-encoding': '*, *'
+      }
+    })
+
+    genericResponseChecks(t, response)
+    t.equal(response.headers['content-encoding'], 'gzip')
+    t.equal(response.statusCode, 200)
+    t.same(response.rawPayload, allThreeGzip)
+    t.end()
+  }
+)
+
+t.test(
+  'will serve uncompressed files if there are no compressed variants on disk (with wildcard: false)',
   async (t) => {
     const pluginOptions = {
       root: path.join(__dirname, '/static-pre-compressed'),
