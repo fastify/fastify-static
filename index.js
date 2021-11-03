@@ -429,11 +429,11 @@ function findIndexFile (pathname, root, indexFiles = ['index.html']) {
   })
 }
 
-// Adapted from https://github.com/fastify/fastify-compress/blob/fa5c12a5394285c86d9f438cb39ff44f3d5cde79/index.js#L442
+// Adapted from https://github.com/fastify/fastify-compress/blob/665e132fa63d3bf05ad37df3c20346660b71a857/index.js#L451
 function getEncodingHeader (headers, checked) {
   if (!('accept-encoding' in headers)) return
 
-  const header = headers['accept-encoding'].toLowerCase().replace('*', 'gzip')
+  const header = headers['accept-encoding'].toLowerCase().replace(/\*/g, 'gzip')
   return encodingNegotiator.negotiate(
     header,
     supportedEncodings.filter((enc) => !checked.has(enc))
