@@ -2537,7 +2537,7 @@ t.test('register /static with redirect true and wildcard false', t => {
   })
 })
 
-t.test('trailing slash behavior with redirect = false', (t) => {
+t.only('trailing slash behavior with redirect = false', (t) => {
   t.plan(6)
 
   const fastify = Fastify()
@@ -2588,14 +2588,14 @@ t.test('trailing slash behavior with redirect = false', (t) => {
       })
     })
 
-    t.test('deep path with index.html but no trailing slash => 404', (t) => {
+    t.only('deep path with index.html but no trailing slash => 200', (t) => {
       t.plan(2)
       simple.concat({
         method: 'GET',
         url: host + '/static/deep/path/for/test'
       }, (err, response) => {
         t.error(err)
-        t.equal(response.statusCode, 404)
+        t.equal(response.statusCode, 200)
       })
     })
 
