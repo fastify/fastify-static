@@ -172,6 +172,19 @@ async function fastifyStatic (fastify, opts) {
           reply.send(error)
         }
       } else {
+        // if is a directory path without a trailing slash, and has an index file, reply as if it has a trailing slash
+        if (!pathname.endsWith('/') && findIndexFile(pathname, options.root, options.index)) {
+          return pumpSendToReply(
+            request,
+            reply,
+            pathname + '/',
+            rootPath,
+            undefined,
+            undefined,
+            checkedEncodings
+          )
+        }
+
         reply.callNotFound()
       }
     })
