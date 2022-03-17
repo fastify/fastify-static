@@ -178,6 +178,22 @@ async function fastifyStatic (fastify, opts) {
 
     stream.on('error', function (err) {
       if (err.code === 'ENOENT') {
+        // when preCompress is enabled and the path is a directoy without a trailing shash
+        if (opts.preCompressed && encoding) {
+          const indexPathname = findIndexFile(pathname, options.root, options.index)
+          if (indexPathname) {
+            return pumpSendToReply(
+              request,
+              reply,
+              pathname + '/',
+              rootPath,
+              undefined,
+              undefined,
+              checkedEncodings
+            )
+          }
+        }
+
         // if file exists, send real file, otherwise send dir list if name match
         if (opts.list && dirList.handle(pathname, opts.list)) {
           dirList.send({
