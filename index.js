@@ -190,6 +190,21 @@ async function fastifyStatic (fastify, opts) {
           return
         }
 
+        if (opts.preCompressed && encoding) {
+          const indexPathname = findIndexFile(pathname, options.root, options.index)
+          if (indexPathname) {
+            return pumpSendToReply(
+              request,
+              reply,
+              pathname + '/',
+              rootPath,
+              undefined,
+              undefined,
+              checkedEncodings
+            )
+          }
+        }
+
         // root paths left to try?
         if (Array.isArray(rootPath) && rootPathOffset < (rootPath.length - 1)) {
           return pumpSendToReply(request, reply, pathname, rootPath, rootPathOffset + 1)
