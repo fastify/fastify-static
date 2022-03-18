@@ -44,6 +44,9 @@ const gzipOnly = fs.readFileSync(
 const indexBr = fs.readFileSync(
   './test/static-pre-compressed/index.html.br'
 )
+const dirIndexBr = fs.readFileSync(
+  './test/static-pre-compressed/dir/index.html.br'
+)
 const uncompressedStatic = fs
   .readFileSync('./test/static-pre-compressed/uncompressed.html')
   .toString('utf8')
@@ -3321,7 +3324,7 @@ t.test(
 )
 
 t.test(
-  'will serve precompressed index without trailing slash',
+  'will serve preCompressed index without trailing slash',
   async (t) => {
     const pluginOptions = {
       root: path.join(__dirname, '/static-pre-compressed'),
@@ -3346,7 +3349,7 @@ t.test(
     genericResponseChecks(t, response)
     t.equal(response.headers['content-encoding'], 'br')
     t.equal(response.statusCode, 200)
-    t.same(response.rawPayload, indexBr)
+    t.same(response.rawPayload, dirIndexBr)
     t.end()
   }
 )
