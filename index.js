@@ -96,8 +96,10 @@ async function fastifyStatic (fastify, opts) {
           if (!pathname) {
             return reply.callNotFound()
           }
+          pathnameForSend = pathnameForSend + pathname + '.' + getEncodingExtension(encoding)
+        } else {
+          pathnameForSend = pathname + '.' + getEncodingExtension(encoding)
         }
-        pathnameForSend = pathname + '.' + getEncodingExtension(encoding)
       }
     }
 
