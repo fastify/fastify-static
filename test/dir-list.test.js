@@ -9,6 +9,7 @@ const simple = require('simple-get')
 const Fastify = require('fastify')
 
 const fastifyStatic = require('..')
+const dirList = require('../lib/dirList')
 
 const helper = {
   arrange: function (t, options, f) {
@@ -30,6 +31,38 @@ const helper = {
 try {
   fs.mkdirSync(path.join(__dirname, 'static/shallow/empty'))
 } catch (error) {}
+
+t.test('throws when `root` is an array', t => {
+  t.plan(2)
+
+  const err = dirList.validateOptions({ root: ['hello', 'world'], list: true })
+  t.type(err, TypeError)
+  t.equal(err.message, 'multi-root with list option is not supported')
+})
+
+t.test('throws when `list.format option` is invalid', t => {
+  t.plan(2)
+
+  const err = dirList.validateOptions({ list: { format: 'hello' } })
+  t.type(err, TypeError)
+  t.equal(err.message, 'The `list.format` option must be json or html')
+})
+
+t.test('throws when `list.names option` is not an array', t => {
+  t.plan(2)
+
+  const err = dirList.validateOptions({ list: { names: 'hello' } })
+  t.type(err, TypeError)
+  t.equal(err.message, 'The `list.names` option must be an array')
+})
+
+t.test('throws when `list.format` is html and `list render` is not a function', t => {
+  t.plan(2)
+
+  const err = dirList.validateOptions({ list: { format: 'html', render: 'hello' } })
+  t.type(err, TypeError)
+  t.equal(err.message, 'The `list.render` option must be a function and is required with html format')
+})
 
 t.test('dir list wrong options', t => {
   t.plan(3)
@@ -620,7 +653,6 @@ t.test('dir list error', t => {
   }
 
   const errorMessage = 'mocking send'
-  const dirList = require('../lib/dirList')
   dirList.send = async () => { throw new Error(errorMessage) }
 
   const mock = t.mock('..', {
