@@ -379,7 +379,6 @@ t.test('dir list json format', t => {
       names: ['index', 'index.json', '/']
     }
   }
-  // const routes = ['/public/shallow', 'public/shallow/', '/public/shallow/index.json', '/public/shallow/index']
   const routes = ['/public/shallow/']
   const content = { dirs: ['empty'], files: ['sample.jpg'] }
 
