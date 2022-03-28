@@ -22,7 +22,7 @@ async function fastifyStatic (fastify, opts) {
     throw new TypeError('The `setHeaders` option must be a function')
   }
 
-  const invalidDirListOpts = dirList.validateOptions(opts.list)
+  const invalidDirListOpts = dirList.validateOptions(opts)
   if (invalidDirListOpts) {
     throw invalidDirListOpts
   }
