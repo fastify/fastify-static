@@ -191,7 +191,7 @@ If set, it provide the directory list calling the directory path.
 
 Default response is json.
 
-Note: Multi-root is not supported.
+Note: Multi-root is not supported within the `list` option.
 
 **Example:**
 
