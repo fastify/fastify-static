@@ -326,7 +326,7 @@ async function fastifyStatic (fastify, opts) {
         })
       }
     } else {
-      const globPattern = '**/*'
+      const globPattern = '**/**'
       const indexDirs = new Map()
       const routes = new Set()
 
