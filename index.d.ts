@@ -2,7 +2,7 @@
 //                 Leo <https://github.com/leomelzer>
 /// <reference types="node" />
 
-import { FastifyPluginCallback, FastifyReply } from 'fastify';
+import { FastifyPluginCallback } from 'fastify';
 import { Stats } from 'fs';
 
 declare module "fastify" {
@@ -96,3 +96,4 @@ export interface FastifyStaticOptions extends SendOptions {
 declare const fastifyStatic: FastifyPluginCallback<FastifyStaticOptions>
 
 export default fastifyStatic;
+export { fastifyStatic }
