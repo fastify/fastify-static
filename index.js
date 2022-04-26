@@ -13,7 +13,7 @@ const encodingNegotiator = require('encoding-negotiator')
 
 const dirList = require('./lib/dirList')
 
-async function plugin (fastify, opts) {
+async function fastifyStatic (fastify, opts) {
   checkRootPathForErrors(fastify, opts.root)
 
   const setHeaders = opts.setHeaders
@@ -503,21 +503,7 @@ function getRedirectUrl (url) {
   }
 }
 
-const fastifyStatic = fp(plugin, {
+module.exports = fp(fastifyStatic, {
   fastify: '3.x',
   name: 'fastify-static'
 })
-
-/**
- * These export configurations enable JS and TS developers
- * to consume fastify-static in whatever way best suits their needs.
- * Some examples of supported import syntax includes:
- * - `const fastifyStatic = require('fastify-static')`
- * - `const { fastifyStatic } = require('fastify-static')`
- * - `import * as fastifyStatic from 'fastify-static'`
- * - `import { fastifyStatic } from 'fastify-static'`
- * - `import fastifyStatic from 'fastify-static'`
- */
-fastifyStatic.fastifyStatic = fastifyStatic
-fastifyStatic.default = fastifyStatic
-module.exports = fastifyStatic

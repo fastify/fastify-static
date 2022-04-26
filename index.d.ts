@@ -2,7 +2,7 @@
 //                 Leo <https://github.com/leomelzer>
 /// <reference types="node" />
 
-import { FastifyPluginCallback } from 'fastify';
+import { FastifyPluginCallback, FastifyReply } from 'fastify';
 import { Stats } from 'fs';
 
 declare module "fastify" {
@@ -93,7 +93,6 @@ export interface FastifyStaticOptions extends SendOptions {
   maxAge?: string | number;
 }
 
-declare const fastifyStatic: FastifyPluginCallback<FastifyStaticOptions>
+export declare const fastifyStatic: FastifyPluginCallback<FastifyStaticOptions>
 
 export default fastifyStatic;
-export { fastifyStatic }
