@@ -1,6 +1,6 @@
 'use strict'
 
-/* eslint node/no-deprecated-api: "off" */
+/* eslint n/no-deprecated-api: "off" */
 
 const path = require('path')
 const fs = require('fs')
@@ -1270,7 +1270,7 @@ t.test('root not found warning', (t) => {
     },
     destination
   )
-  const fastify = Fastify({ logger: logger })
+  const fastify = Fastify({ logger })
   fastify.register(fastifyStatic, pluginOptions)
   fastify.listen(0, (err) => {
     t.error(err)

@@ -1,6 +1,6 @@
 'use strict'
 
-/* eslint node/no-deprecated-api: "off" */
+/* eslint n/no-deprecated-api: "off" */
 
 const fs = require('fs')
 const path = require('path')
