@@ -449,15 +449,18 @@ function getContentType (path) {
 }
 
 function findIndexFile (pathname, root, indexFiles = ['index.html']) {
-  return indexFiles.find(filename => {
-    const p = path.join(root, pathname, filename)
-    try {
-      const stats = statSync(p)
-      return !stats.isDirectory()
-    } catch (e) {
-      return false
-    }
-  })
+  if (Array.isArray(indexFiles)) {
+    return indexFiles.find(filename => {
+      const p = path.join(root, pathname, filename)
+      try {
+        const stats = statSync(p)
+        return !stats.isDirectory()
+      } catch (e) {
+        return false
+      }
+    })
+  }
+  return false
 }
 
 // Adapted from https://github.com/fastify/fastify-compress/blob/665e132fa63d3bf05ad37df3c20346660b71a857/index.js#L451
