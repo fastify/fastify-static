@@ -1,7 +1,7 @@
-# fastify-static
+# @fastify/static
 
 ![CI](https://github.com/fastify/fastify-static/workflows/CI/badge.svg)
-[![NPM version](https://img.shields.io/npm/v/fastify-static.svg?style=flat)](https://www.npmjs.com/package/fastify-static)
+[![NPM version](https://img.shields.io/npm/v/@fastify/static.svg?style=flat)](https://www.npmjs.com/package/@fastify/static)
 [![Known Vulnerabilities](https://snyk.io/test/github/fastify/fastify-static/badge.svg)](https://snyk.io/test/github/fastify/fastify-static)
 [![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat)](https://standardjs.com/)
 
@@ -12,7 +12,7 @@ Please refer to [this branch](https://github.com/fastify/fastify-static/tree/1.x
 
 ## Install
 
-`npm install --save fastify-static`
+`npm install --save @fastify/static`
 
 ## Usage
 
@@ -20,7 +20,7 @@ Please refer to [this branch](https://github.com/fastify/fastify-static/tree/1.x
 const fastify = require('fastify')()
 const path = require('path')
 
-fastify.register(require('fastify-static'), {
+fastify.register(require('@fastify/static'), {
   root: path.join(__dirname, 'public'),
   prefix: '/public/', // optional: default '/'
 })
@@ -42,7 +42,7 @@ fastify.get('/another/path', function (req, reply) {
 
 ```js
 const fastify = require('fastify')()
-const fastifyStatic = require('fastify-static')
+const fastifyStatic = require('@fastify/static')
 const path = require('path')
 // first plugin
 fastify.register(fastifyStatic, {
@@ -64,7 +64,7 @@ fastify.register(fastifyStatic, {
 const fastify = require('fastify')()
 const path = require('path')
 
-fastify.register(require('fastify-static'), {
+fastify.register(require('@fastify/static'), {
   root: path.join(__dirname, 'public'),
   prefix: '/public/', // optional: default '/'
 })
@@ -145,7 +145,7 @@ You're able to alter this options when calling `reply.download('filename.html', 
 
 Default: `false`
 
-If set to `true`, `fastify-static` redirects to the directory with a trailing slash.
+If set to `true`, `@fastify/static` redirects to the directory with a trailing slash.
 
 This option cannot be set to `true` with `wildcard` set to `false` on a server
 with `ignoreTrailingSlash` set to `true`.
@@ -157,8 +157,8 @@ slash will trigger your app's 404 handler using `reply.callNotFound()`.
 
 Default: `true`
 
-If set to `true`, `fastify-static` adds a wildcard route to serve files.
-If set to `false`, `fastify-static` globs the filesystem for all defined
+If set to `true`, `@fastify/static` adds a wildcard route to serve files.
+If set to `false`, `@fastify/static` globs the filesystem for all defined
 files in the served folder (`${root}/**/*`), and just creates the routes needed for
 those and it will not serve the newly added file on the filesystem.
 
@@ -196,7 +196,7 @@ Note: Multi-root is not supported within the `list` option.
 **Example:**
 
 ```js
-fastify.register(require('fastify-static'), {
+fastify.register(require('@fastify/static'), {
   root: path.join(__dirname, 'public'),
   prefix: '/public/',
   index: false
@@ -235,7 +235,7 @@ will return the response as json independent of `list.format`.
 **Example:**
 
 ```js
-fastify.register(require('fastify-static'), {
+fastify.register(require('@fastify/static'), {
   root: path.join(__dirname, 'public'),
   prefix: '/public/',
   list: {
@@ -290,7 +290,7 @@ Note: if a file with the same name exists, the actual file is sent.
 **Example:**
 
 ```js
-fastify.register(require('fastify-static'), {
+fastify.register(require('@fastify/static'), {
   root: path.join(__dirname, '/static'),
   prefix: '/public',
   prefixAvoidTrailingSlash: true,
@@ -408,7 +408,7 @@ If you would just like to use the reply decorator and not serve whole directorie
 #### Disabling reply decorator
 
 The reply object is decorated with a `sendFile` function by default.  If you want to
-disable this, pass the option `{ decorateReply: false }`.  If fastify-static is
+disable this, pass the option `{ decorateReply: false }`.  If @fastify/static is
 registered to multiple prefixes in the same route only one can initialize reply
 decorators.
 
