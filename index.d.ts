@@ -93,6 +93,6 @@ export interface FastifyStaticOptions extends SendOptions {
   maxAge?: string | number;
 }
 
-declare const fastifyStatic: FastifyPluginCallback<FastifyStaticOptions>
+export declare const fastifyStatic: FastifyPluginCallback<FastifyStaticOptions>
 
 export default fastifyStatic;
