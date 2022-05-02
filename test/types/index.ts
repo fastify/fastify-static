@@ -103,3 +103,14 @@ noIndexApp
       reply.send('<h1>fastify-static</h1>')
     })
 })
+
+const defaultIndexApp = fastify()
+options.index = 'index.html'
+
+defaultIndexApp
+  .register(fastifyStatic, options)
+  .after(() => {
+    defaultIndexApp.get('/', (request, reply) => {
+      reply.send('<h1>fastify-static</h1>')
+    })
+  })
