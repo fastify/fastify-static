@@ -3525,3 +3525,32 @@ t.test('should not serve index if option is `false`', (t) => {
     })
   })
 })
+
+t.test('should follow symbolic link without wildcard', (t) => {
+  t.plan(5)
+  const fastify = Fastify()
+  fastify.register(fastifyStatic, {
+    root: path.join(__dirname, '/static-symbolic-link'),
+    wildcard: false
+  })
+  t.teardown(fastify.close.bind(fastify))
+  fastify.listen(0, (err) => {
+    t.error(err)
+
+    simple.concat({
+      method: 'GET',
+      url: 'http://localhost:' + fastify.server.address().port + '/origin/subdir/subdir/index.html'
+    }, (err, response) => {
+      t.error(err)
+      t.equal(response.statusCode, 200)
+    })
+
+    simple.concat({
+      method: 'GET',
+      url: 'http://localhost:' + fastify.server.address().port + '/dir/symlink/subdir/subdir/index.html'
+    }, (err, response) => {
+      t.error(err)
+      t.equal(response.statusCode, 200)
+    })
+  })
+})

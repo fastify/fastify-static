@@ -28,7 +28,8 @@ const options: FastifyStaticOptions = {
 }
 
 expectError<FastifyStaticOptions>({
-  wlidcard: '**/*'
+  root: '',
+  wildcard: '**/**'
 })
 
 appWithImplicitHttp
