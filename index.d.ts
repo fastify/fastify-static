@@ -58,7 +58,7 @@ interface SendOptions {
   etag?: boolean;
   extensions?: string[];
   immutable?: boolean;
-  index?: string[] | false;
+  index?: string[] | string | false;
   lastModified?: boolean;
   maxAge?: string | number;
 }
@@ -88,7 +88,7 @@ export interface FastifyStaticOptions extends SendOptions {
   etag?: boolean;
   extensions?: string[];
   immutable?: boolean;
-  index?: string[] | false;
+  index?: string[] | string | false;
   lastModified?: boolean;
   maxAge?: string | number;
 }

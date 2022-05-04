@@ -3481,6 +3481,51 @@ t.test('should not redirect to protocol-relative locations', (t) => {
   })
 })
 
+t.test('should not serve index if option is `false`', (t) => {
+  t.plan(3)
+
+  const pluginOptions = {
+    root: path.join(__dirname, '/static'),
+    prefix: '/static',
+    index: false
+  }
+  const fastify = Fastify()
+  fastify.register(fastifyStatic, pluginOptions)
+
+  t.teardown(fastify.close.bind(fastify))
+
+  fastify.listen(0, (err) => {
+    t.error(err)
+
+    fastify.server.unref()
+
+    t.test('/static/index.html', (t) => {
+      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/static/index.html'
+      }, (err, response, body) => {
+        t.error(err)
+        t.equal(response.statusCode, 200)
+        t.equal(body.toString(), indexContent)
+        genericResponseChecks(t, response)
+      })
+    })
+
+    t.test('/static', (t) => {
+      t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/static'
+      }, (err, response, body) => {
+        t.error(err)
+        t.equal(response.statusCode, 404)
+        genericErrorResponseChecks(t, response)
+      })
+    })
+  })
+})
+
 t.test('should follow symbolic link without wildcard', (t) => {
   t.plan(5)
   const fastify = Fastify()
