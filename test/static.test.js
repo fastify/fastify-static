@@ -9,7 +9,6 @@ const http = require('http')
 const t = require('tap')
 const simple = require('simple-get')
 const Fastify = require('fastify')
-const { kErrorHandler } = require('fastify/lib/symbols')
 const compress = require('@fastify/compress')
 const concat = require('concat-stream')
 const pino = require('pino')
@@ -81,7 +80,7 @@ t.test('register /static prefixAvoidTrailingSlash', t => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, (err) => {
+  fastify.listen({ port: 0 }, (err) => {
     t.error(err)
 
     fastify.server.unref()
@@ -241,7 +240,7 @@ t.test('register /static', (t) => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, (err) => {
+  fastify.listen({ port: 0 }, (err) => {
     t.error(err)
 
     fastify.server.unref()
@@ -386,7 +385,7 @@ t.test('register /static/', t => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, (err) => {
+  fastify.listen({ port: 0 }, (err) => {
     t.error(err)
 
     fastify.server.unref()
@@ -565,7 +564,7 @@ t.test('register /static and /static2', (t) => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, (err) => {
+  fastify.listen({ port: 0 }, (err) => {
     t.error(err)
 
     fastify.server.unref()
@@ -642,7 +641,7 @@ t.test('payload.filename is set', (t) => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, (err) => {
+  fastify.listen({ port: 0 }, (err) => {
     t.error(err)
 
     fastify.server.unref()
@@ -687,14 +686,14 @@ t.test('error responses can be customized with fastify.setErrorHandler()', t => 
   const fastify = Fastify()
 
   fastify.setErrorHandler(function errorHandler (err, request, reply) {
-    reply.type('text/plain').send(err.status + ' Custom error message')
+    reply.code(403).type('text/plain').send(err.status + ' Custom error message')
   })
 
   fastify.register(fastifyStatic, pluginOptions)
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, err => {
+  fastify.listen({ port: 0 }, err => {
     t.error(err)
 
     fastify.server.unref()
@@ -732,7 +731,7 @@ t.test('not found responses can be customized with fastify.setNotFoundHandler()'
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, err => {
+  fastify.listen({ port: 0 }, err => {
     t.error(err)
 
     fastify.server.unref()
@@ -773,7 +772,7 @@ t.test('fastify.setNotFoundHandler() is called for dotfiles when when send is co
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, err => {
+  fastify.listen({ port: 0 }, err => {
     t.error(err)
 
     fastify.server.unref()
@@ -814,7 +813,7 @@ t.test('serving disabled', (t) => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, (err) => {
+  fastify.listen({ port: 0 }, (err) => {
     t.error(err)
 
     fastify.server.unref()
@@ -871,7 +870,7 @@ t.test('sendFile', (t) => {
     return reply.sendFile('/index.html', { maxAge })
   })
 
-  fastify.listen(0, (err) => {
+  fastify.listen({ port: 0 }, (err) => {
     t.error(err)
 
     fastify.server.unref()
@@ -954,7 +953,7 @@ t.test('sendFile disabled', (t) => {
     }
   })
 
-  fastify.listen(0, (err) => {
+  fastify.listen({ port: 0 }, (err) => {
     t.error(err)
 
     fastify.server.unref()
@@ -983,7 +982,7 @@ t.test('allowedPath option', (t) => {
   }
   const fastify = Fastify()
   fastify.register(fastifyStatic, pluginOptions)
-  fastify.listen(0, (err) => {
+  fastify.listen({ port: 0 }, (err) => {
     t.error(err)
 
     fastify.server.unref()
@@ -1072,7 +1071,7 @@ t.test('download', (t) => {
     })
   })
 
-  fastify.listen(0, (err) => {
+  fastify.listen({ port: 0 }, (err) => {
     t.error(err)
 
     fastify.server.unref()
@@ -1190,7 +1189,7 @@ t.test('sendFile disabled', (t) => {
     }
   })
 
-  fastify.listen(0, (err) => {
+  fastify.listen({ port: 0 }, (err) => {
     t.error(err)
 
     fastify.server.unref()
@@ -1230,7 +1229,7 @@ t.test('download disabled', (t) => {
     }
   })
 
-  fastify.listen(0, (err) => {
+  fastify.listen({ port: 0 }, (err) => {
     t.error(err)
 
     fastify.server.unref()
@@ -1272,7 +1271,7 @@ t.test('root not found warning', (t) => {
   )
   const fastify = Fastify({ logger })
   fastify.register(fastifyStatic, pluginOptions)
-  fastify.listen(0, (err) => {
+  fastify.listen({ port: 0 }, (err) => {
     t.error(err)
     fastify.server.unref()
     destination.end()
@@ -1329,7 +1328,7 @@ t.test('setHeaders option', (t) => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, (err) => {
+  fastify.listen({ port: 0 }, (err) => {
     t.error(err)
 
     fastify.server.unref()
@@ -1360,7 +1359,7 @@ t.test('maxAge option', (t) => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, (err) => {
+  fastify.listen({ port: 0 }, (err) => {
     t.error(err)
 
     fastify.server.unref()
@@ -1499,7 +1498,7 @@ t.test('register no prefix', (t) => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, (err) => {
+  fastify.listen({ port: 0 }, (err) => {
     t.error(err)
 
     fastify.server.unref()
@@ -1607,7 +1606,7 @@ t.test('with fastify-compress', t => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, err => {
+  fastify.listen({ port: 0 }, err => {
     t.error(err)
 
     t.test('deflate', function (t) {
@@ -1643,7 +1642,7 @@ t.test('with fastify-compress', t => {
   })
 })
 t.test('register /static/ with schemaHide true', t => {
-  t.plan(4)
+  t.plan(5)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -1661,7 +1660,7 @@ t.test('register /static/ with schemaHide true', t => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, (err) => {
+  fastify.listen({ port: 0 }, (err) => {
     t.error(err)
 
     fastify.server.unref()
@@ -1683,7 +1682,7 @@ t.test('register /static/ with schemaHide true', t => {
 })
 
 t.test('register /static/ with schemaHide false', t => {
-  t.plan(4)
+  t.plan(5)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -1701,7 +1700,7 @@ t.test('register /static/ with schemaHide false', t => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, (err) => {
+  fastify.listen({ port: 0 }, (err) => {
     t.error(err)
 
     fastify.server.unref()
@@ -1723,7 +1722,7 @@ t.test('register /static/ with schemaHide false', t => {
 })
 
 t.test('register /static/ without schemaHide', t => {
-  t.plan(4)
+  t.plan(5)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -1740,7 +1739,7 @@ t.test('register /static/ without schemaHide', t => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, (err) => {
+  fastify.listen({ port: 0 }, (err) => {
     t.error(err)
 
     fastify.server.unref()
@@ -1768,16 +1767,12 @@ t.test('fastify with exposeHeadRoutes', t => {
     root: path.join(__dirname, '/static'),
     wildcard: false
   }
-  const fastify = Fastify({ exposeHeadRoutes: true })
+  const fastify = Fastify()
   fastify.register(fastifyStatic, pluginOptions)
-
-  fastify.get('/*', (request, reply) => {
-    reply.send({ hello: 'world' })
-  })
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, err => {
+  fastify.listen({ port: 0 }, err => {
     t.error(err)
 
     fastify.server.unref()
@@ -1813,7 +1808,7 @@ t.test('register with wildcard false', t => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, (err) => {
+  fastify.listen({ port: 0 }, (err) => {
     t.error(err)
 
     fastify.server.unref()
@@ -1957,7 +1952,7 @@ t.test('register with wildcard string on multiple root paths', (t) => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, (err) => {
+  fastify.listen({ port: 0 }, (err) => {
     t.ok(err)
 
     fastify.server.unref()
@@ -1981,7 +1976,7 @@ t.test('register with wildcard false and alternative index', t => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, (err) => {
+  fastify.listen({ port: 0 }, (err) => {
     t.error(err)
 
     fastify.server.unref()
@@ -2134,7 +2129,7 @@ t.test('register /static with wildcard false and alternative index', t => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, (err) => {
+  fastify.listen({ port: 0 }, (err) => {
     t.error(err)
 
     fastify.server.unref()
@@ -2292,7 +2287,7 @@ t.test('register /static with redirect true', t => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(3001, (err) => {
+  fastify.listen({ port: 0 }, (err) => {
     t.error(err)
 
     fastify.server.unref()
@@ -2417,7 +2412,7 @@ t.test('register /static with redirect true and wildcard false', t => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(3001, err => {
+  fastify.listen({ port: 0 }, err => {
     t.error(err)
 
     fastify.server.unref()
@@ -2553,7 +2548,7 @@ t.test('trailing slash behavior with redirect = false', (t) => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, (err) => {
+  fastify.listen({ port: 0 }, (err) => {
     t.error(err)
 
     const host = 'http://localhost:' + fastify.server.address().port
@@ -2636,7 +2631,7 @@ t.test('if dotfiles are properly served according to plugin options', (t) => {
     fastify.register(fastifyStatic, pluginOptions)
 
     t.teardown(fastify.close.bind(fastify))
-    fastify.listen(0, (err) => {
+    fastify.listen({ port: 0 }, (err) => {
       t.error(err)
 
       simple.concat({
@@ -2663,7 +2658,7 @@ t.test('if dotfiles are properly served according to plugin options', (t) => {
     fastify.register(fastifyStatic, pluginOptions)
 
     t.teardown(fastify.close.bind(fastify))
-    fastify.listen(0, (err) => {
+    fastify.listen({ port: 0 }, (err) => {
       t.error(err)
 
       simple.concat({
@@ -2689,7 +2684,7 @@ t.test('if dotfiles are properly served according to plugin options', (t) => {
     fastify.register(fastifyStatic, pluginOptions)
 
     t.teardown(fastify.close.bind(fastify))
-    fastify.listen(0, (err) => {
+    fastify.listen({ port: 0 }, (err) => {
       t.error(err)
 
       simple.concat({
@@ -2722,7 +2717,7 @@ t.test('register with failing glob handler', (t) => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, (err) => {
+  fastify.listen({ port: 0 }, (err) => {
     fastify.server.unref()
     t.ok(err)
     t.end()
@@ -2748,7 +2743,7 @@ t.test(
     fastify.register(fastifyStatic, pluginOptions)
 
     t.teardown(fastify.close.bind(fastify))
-    fastify.listen(0, (err) => {
+    fastify.listen({ port: 0 }, (err) => {
       fastify.server.unref()
       t.ok(err)
       t.end()
@@ -2774,7 +2769,7 @@ t.test('inject support', async (t) => {
 })
 
 t.test('routes should use custom errorHandler premature stream close', t => {
-  t.plan(4)
+  t.plan(5)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -2809,7 +2804,7 @@ t.test('routes should use custom errorHandler premature stream close', t => {
 })
 
 t.test('routes should fallback to default errorHandler', t => {
-  t.plan(4)
+  t.plan(5)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -2820,44 +2815,6 @@ t.test('routes should fallback to default errorHandler', t => {
 
   fastify.addHook('onRoute', function (routeOptions) {
     t.ok(routeOptions.errorHandler instanceof Function)
-
-    routeOptions.preHandler = (request, reply, done) => {
-      const fakeError = new Error()
-      fakeError.code = 'SOMETHING_ELSE'
-      done(fakeError)
-    }
-  })
-
-  fastify.register(fastifyStatic, pluginOptions)
-  t.teardown(fastify.close.bind(fastify))
-
-  fastify.inject({
-    method: 'GET',
-    url: '/static/index.html'
-  }, (err, response) => {
-    t.error(err)
-    t.same(JSON.parse(response.payload), {
-      statusCode: 500,
-      code: 'SOMETHING_ELSE',
-      error: 'Internal Server Error',
-      message: ''
-    })
-  })
-})
-
-t.test('routes use default errorHandler when fastify.errorHandler is not defined', t => {
-  t.plan(4)
-
-  const pluginOptions = {
-    root: path.join(__dirname, '/static'),
-    prefix: '/static/'
-  }
-
-  const fastify = Fastify()
-  fastify[kErrorHandler] = undefined // simulate old fastify version
-
-  fastify.addHook('onRoute', function (routeOptions) {
-    t.notOk(routeOptions.errorHandler instanceof Function)
 
     routeOptions.preHandler = (request, reply, done) => {
       const fakeError = new Error()
@@ -2896,7 +2853,7 @@ t.test('precent encoded URLs in glob mode', (t) => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, (err) => {
+  fastify.listen({ port: 0 }, (err) => {
     t.error(err)
     fastify.server.unref()
 
@@ -2927,7 +2884,7 @@ t.test('register /static and /static2 without wildcard', t => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, err => {
+  fastify.listen({ port: 0 }, err => {
     t.error(err)
 
     fastify.server.unref()
@@ -3463,7 +3420,7 @@ t.test('should not redirect to protocol-relative locations', (t) => {
     redirect: true
   })
   t.teardown(fastify.close.bind(fastify))
-  fastify.listen(0, (err, address) => {
+  fastify.listen({ port: 0 }, (err, address) => {
     t.error(err)
     urls.forEach(([testUrl, expected, status]) => {
       const req = http.request(url.parse(address + testUrl), res => {
@@ -3494,7 +3451,7 @@ t.test('should not serve index if option is `false`', (t) => {
 
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen(0, (err) => {
+  fastify.listen({ port: 0 }, (err) => {
     t.error(err)
 
     fastify.server.unref()
@@ -3534,7 +3491,7 @@ t.test('should follow symbolic link without wildcard', (t) => {
     wildcard: false
   })
   t.teardown(fastify.close.bind(fastify))
-  fastify.listen(0, (err) => {
+  fastify.listen({ port: 0 }, (err) => {
     t.error(err)
 
     simple.concat({

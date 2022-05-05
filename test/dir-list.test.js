@@ -19,7 +19,7 @@ const helper = {
     const fastify = Fastify()
     fastify.register(mock, options)
     t.teardown(fastify.close.bind(fastify))
-    fastify.listen(0, err => {
+    fastify.listen({ port: 0 }, err => {
       t.error(err)
       fastify.server.unref()
       f('http://localhost:' + fastify.server.address().port)
@@ -102,7 +102,7 @@ t.test('dir list wrong options', t => {
   for (const case_ of cases) {
     const fastify = Fastify()
     fastify.register(fastifyStatic, case_.options)
-    fastify.listen(0, err => {
+    fastify.listen({ port: 0 }, err => {
       t.equal(err.message, case_.error.message)
       fastify.server.unref()
     })

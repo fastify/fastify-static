@@ -274,7 +274,7 @@ async function fastifyStatic (fastify, opts) {
     schema: {
       hide: typeof opts.schemaHide !== 'undefined' ? opts.schemaHide : true
     },
-    errorHandler: fastify.errorHandler ? errorHandler : undefined
+    errorHandler
   }
 
   if (opts.decorateReply !== false) {
@@ -338,7 +338,7 @@ async function fastifyStatic (fastify, opts) {
           file = file
             .replace(rootPath.replace(/\\/g, '/'), '')
             .replace(/^\//, '')
-          const route = encodeURI(prefix + file).replace(/\/\//g, '/')
+          const route = (prefix + file).replace(/\/\//g, '/')
           if (routes.has(route)) {
             continue
           }
@@ -449,6 +449,8 @@ function getContentType (path) {
 }
 
 function findIndexFile (pathname, root, indexFiles = ['index.html']) {
+  // TODO remove istanbul ignore
+  /* istanbul ignore else */
   if (Array.isArray(indexFiles)) {
     return indexFiles.find(filename => {
       const p = path.join(root, pathname, filename)
@@ -460,6 +462,7 @@ function findIndexFile (pathname, root, indexFiles = ['index.html']) {
       }
     })
   }
+  /* istanbul ignore next */
   return false
 }
 
@@ -507,6 +510,6 @@ function getRedirectUrl (url) {
 }
 
 module.exports = fp(fastifyStatic, {
-  fastify: '3.x',
-  name: 'fastify-static'
+  fastify: '4.x',
+  name: '@fastify/static'
 })
