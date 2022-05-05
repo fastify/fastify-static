@@ -7,11 +7,11 @@
   "scripts": {
     "lint": "standard | snazzy",
     "lint:fix": "standard --fix",
-    "unit": "tap --no-check-coverage test/*.test.js",
+    "unit": "tap test/*.test.js",
     "typescript": "tsd",
     "test": "npm run lint && npm run unit && npm run typescript",
     "example": "node example/server.js",
-    "coverage": "tap --cov --coverage-report=html --no-check-coverage test",
+    "coverage": "tap --cov --coverage-report=html test",
     "coveralls": "tap test/*test.js  test/*/*.test.js --cov"
   },
   "repository": {
@@ -38,14 +38,14 @@
     "send": "^0.17.1"
   },
   "devDependencies": {
-    "@fastify/compress": "^5.0.0",
+    "@fastify/compress": "^6.0.0",
     "@types/node": "^17.0.0",
     "@typescript-eslint/eslint-plugin": "^2.29.0",
     "@typescript-eslint/parser": "^2.29.0",
     "concat-stream": "^2.0.0",
     "coveralls": "^3.0.4",
     "eslint-plugin-typescript": "^0.14.0",
-    "fastify": "^3.7.0",
+    "fastify": "^4.0.0-rc.2",
     "handlebars": "^4.7.6",
     "pre-commit": "^1.2.2",
     "proxyquire": "^2.1.0",
