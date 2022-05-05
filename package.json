@@ -35,7 +35,7 @@
     "glob": "^7.1.4",
     "p-limit": "^3.1.0",
     "readable-stream": "^3.4.0",
-    "send": "^0.17.1"
+    "send": "^0.18.0"
   },
   "devDependencies": {
     "@fastify/compress": "^6.0.0",

@@ -121,6 +121,7 @@ async function fastifyStatic (fastify, opts) {
 
     wrap.getHeader = reply.getHeader.bind(reply)
     wrap.setHeader = reply.header.bind(reply)
+    wrap.removeHeader = () => {}
     wrap.finished = false
 
     Object.defineProperty(wrap, 'filename', {
