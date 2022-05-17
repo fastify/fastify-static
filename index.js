@@ -161,7 +161,8 @@ async function fastifyStatic (fastify, opts) {
           dir: path,
           options: opts.list,
           route: pathname,
-          prefix
+          prefix,
+          dotfiles: opts.dotfiles
         }).catch((err) => reply.send(err))
         return
       }
@@ -217,7 +218,8 @@ async function fastifyStatic (fastify, opts) {
             dir: dirList.path(opts.root, pathname),
             options: opts.list,
             route: pathname,
-            prefix
+            prefix,
+            dotfiles: opts.dotfiles
           }).catch((err) => reply.send(err))
           return
         }
