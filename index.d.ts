@@ -43,11 +43,18 @@ interface ListRender {
 }
 
 interface ListOptions {
-  format: 'json' | 'html';
-  names: string[];
-  render: ListRender;
+  names?: string[];
   extendedFolderInfo?: boolean;
+}
+
+interface ListOptionsJsonFormat extends ListOptions {
+  format: 'json';
   jsonFormat?: 'names' | 'extended';
+}
+
+interface ListOptionsHtmlFormat extends ListOptions {
+  format: 'html';
+  render: ListRender;
 }
 
 // Passed on to `send`
@@ -73,7 +80,7 @@ export interface FastifyStaticOptions extends SendOptions {
   setHeaders?: (...args: any[]) => void;
   redirect?: boolean;
   wildcard?: boolean;
-  list?: boolean | ListOptions;
+  list?: boolean | ListOptionsJsonFormat | ListOptionsHtmlFormat;
   allowedPath?: (pathName: string, root?: string) => boolean;
   /**
    * @description
