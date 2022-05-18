@@ -40,7 +40,7 @@ t.test('throws when `root` is an array', t => {
   t.equal(err.message, 'multi-root with list option is not supported')
 })
 
-t.test('throws when `list.format option` is invalid', t => {
+t.test('throws when `list.format` option is invalid', t => {
   t.plan(2)
 
   const err = dirList.validateOptions({ list: { format: 'hello' } })
@@ -56,12 +56,28 @@ t.test('throws when `list.names option` is not an array', t => {
   t.equal(err.message, 'The `list.names` option must be an array')
 })
 
+t.test('throws when `list.jsonFormat` option is invalid', t => {
+  t.plan(2)
+
+  const err = dirList.validateOptions({ list: { jsonFormat: 'hello' } })
+  t.type(err, TypeError)
+  t.equal(err.message, 'The `list.jsonFormat` option must be name or extended')
+})
+
 t.test('throws when `list.format` is html and `list render` is not a function', t => {
   t.plan(2)
 
   const err = dirList.validateOptions({ list: { format: 'html', render: 'hello' } })
   t.type(err, TypeError)
   t.equal(err.message, 'The `list.render` option must be a function and is required with html format')
+})
+
+t.test('throws when `list.format` is html and `list.jsonFormat` is given', t => {
+  t.plan(2)
+
+  const err = dirList.validateOptions({ list: { format: 'html', render: () => '', jsonFormat: 'extended' } })
+  t.type(err, TypeError)
+  t.equal(err.message, 'The `list.jsonFormat` option must be with json format')
 })
 
 t.test('dir list wrong options', t => {

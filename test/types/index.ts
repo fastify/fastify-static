@@ -1,5 +1,5 @@
 import fastify from 'fastify'
-import { expectError } from 'tsd'
+import { expectAssignable, expectError } from 'tsd'
 import fastifyStatic, { FastifyStaticOptions } from '../..'
 
 const appWithImplicitHttp = fastify()
@@ -30,6 +30,36 @@ const options: FastifyStaticOptions = {
 expectError<FastifyStaticOptions>({
   root: '',
   wildcard: '**/**'
+})
+
+expectAssignable<FastifyStaticOptions>({
+  root: '',
+  list: {
+    format: 'json',
+  }
+})
+
+expectError<FastifyStaticOptions>({
+  root: '',
+  list: {
+    format: 'json',
+    render: () => ''
+  }
+})
+
+expectAssignable<FastifyStaticOptions>({
+  root: '',
+  list: {
+    format: 'html',
+    render: () => ''
+  }
+})
+
+expectError<FastifyStaticOptions>({
+  root: '',
+  list: {
+    format: 'html',
+  }
 })
 
 appWithImplicitHttp
