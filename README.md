@@ -190,7 +190,9 @@ If set, it provide the directory list calling the directory path.
 
 Default response is json.
 
-Note: Multi-root is not supported within the `list` option.
+Note:
+- Multi-root is not supported within the `list` option.
+- If `dotfiles` option value is `deny` or `ignore`, dotfiles will be excluded.
 
 **Example:**
 

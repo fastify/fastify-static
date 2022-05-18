@@ -636,6 +636,90 @@ t.test('serve a non existent dir and get error', t => {
   })
 })
 
+t.test('dir list with dotfiles allow option', t => {
+  t.plan(2)
+
+  const options = {
+    root: path.join(__dirname, '/static-dotfiles'),
+    prefix: '/public',
+    dotfiles: 'allow',
+    index: false,
+    list: true
+  }
+  const route = '/public/'
+  const content = { dirs: ['dir'], files: ['.aaa', 'test.txt'] }
+
+  helper.arrange(t, options, (url) => {
+    t.test(route, t => {
+      t.plan(3)
+      simple.concat({
+        method: 'GET',
+        url: url + route
+      }, (err, response, body) => {
+        t.error(err)
+        t.equal(response.statusCode, 200)
+        t.equal(body.toString(), JSON.stringify(content))
+      })
+    })
+  })
+})
+
+t.test('dir list with dotfiles deny option', t => {
+  t.plan(2)
+
+  const options = {
+    root: path.join(__dirname, '/static-dotfiles'),
+    prefix: '/public',
+    dotfiles: 'deny',
+    index: false,
+    list: true
+  }
+  const route = '/public/'
+  const content = { dirs: ['dir'], files: ['test.txt'] }
+
+  helper.arrange(t, options, (url) => {
+    t.test(route, t => {
+      t.plan(3)
+      simple.concat({
+        method: 'GET',
+        url: url + route
+      }, (err, response, body) => {
+        t.error(err)
+        t.equal(response.statusCode, 200)
+        t.equal(body.toString(), JSON.stringify(content))
+      })
+    })
+  })
+})
+
+t.test('dir list with dotfiles ignore option', t => {
+  t.plan(2)
+
+  const options = {
+    root: path.join(__dirname, '/static-dotfiles'),
+    prefix: '/public',
+    dotfiles: 'ignore',
+    index: false,
+    list: true
+  }
+  const route = '/public/'
+  const content = { dirs: ['dir'], files: ['test.txt'] }
+
+  helper.arrange(t, options, (url) => {
+    t.test(route, t => {
+      t.plan(3)
+      simple.concat({
+        method: 'GET',
+        url: url + route
+      }, (err, response, body) => {
+        t.error(err)
+        t.equal(response.statusCode, 200)
+        t.equal(body.toString(), JSON.stringify(content))
+      })
+    })
+  })
+})
+
 t.test('dir list error', t => {
   t.plan(7)
 
