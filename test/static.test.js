@@ -2840,7 +2840,7 @@ t.test('routes should fallback to default errorHandler', t => {
   })
 })
 
-t.test('precent encoded URLs in glob mode', (t) => {
+t.test('percent encoded URLs in glob mode', (t) => {
   t.plan(4)
 
   const fastify = Fastify({})
