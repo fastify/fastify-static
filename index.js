@@ -195,7 +195,7 @@ async function fastifyStatic (fastify, opts) {
 
     stream.on('error', function (err) {
       if (err.code === 'ENOENT') {
-        // when preCompress is enabled and the path is a directoy without a trailing shash
+        // when preCompress is enabled and the path is a directory without a trailing slash
         if (opts.preCompressed && encoding) {
           const indexPathname = findIndexFile(pathname, options.root, options.index)
           if (indexPathname) {
@@ -494,7 +494,7 @@ function getEncodingExtension (encoding) {
 
 function getRedirectUrl (url) {
   let i = 0
-  // we detech how many slash before a valid path
+  // we detect how many slash before a valid path
   for (i; i < url.length; i++) {
     if (url[i] !== '/' && url[i] !== '\\') break
   }
