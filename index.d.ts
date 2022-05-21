@@ -50,6 +50,8 @@ interface ListOptions {
 interface ListOptionsJsonFormat extends ListOptions {
   format: 'json';
   jsonFormat?: 'names' | 'extended';
+  // Required when the URL parameter `format=html` exists
+  render?: ListRender;
 }
 
 interface ListOptionsHtmlFormat extends ListOptions {
