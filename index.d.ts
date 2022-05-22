@@ -98,6 +98,7 @@ export interface FastifyStaticOptions extends SendOptions {
   index?: string[] | string | false;
   lastModified?: boolean;
   maxAge?: string | number;
+  disableRequestLogging?: boolean | false
 }
 
 export declare const fastifyStatic: FastifyPluginCallback<FastifyStaticOptions>
