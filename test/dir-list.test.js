@@ -72,14 +72,6 @@ t.test('throws when `list.format` is html and `list render` is not a function', 
   t.equal(err.message, 'The `list.render` option must be a function and is required with html format')
 })
 
-t.test('throws when `list.format` is html and `list.jsonFormat` is given', t => {
-  t.plan(2)
-
-  const err = dirList.validateOptions({ list: { format: 'html', render: () => '', jsonFormat: 'extended' } })
-  t.type(err, TypeError)
-  t.equal(err.message, 'The `list.jsonFormat` option must be with json format')
-})
-
 t.test('dir list wrong options', t => {
   t.plan(3)
 
@@ -485,7 +477,103 @@ t.test('dir list json format - extended info', t => {
   })
 })
 
-t.test('dir list - url parameter format', t => {
+t.test('json format with url parameter format', t => {
+  t.plan(13)
+
+  const options = {
+    root: path.join(__dirname, '/static'),
+    prefix: '/public',
+    index: false,
+    list: {
+      format: 'json',
+      render (dirs, files) {
+        return 'html'
+      }
+    }
+  }
+  const route = '/public/'
+  const jsonContent = { dirs: ['deep', 'shallow'], files: ['.example', 'a .md', 'foo.html', 'foobar.html', 'index.css', 'index.html'] }
+
+  helper.arrange(t, options, (url) => {
+    simple.concat({
+      method: 'GET',
+      url: url + route
+    }, (err, response, body) => {
+      t.error(err)
+      t.equal(response.statusCode, 200)
+      t.equal(body.toString(), JSON.stringify(jsonContent))
+      t.ok(response.headers['content-type'].includes('application/json'))
+    })
+
+    simple.concat({
+      method: 'GET',
+      url: url + route + '?format=html'
+    }, (err, response, body) => {
+      t.error(err)
+      t.equal(response.statusCode, 200)
+      t.equal(body.toString(), 'html')
+      t.ok(response.headers['content-type'].includes('text/html'))
+    })
+
+    simple.concat({
+      method: 'GET',
+      url: url + route + '?format=json'
+    }, (err, response, body) => {
+      t.error(err)
+      t.equal(response.statusCode, 200)
+      t.equal(body.toString(), JSON.stringify(jsonContent))
+      t.ok(response.headers['content-type'].includes('application/json'))
+    })
+  })
+})
+
+t.test('json format with url parameter format and without render option', t => {
+  t.plan(12)
+
+  const options = {
+    root: path.join(__dirname, '/static'),
+    prefix: '/public',
+    index: false,
+    list: {
+      format: 'json'
+    }
+  }
+  const route = '/public/'
+  const jsonContent = { dirs: ['deep', 'shallow'], files: ['.example', 'a .md', 'foo.html', 'foobar.html', 'index.css', 'index.html'] }
+
+  helper.arrange(t, options, (url) => {
+    simple.concat({
+      method: 'GET',
+      url: url + route
+    }, (err, response, body) => {
+      t.error(err)
+      t.equal(response.statusCode, 200)
+      t.equal(body.toString(), JSON.stringify(jsonContent))
+      t.ok(response.headers['content-type'].includes('application/json'))
+    })
+
+    simple.concat({
+      method: 'GET',
+      url: url + route + '?format=html'
+    }, (err, response, body) => {
+      t.error(err)
+      t.equal(response.statusCode, 500)
+      t.equal(JSON.parse(body.toString()).message, 'The `list.render` option must be a function and is required with the URL parameter `format=html`')
+    })
+
+    simple.concat({
+      method: 'GET',
+      url: url + route + '?format=json'
+    }, (err, response, body) => {
+      t.error(err)
+      t.equal(response.statusCode, 200)
+      t.equal(body.toString(), JSON.stringify(jsonContent))
+      t.ok(response.headers['content-type'].includes('application/json'))
+    })
+  })
+})
+
+t.test('html format with url parameter format', t => {
   t.plan(13)
 
   const options = {
@@ -500,6 +588,7 @@ t.test('dir list - url parameter format', t => {
     }
   }
   const route = '/public/'
+  const jsonContent = { dirs: ['deep', 'shallow'], files: ['.example', 'a .md', 'foo.html', 'foobar.html', 'index.css', 'index.html'] }
 
   helper.arrange(t, options, (url) => {
     simple.concat({
@@ -528,7 +617,7 @@ t.test('dir list - url parameter format', t => {
     }, (err, response, body) => {
       t.error(err)
       t.equal(response.statusCode, 200)
-      t.ok(body.toString())
+      t.equal(body.toString(), JSON.stringify(jsonContent))
       t.ok(response.headers['content-type'].includes('application/json'))
     })
   })

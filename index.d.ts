@@ -45,11 +45,13 @@ interface ListRender {
 interface ListOptions {
   names?: string[];
   extendedFolderInfo?: boolean;
+  jsonFormat?: 'names' | 'extended';
 }
 
 interface ListOptionsJsonFormat extends ListOptions {
   format: 'json';
-  jsonFormat?: 'names' | 'extended';
+  // Required when the URL parameter `format=html` exists
+  render?: ListRender;
 }
 
 interface ListOptionsHtmlFormat extends ListOptions {

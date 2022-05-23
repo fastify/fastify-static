@@ -39,7 +39,7 @@ expectAssignable<FastifyStaticOptions>({
   }
 })
 
-expectError<FastifyStaticOptions>({
+expectAssignable<FastifyStaticOptions>({
   root: '',
   list: {
     format: 'json',
