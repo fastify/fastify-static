@@ -108,6 +108,6 @@ declare namespace fastifyStatic {
   export { fastifyStatic as default };
 }
 
-declare function fastifyStatic(): FastifyPluginCallback<fastifyStatic.FastifyStaticOptions>;
+declare function fastifyStatic(...params: Parameters<FastifyPluginCallback<NonNullable<fastifyStatic.FastifyStaticOptions>>>): void
 
 export = fastifyStatic;
