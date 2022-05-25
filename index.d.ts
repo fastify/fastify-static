@@ -16,6 +16,8 @@ declare module "fastify" {
   }
 }
 
+type FastifyStaticPlugin = FastifyPluginCallback<NonNullable<fastifyStatic.FastifyStaticOptions>>;
+
 declare namespace fastifyStatic {
   export interface ExtendedInformation {
     fileCount: number;
@@ -103,11 +105,11 @@ declare namespace fastifyStatic {
     maxAge?: string | number;
   }
 
-  export const fastifyStatic: FastifyPluginCallback<FastifyStaticOptions>;
+  export const fastifyStatic: FastifyStaticPlugin;
 
   export { fastifyStatic as default };
 }
 
-declare function fastifyStatic(...params: Parameters<FastifyPluginCallback<NonNullable<fastifyStatic.FastifyStaticOptions>>>): void
+declare function fastifyStatic(...params: Parameters<FastifyStaticPlugin>): ReturnType<FastifyStaticPlugin>;
 
 export = fastifyStatic;
