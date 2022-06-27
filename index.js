@@ -9,7 +9,7 @@ const contentDisposition = require('content-disposition')
 const fp = require('fastify-plugin')
 const util = require('util')
 const globPromise = util.promisify(glob)
-const encodingNegotiator = require('encoding-negotiator')
+const encodingNegotiator = require('@fastify/accept-negotiator')
 
 const dirList = require('./lib/dirList')
 
