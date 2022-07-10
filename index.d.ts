@@ -2,7 +2,7 @@
 //                 Leo <https://github.com/leomelzer>
 /// <reference types="node" />
 
-import { FastifyPluginCallback, FastifyReply } from 'fastify';
+import { FastifyPluginCallback, FastifyReply, FastifyRequest } from 'fastify';
 import { Stats } from 'fs';
 
 declare module "fastify" {
@@ -83,7 +83,7 @@ export interface FastifyStaticOptions extends SendOptions {
   redirect?: boolean;
   wildcard?: boolean;
   list?: boolean | ListOptionsJsonFormat | ListOptionsHtmlFormat;
-  allowedPath?: (pathName: string, root?: string) => boolean;
+  allowedPath?: (pathName: string, root?: string, request: FastifyRequest) => boolean;
   /**
    * @description
    * Opt-in to looking for pre-compressed files

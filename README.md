@@ -169,9 +169,9 @@ with `ignoreTrailingSlash` set to `true`.
 
 #### `allowedPath`
 
-Default: `(pathname, root) => true`
+Default: `(pathName, root, request) => true`
 
-This function allows filtering the served files.
+This function allows filtering the served files. Also, with the help of the request object a more complex path authentication is possible. 
 If the function returns `true`, the file will be served.
 If the function returns `false`, Fastify's 404 handler will be called.
 
