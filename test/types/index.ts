@@ -1,4 +1,4 @@
-import fastify from 'fastify'
+import fastify, { FastifyRequest } from 'fastify'
 import { expectAssignable, expectError } from 'tsd'
 import fastifyStatic, { FastifyStaticOptions } from '../..'
 
@@ -24,7 +24,10 @@ const options: FastifyStaticOptions = {
   setHeaders: (res: any, pathName: any) => {
     res.setHeader('test', pathName)
   },
-  preCompressed: false
+  preCompressed: false,
+  allowedPath: (pathName: string, root: string, request: FastifyRequest) => {
+    return true;
+  }
 }
 
 expectError<FastifyStaticOptions>({

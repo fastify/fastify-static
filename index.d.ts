@@ -83,7 +83,7 @@ export interface FastifyStaticOptions extends SendOptions {
   redirect?: boolean;
   wildcard?: boolean;
   list?: boolean | ListOptionsJsonFormat | ListOptionsHtmlFormat;
-  allowedPath?: (pathName: string, root?: string, request: FastifyRequest) => boolean;
+  allowedPath?: (pathName: string, root: string, request: FastifyRequest) => boolean;
   /**
    * @description
    * Opt-in to looking for pre-compressed files
