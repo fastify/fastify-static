@@ -30,16 +30,16 @@
   "homepage": "https://github.com/fastify/fastify-static",
   "dependencies": {
     "content-disposition": "^0.5.3",
-    "encoding-negotiator": "^2.0.1",
+    "@fastify/accept-negotiator": "^1.0.0",
     "fastify-plugin": "^3.0.0",
     "glob": "^8.0.1",
     "p-limit": "^3.1.0",
-    "readable-stream": "^3.4.0",
+    "readable-stream": "^4.0.0",
     "send": "^0.18.0"
   },
   "devDependencies": {
     "@fastify/compress": "^6.0.0",
-    "@types/node": "^17.0.0",
+    "@types/node": "^18.0.0",
     "@typescript-eslint/eslint-plugin": "^2.29.0",
     "@typescript-eslint/parser": "^2.29.0",
     "concat-stream": "^2.0.0",
@@ -53,7 +53,7 @@
     "snazzy": "^9.0.0",
     "standard": "^17.0.0",
     "tap": "^16.0.0",
-    "tsd": "^0.20.0",
+    "tsd": "^0.21.0",
     "typescript": "^4.0.2"
   },
   "tsd": {
