@@ -1642,7 +1642,7 @@ t.test('with fastify-compress', t => {
   })
 })
 t.test('register /static/ with schemaHide true', t => {
-  t.plan(5)
+  t.plan(4)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -1682,7 +1682,7 @@ t.test('register /static/ with schemaHide true', t => {
 })
 
 t.test('register /static/ with schemaHide false', t => {
-  t.plan(5)
+  t.plan(4)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -1722,7 +1722,7 @@ t.test('register /static/ with schemaHide false', t => {
 })
 
 t.test('register /static/ without schemaHide', t => {
-  t.plan(5)
+  t.plan(4)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -2769,7 +2769,7 @@ t.test('inject support', async (t) => {
 })
 
 t.test('routes should use custom errorHandler premature stream close', t => {
-  t.plan(5)
+  t.plan(4)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -2804,7 +2804,7 @@ t.test('routes should use custom errorHandler premature stream close', t => {
 })
 
 t.test('routes should fallback to default errorHandler', t => {
-  t.plan(5)
+  t.plan(4)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
