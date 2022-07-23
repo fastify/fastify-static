@@ -1,6 +1,34 @@
-import fastify from 'fastify'
-import { expectAssignable, expectError } from 'tsd'
-import fastifyStatic, { FastifyStaticOptions } from '../..'
+import fastify, { FastifyInstance, FastifyPluginCallback } from 'fastify'
+import { Server } from 'http';
+import { expectAssignable, expectError, expectType } from 'tsd'
+import * as fastifyStaticStar from '../..';
+import fastifyStatic, {
+  FastifyStaticOptions, 
+  fastifyStatic as fastifyStaticNamed,
+} from '../..'
+
+import fastifyStaticCjsImport = require('../..');
+const fastifyStaticCjs = require('../..');
+
+const app: FastifyInstance = fastify();
+
+app.register(fastifyStatic);
+app.register(fastifyStaticNamed);
+app.register(fastifyStaticCjs);
+app.register(fastifyStaticCjsImport.default);
+app.register(fastifyStaticCjsImport.fastifyStatic);
+app.register(fastifyStaticStar.default);
+app.register(fastifyStaticStar.fastifyStatic);
+
+expectType<FastifyPluginCallback<FastifyStaticOptions, Server>>(fastifyStatic);
+expectType<FastifyPluginCallback<FastifyStaticOptions, Server>>(fastifyStaticNamed);
+expectType<FastifyPluginCallback<FastifyStaticOptions, Server>>(fastifyStaticCjsImport.default);
+expectType<FastifyPluginCallback<FastifyStaticOptions, Server>>(fastifyStaticCjsImport.fastifyStatic);
+expectType<FastifyPluginCallback<FastifyStaticOptions, Server>>(fastifyStaticStar.default);
+expectType<FastifyPluginCallback<FastifyStaticOptions, Server>>(
+fastifyStaticStar.fastifyStatic
+);
+expectType<any>(fastifyStaticCjs);
 
 const appWithImplicitHttp = fastify()
 const options: FastifyStaticOptions = {
