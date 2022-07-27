@@ -11,7 +11,7 @@ Please refer to [this branch](https://github.com/fastify/fastify-static/tree/1.x
 
 ## Install
 
-`npm install --save @fastify/static`
+`npm i @fastify/static`
 
 ## Usage
 

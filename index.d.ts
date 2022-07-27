@@ -8,100 +8,108 @@ import { Stats } from 'fs';
 declare module "fastify" {
   interface FastifyReply {
     sendFile(filename: string, rootPath?: string): FastifyReply;
-    sendFile(filename: string, options?: SendOptions): FastifyReply;
-    sendFile(filename: string, rootPath?: string, options?: SendOptions): FastifyReply;
-    download(filepath: string, options?: SendOptions): FastifyReply;
+    sendFile(filename: string, options?: fastifyStatic.SendOptions): FastifyReply;
+    sendFile(filename: string, rootPath?: string, options?: fastifyStatic.SendOptions): FastifyReply;
+    download(filepath: string, options?: fastifyStatic.SendOptions): FastifyReply;
     download(filepath: string, filename?: string): FastifyReply;
-    download(filepath: string, filename?: string, options?: SendOptions): FastifyReply;
+    download(filepath: string, filename?: string, options?: fastifyStatic.SendOptions): FastifyReply;
   }
 }
 
-interface ExtendedInformation {
-  fileCount: number;
-  totalFileCount: number;
-  folderCount: number;
-  totalFolderCount: number;
-  totalSize: number;
-  lastModified: number;
-}
+type FastifyStaticPlugin = FastifyPluginCallback<NonNullable<fastifyStatic.FastifyStaticOptions>>;
 
-interface ListDir {
-  href: string;
-  name: string;
-  stats: Stats;
-  extendedInfo?: ExtendedInformation;
-}
+declare namespace fastifyStatic {
+  export interface ExtendedInformation {
+    fileCount: number;
+    totalFileCount: number;
+    folderCount: number;
+    totalFolderCount: number;
+    totalSize: number;
+    lastModified: number;
+  }
 
-interface ListFile {
-  href: string;
-  name: string;
-  stats: Stats;
-}
+  export interface ListDir {
+    href: string;
+    name: string;
+    stats: Stats;
+    extendedInfo?: ExtendedInformation;
+  }
 
-interface ListRender {
-  (dirs: ListDir[], files: ListFile[]): string;
-}
+  export interface ListFile {
+    href: string;
+    name: string;
+    stats: Stats;
+  }
 
-interface ListOptions {
-  names?: string[];
-  extendedFolderInfo?: boolean;
-  jsonFormat?: 'names' | 'extended';
-}
+  export interface ListRender {
+    (dirs: ListDir[], files: ListFile[]): string;
+  }
 
-interface ListOptionsJsonFormat extends ListOptions {
-  format: 'json';
-  // Required when the URL parameter `format=html` exists
-  render?: ListRender;
-}
+  export interface ListOptions {
+    names?: string[];
+    extendedFolderInfo?: boolean;
+    jsonFormat?: 'names' | 'extended';
+  }
 
-interface ListOptionsHtmlFormat extends ListOptions {
-  format: 'html';
-  render: ListRender;
-}
+  export interface ListOptionsJsonFormat extends ListOptions {
+    format: 'json';
+    // Required when the URL parameter `format=html` exists
+    render?: ListRender;
+  }
 
-// Passed on to `send`
-interface SendOptions {
-  acceptRanges?: boolean;
-  cacheControl?: boolean;
-  dotfiles?: 'allow' | 'deny' | 'ignore';
-  etag?: boolean;
-  extensions?: string[];
-  immutable?: boolean;
-  index?: string[] | string | false;
-  lastModified?: boolean;
-  maxAge?: string | number;
-}
-
-export interface FastifyStaticOptions extends SendOptions {
-  root: string | string[];
-  prefix?: string;
-  prefixAvoidTrailingSlash?: boolean;
-  serve?: boolean;
-  decorateReply?: boolean;
-  schemaHide?: boolean;
-  setHeaders?: (...args: any[]) => void;
-  redirect?: boolean;
-  wildcard?: boolean;
-  list?: boolean | ListOptionsJsonFormat | ListOptionsHtmlFormat;
-  allowedPath?: (pathName: string, root: string, request: FastifyRequest) => boolean;
-  /**
-   * @description
-   * Opt-in to looking for pre-compressed files
-   */
-  preCompressed?: boolean;
+  export interface ListOptionsHtmlFormat extends ListOptions {
+    format: 'html';
+    render: ListRender;
+  }
 
   // Passed on to `send`
-  acceptRanges?: boolean;
-  cacheControl?: boolean;
-  dotfiles?: 'allow' | 'deny' | 'ignore';
-  etag?: boolean;
-  extensions?: string[];
-  immutable?: boolean;
-  index?: string[] | string | false;
-  lastModified?: boolean;
-  maxAge?: string | number;
+  export interface SendOptions {
+    acceptRanges?: boolean;
+    cacheControl?: boolean;
+    dotfiles?: 'allow' | 'deny' | 'ignore';
+    etag?: boolean;
+    extensions?: string[];
+    immutable?: boolean;
+    index?: string[] | string | false;
+    lastModified?: boolean;
+    maxAge?: string | number;
+  }
+
+  export interface FastifyStaticOptions extends SendOptions {
+    root: string | string[];
+    prefix?: string;
+    prefixAvoidTrailingSlash?: boolean;
+    serve?: boolean;
+    decorateReply?: boolean;
+    schemaHide?: boolean;
+    setHeaders?: (...args: any[]) => void;
+    redirect?: boolean;
+    wildcard?: boolean;
+    list?: boolean | ListOptionsJsonFormat | ListOptionsHtmlFormat;
+    allowedPath?: (pathName: string, root: string, request: FastifyRequest) => boolean;
+    /**
+     * @description
+     * Opt-in to looking for pre-compressed files
+     */
+    preCompressed?: boolean;
+
+    // Passed on to `send`
+    acceptRanges?: boolean;
+    cacheControl?: boolean;
+    dotfiles?: 'allow' | 'deny' | 'ignore';
+    etag?: boolean;
+    extensions?: string[];
+    immutable?: boolean;
+    index?: string[] | string | false;
+    lastModified?: boolean;
+    maxAge?: string | number;
+  }
+
+  export const fastifyStatic: FastifyStaticPlugin;
+
+  export { fastifyStatic as default };
 }
 
-export declare const fastifyStatic: FastifyPluginCallback<FastifyStaticOptions>
+declare function fastifyStatic(...params: Parameters<FastifyStaticPlugin>): ReturnType<FastifyStaticPlugin>;
 
-export default fastifyStatic;
+export = fastifyStatic;
