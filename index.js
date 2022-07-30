@@ -72,7 +72,7 @@ async function fastifyStatic (fastify, opts) {
       }
     }
 
-    if (allowedPath && !allowedPath(pathname, options.root)) {
+    if (allowedPath && !allowedPath(pathname, options.root, request)) {
       return reply.callNotFound()
     }
 

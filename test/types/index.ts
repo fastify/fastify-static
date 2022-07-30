@@ -1,4 +1,4 @@
-import fastify, { FastifyInstance, FastifyPluginCallback } from 'fastify'
+import fastify, { FastifyInstance, FastifyPluginCallback, FastifyRequest } from 'fastify'
 import { Server } from 'http';
 import { expectAssignable, expectError, expectType } from 'tsd'
 import * as fastifyStaticStar from '../..';
@@ -52,7 +52,10 @@ const options: FastifyStaticOptions = {
   setHeaders: (res: any, pathName: any) => {
     res.setHeader('test', pathName)
   },
-  preCompressed: false
+  preCompressed: false,
+  allowedPath: (pathName: string, root: string, request: FastifyRequest) => {
+    return true;
+  }
 }
 
 expectError<FastifyStaticOptions>({
