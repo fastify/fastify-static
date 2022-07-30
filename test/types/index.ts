@@ -1,4 +1,4 @@
-import fastify, { FastifyInstance, FastifyPluginCallback } from 'fastify'
+import fastify, { FastifyInstance, FastifyPluginCallback, FastifyRequest } from 'fastify'
 import { Server } from 'http';
 import { expectAssignable, expectError, expectType } from 'tsd'
 import * as fastifyStaticStar from '../..';
