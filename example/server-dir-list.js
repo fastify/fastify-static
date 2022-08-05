@@ -44,6 +44,6 @@ fastify
       render: (dirs, files) => handlebarTemplate({ dirs, files })
     }
   })
-  .listen(3000, err => {
+  .listen({ port: 3000 }, err => {
     if (err) throw err
   })
