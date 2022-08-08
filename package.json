@@ -3,7 +3,7 @@
   "version": "6.5.0",
   "description": "Plugin for serving static files as fast as possible.",
   "main": "index.js",
-  "types": "index.d.ts",
+  "types": "types/index.d.ts",
   "scripts": {
     "lint": "standard | snazzy",
     "lint:fix": "standard --fix",
@@ -53,8 +53,7 @@
     "snazzy": "^9.0.0",
     "standard": "^17.0.0",
     "tap": "^16.0.0",
-    "tsd": "^0.22.0",
-    "typescript": "^4.0.2"
+    "tsd": "^0.22.0"
   },
   "tsd": {
     "directory": "test/types"

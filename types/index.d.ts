@@ -2,7 +2,7 @@
 //                 Leo <https://github.com/leomelzer>
 /// <reference types="node" />
 
-import { FastifyPluginCallback, FastifyReply, FastifyRequest } from 'fastify';
+import { FastifyPluginAsync, FastifyRequest } from 'fastify';
 import { Stats } from 'fs';
 
 declare module "fastify" {
@@ -16,7 +16,7 @@ declare module "fastify" {
   }
 }
 
-type FastifyStaticPlugin = FastifyPluginCallback<NonNullable<fastifyStatic.FastifyStaticOptions>>;
+type FastifyStaticPlugin = FastifyPluginAsync<NonNullable<fastifyStatic.FastifyStaticOptions>>;
 
 declare namespace fastifyStatic {
   export interface ExtendedInformation {
