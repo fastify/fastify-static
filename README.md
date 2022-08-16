@@ -77,6 +77,7 @@ fastify.get('/another/path', function (req, reply) {
 })
 
 fastify.get('another/patch-async', async function (req, reply) {
+  // an async handler must always return the reply object
   return reply.download('myHtml.html', 'custom-filename.html')
 })
 
