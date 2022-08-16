@@ -25,15 +25,19 @@ fastify.register(require('@fastify/static'), {
 })
 
 fastify.get('/another/path', function (req, reply) {
-  return reply.sendFile('myHtml.html') // serving path.join(__dirname, 'public', 'myHtml.html') directly
+  reply.sendFile('myHtml.html') // serving path.join(__dirname, 'public', 'myHtml.html') directly
+})
+
+fastify.get('another/patch-async', async function (req, reply) {
+  return reply.sendFile('myHtml.html')
 })
 
 fastify.get('/path/with/different/root', function (req, reply) {
-  return reply.sendFile('myHtml.html', path.join(__dirname, 'build')) // serving a file from a different root location
+  reply.sendFile('myHtml.html', path.join(__dirname, 'build')) // serving a file from a different root location
 })
 
 fastify.get('/another/path', function (req, reply) {
-  return reply.sendFile('myHtml.html', { cacheControl: false }) // overriding the options disabling cache-control headers
+  reply.sendFile('myHtml.html', { cacheControl: false }) // overriding the options disabling cache-control headers
 })
 ```
 
@@ -69,15 +73,20 @@ fastify.register(require('@fastify/static'), {
 })
 
 fastify.get('/another/path', function (req, reply) {
-  return reply.download('myHtml.html', 'custom-filename.html') // sending path.join(__dirname, 'public', 'myHtml.html') directly with custom filename
+  reply.download('myHtml.html', 'custom-filename.html') // sending path.join(__dirname, 'public', 'myHtml.html') directly with custom filename
+})
+
+fastify.get('another/patch-async', async function (req, reply) {
+  // an async handler must always return the reply object
+  return reply.download('myHtml.html', 'custom-filename.html')
 })
 
 fastify.get('/path/without/cache/control', function (req, reply) {
-  return reply.download('myHtml.html', { cacheControl: false }) // serving a file disabling cache-control headers
+  reply.download('myHtml.html', { cacheControl: false }) // serving a file disabling cache-control headers
 })
 
 fastify.get('/path/without/cache/control', function (req, reply) {
-  return reply.download('myHtml.html', 'custom-filename.html', { cacheControl: false })
+  reply.download('myHtml.html', 'custom-filename.html', { cacheControl: false })
 })
 
 ```

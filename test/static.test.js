@@ -808,7 +808,7 @@ t.test('serving disabled', (t) => {
   fastify.register(fastifyStatic, pluginOptions)
 
   fastify.get('/foo/bar', (request, reply) => {
-    return reply.sendFile('index.html')
+    reply.sendFile('index.html')
   })
 
   t.teardown(fastify.close.bind(fastify))
@@ -856,18 +856,18 @@ t.test('sendFile', (t) => {
   fastify.register(fastifyStatic, pluginOptions)
 
   fastify.get('/foo/bar', function (req, reply) {
-    return reply.sendFile('/index.html')
+    reply.sendFile('/index.html')
   })
 
   fastify.get('/root/path/override/test', (request, reply) => {
-    return reply.sendFile(
+    reply.sendFile(
       '/foo.html',
       path.join(__dirname, 'static', 'deep', 'path', 'for', 'test', 'purpose')
     )
   })
 
   fastify.get('/foo/bar/options/override/test', function (req, reply) {
-    return reply.sendFile('/index.html', { maxAge })
+    reply.sendFile('/index.html', { maxAge })
   })
 
   fastify.listen({ port: 0 }, (err) => {
@@ -1066,26 +1066,26 @@ t.test('download', (t) => {
   fastify.register(fastifyStatic, pluginOptions)
 
   fastify.get('/foo/bar', function (req, reply) {
-    return reply.download('/index.html')
+    reply.download('/index.html')
   })
 
   fastify.get('/foo/bar/change', function (req, reply) {
-    return reply.download('/index.html', 'hello-world.html')
+    reply.download('/index.html', 'hello-world.html')
   })
 
   fastify.get('/foo/bar/override', function (req, reply) {
-    return reply.download('/index.html', 'hello-world.html', {
+    reply.download('/index.html', 'hello-world.html', {
       maxAge: '2 hours',
       immutable: true
     })
   })
 
   fastify.get('/foo/bar/override/2', function (req, reply) {
-    return reply.download('/index.html', { acceptRanges: false })
+    reply.download('/index.html', { acceptRanges: false })
   })
 
   fastify.get('/root/path/override/test', (request, reply) => {
-    return reply.download('/foo.html', {
+    reply.download('/foo.html', {
       root: path.join(
         __dirname,
         'static',
@@ -1099,7 +1099,7 @@ t.test('download', (t) => {
   })
 
   fastify.get('/root/path/override/test/change', (request, reply) => {
-    return reply.download('/foo.html', 'hello-world.html', {
+    reply.download('/foo.html', 'hello-world.html', {
       root: path.join(
         __dirname,
         'static',
