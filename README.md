@@ -16,7 +16,7 @@ Please refer to [this branch](https://github.com/fastify/fastify-static/tree/1.x
 ## Usage
 
 ```js
-const fastify = require('fastify')()
+const fastify = require('fastify')({logger: true})
 const path = require('path')
 
 fastify.register(require('@fastify/static'), {
@@ -28,7 +28,7 @@ fastify.get('/another/path', function (req, reply) {
   reply.sendFile('myHtml.html') // serving path.join(__dirname, 'public', 'myHtml.html') directly
 })
 
-fastify.get('another/patch-async', async function (req, reply) {
+fastify.get('/another/patch-async', async function (req, reply) {
   return reply.sendFile('myHtml.html')
 })
 
@@ -38,6 +38,12 @@ fastify.get('/path/with/different/root', function (req, reply) {
 
 fastify.get('/another/path', function (req, reply) {
   reply.sendFile('myHtml.html', { cacheControl: false }) // overriding the options disabling cache-control headers
+})
+
+// Run the server!
+fastify.listen({ port: 3000 }, (err, address) => {
+  if (err) throw err
+  // Server is now listening on ${address}
 })
 ```
 
