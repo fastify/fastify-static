@@ -4,13 +4,14 @@
 [![NPM version](https://img.shields.io/npm/v/@fastify/static.svg?style=flat)](https://www.npmjs.com/package/@fastify/static)
 [![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat)](https://standardjs.com/)
 
-Plugin for serving static files as fast as possible.
+Plugin for serving static files as fast as possible. Supports Fastify version `4.x`.
 
-Supports Fastify versions `4.x`.
-
-Please refer to [this branch](https://github.com/fastify/fastify-static/tree/CHANGEME) and related versions for Fastify `^3.0.0` compatibility.
-Please refer to [this branch](https://github.com/fastify/fastify-static/tree/2.x) and related versions for Fastify `^2.0.0` compatibility.
-Please refer to [this branch](https://github.com/fastify/fastify-static/tree/1.x) and related versions for Fastify `^1.11.0` compatibility.
+| Fastify version | branch                                                               |
+| --------------- | -------------------------------------------------------------------- |
+| `^4.x`          | This branch                                                          |
+| `^3.x`          | [CHANGE ME](https://github.com/fastify/fastify-static/tree/CHANGEME) |
+| `^2.x`          | [`2.x`](https://github.com/fastify/fastify-static/tree/2.x)          |
+| `^1.11.x`       | [`1.x`](https://github.com/fastify/fastify-static/tree/1.x)          |
 
 ## Install
 
