@@ -518,3 +518,5 @@ module.exports = fp(fastifyStatic, {
   fastify: '4.x',
   name: '@fastify/static'
 })
+module.exports.default = fastifyStatic
+module.exports.fastifyStatic = fastifyStatic
