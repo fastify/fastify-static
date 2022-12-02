@@ -51,6 +51,7 @@ const uncompressedStatic = fs
   .toString('utf8')
 const fooContent = fs.readFileSync('./test/static/foo.html').toString('utf8')
 const barContent = fs.readFileSync('./test/static2/bar.html').toString('utf8')
+const jsonHiddenContent = fs.readFileSync('./test/static-hidden/.hidden/sample.json').toString('utf8')
 
 const GENERIC_RESPONSE_CHECK_COUNT = 5
 function genericResponseChecks (t, response) {
@@ -3549,6 +3550,38 @@ t.test('should follow symbolic link without wildcard', (t) => {
     }, (err, response) => {
       t.error(err)
       t.equal(response.statusCode, 200)
+    })
+  })
+})
+
+t.test('should serve files into hidden dir', (t) => {
+  t.plan(9)
+
+  const pluginOptions = {
+    root: path.join(__dirname, '/static-hidden')
+  }
+  const fastify = Fastify()
+  fastify.register(fastifyStatic, pluginOptions)
+
+  t.teardown(fastify.close.bind(fastify))
+
+  fastify.listen({ port: 0 }, (err) => {
+    t.error(err)
+
+    fastify.server.unref()
+
+    simple.concat({
+      method: 'GET',
+      url: 'http://localhost:' + fastify.server.address().port + '/.hidden/sample.json'
+    }, (err, response, body) => {
+      t.error(err)
+      t.equal(response.statusCode, 200)
+      t.equal(body.toString(), jsonHiddenContent)
+      t.ok(/application\/(json)/.test(response.headers['content-type']))
+      t.ok(response.headers.etag)
+      t.ok(response.headers['last-modified'])
+      t.ok(response.headers.date)
+      t.ok(response.headers['cache-control'])
     })
   })
 })
