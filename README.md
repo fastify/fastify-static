@@ -203,9 +203,9 @@ To disable this set false or to supply a new index pass a string or an array in 
 
 ### `serveHiddenFiles`
 
-Default: `undefined`
+Default: `false`
 
-This option allow to serve files into hidden directory using `wildcard` as `false`.
+When `true`, files in hidden directories (e.g. `.foo`) will be served.
 
 #### `list`
 

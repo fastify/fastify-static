@@ -38,7 +38,7 @@ async function fastifyStatic (fastify, opts) {
     index: opts.index,
     lastModified: opts.lastModified,
     maxAge: opts.maxAge,
-    serveHiddenFiles: opts.serveHiddenFiles
+    serveHiddenFiles: opts.serveHiddenFiles ?? false
   }
 
   const allowedPath = opts.allowedPath
