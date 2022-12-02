@@ -3554,7 +3554,68 @@ t.test('should follow symbolic link without wildcard', (t) => {
   })
 })
 
-t.test('should serve files into hidden dir', (t) => {
+t.test('should serve files into hidden dir with wildcard `false`', (t) => {
+  t.plan(9)
+
+  const pluginOptions = {
+    root: path.join(__dirname, '/static-hidden'),
+    wildcard: false,
+    serveHiddenFiles: true
+  }
+  const fastify = Fastify()
+  fastify.register(fastifyStatic, pluginOptions)
+
+  t.teardown(fastify.close.bind(fastify))
+
+  fastify.listen({ port: 0 }, (err) => {
+    t.error(err)
+
+    fastify.server.unref()
+
+    simple.concat({
+      method: 'GET',
+      url: 'http://localhost:' + fastify.server.address().port + '/.hidden/sample.json'
+    }, (err, response, body) => {
+      t.error(err)
+      t.equal(response.statusCode, 200)
+      t.equal(body.toString(), jsonHiddenContent)
+      t.ok(/application\/(json)/.test(response.headers['content-type']))
+      t.ok(response.headers.etag)
+      t.ok(response.headers['last-modified'])
+      t.ok(response.headers.date)
+      t.ok(response.headers['cache-control'])
+    })
+  })
+})
+
+t.test('should not found hidden file with wildcard is `false`', (t) => {
+  t.plan(3)
+
+  const pluginOptions = {
+    root: path.join(__dirname, '/static-hidden'),
+    wildcard: false
+  }
+  const fastify = Fastify()
+  fastify.register(fastifyStatic, pluginOptions)
+
+  t.teardown(fastify.close.bind(fastify))
+
+  fastify.listen({ port: 0 }, (err) => {
+    t.error(err)
+
+    fastify.server.unref()
+
+    simple.concat({
+      method: 'GET',
+      url: 'http://localhost:' + fastify.server.address().port + '/.hidden/sample.json'
+    }, (err, response, body) => {
+      t.error(err)
+      t.equal(response.statusCode, 404)
+    })
+  })
+})
+
+t.test('should serve files into hidden dir without wildcard option', (t) => {
   t.plan(9)
 
   const pluginOptions = {
