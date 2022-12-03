@@ -201,6 +201,12 @@ Default: `undefined`
 Under the hood we use [send](https://github.com/pillarjs/send#index) lib that by default supports "index.html" files. 
 To disable this set false or to supply a new index pass a string or an array in preferred order.
 
+### `serveDotFiles`
+
+Default: `false`
+
+When `true`, files in hidden directories (e.g. `.foo`) will be served.
+
 #### `list`
 
 Default: `undefined`
