@@ -3560,7 +3560,7 @@ t.test('should serve files into hidden dir with wildcard `false`', (t) => {
   const pluginOptions = {
     root: path.join(__dirname, '/static-hidden'),
     wildcard: false,
-    serveHiddenFiles: true
+    serverDotFiles: true
   }
   const fastify = Fastify()
   fastify.register(fastifyStatic, pluginOptions)
