@@ -73,7 +73,7 @@ declare namespace fastifyStatic {
     index?: string[] | string | false;
     lastModified?: boolean;
     maxAge?: string | number;
-    serverDotFiles?: boolean;
+    serveDotFiles?: boolean;
   }
 
   export interface FastifyStaticOptions extends SendOptions {

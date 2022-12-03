@@ -8,7 +8,7 @@ fastify
     // An absolute path containing static files to serve.
     root: path.join(__dirname, '/public'),
     wildcard: false,
-    serverDotFiles: true
+    serveDotFiles: true
   })
   .listen({ port: 3000 }, err => {
     if (err) throw err
