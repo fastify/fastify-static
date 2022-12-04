@@ -211,7 +211,7 @@ When `true`, files in hidden directories (e.g. `.foo`) will be served.
 
 Default: `undefined`
 
-If set, it provide the directory list calling the directory path.
+If set, it provides the directory list calling the directory path.
 
 Default response is json.
 
