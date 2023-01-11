@@ -1336,7 +1336,7 @@ t.test('send options', (t) => {
   }
   const fastify = Fastify({ logger: false })
   const fastifyStatic = require('proxyquire')('../', {
-    send: function sendStub (req, pathName, options) {
+    '@fastify/send': function sendStub (req, pathName, options) {
       t.equal(pathName, '/index.html')
       t.equal(options.root, path.join(__dirname, '/static'))
       t.equal(options.acceptRanges, 'acceptRanges')
