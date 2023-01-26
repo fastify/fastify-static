@@ -340,6 +340,11 @@ async function fastifyStatic (fastify, opts) {
         const files = await globPromise(path.join(rootPath, globPattern).replace(winSeparatorRegex, path.posix.sep), { nodir: true, dot: sendOptions.serveDotFiles })
         const indexes = typeof opts.index === 'undefined' ? ['index.html'] : [].concat(opts.index)
 
+        function handler (req, reply) {
+          const file = req.routeConfig.file
+          pumpSendToReply(req, reply, '/' + file, rootPath)
+        }
+
         for (let file of files) {
           file = file
             .replace(rootPath.replace(/\\/g, '/'), '')
@@ -349,13 +354,15 @@ async function fastifyStatic (fastify, opts) {
             continue
           }
           routes.add(route)
-          fastify.head(route, routeOpts, function (req, reply) {
-            pumpSendToReply(req, reply, '/' + file, rootPath)
-          })
-
-          fastify.get(route, routeOpts, function (req, reply) {
-            pumpSendToReply(req, reply, '/' + file, rootPath)
-          })
+          const matchedRouteOpts = {
+            ...routeOpts,
+            method: ['HEAD', 'GET'],
+            url: route,
+            handler
+          }
+          matchedRouteOpts.config = matchedRouteOpts.config || {}
+          matchedRouteOpts.config.file = file
+          fastify.route(matchedRouteOpts)
 
           const key = path.posix.basename(route)
           if (indexes.includes(key) && !indexDirs.has(key)) {
