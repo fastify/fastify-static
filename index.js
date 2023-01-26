@@ -340,11 +340,6 @@ async function fastifyStatic (fastify, opts) {
         const files = await globPromise(path.join(rootPath, globPattern).replace(winSeparatorRegex, path.posix.sep), { nodir: true, dot: sendOptions.serveDotFiles })
         const indexes = typeof opts.index === 'undefined' ? ['index.html'] : [].concat(opts.index)
 
-        function handler (req, reply) {
-          const file = req.routeConfig.file
-          pumpSendToReply(req, reply, '/' + file, rootPath)
-        }
-
         for (let file of files) {
           file = file
             .replace(rootPath.replace(/\\/g, '/'), '')
@@ -354,15 +349,8 @@ async function fastifyStatic (fastify, opts) {
             continue
           }
           routes.add(route)
-          const matchedRouteOpts = {
-            ...routeOpts,
-            method: ['HEAD', 'GET'],
-            url: route,
-            handler
-          }
-          matchedRouteOpts.config = matchedRouteOpts.config || {}
-          matchedRouteOpts.config.file = file
-          fastify.route(matchedRouteOpts)
+
+          setUpHeadAndGet(fastify, routeOpts, route, '/' + file, rootPath)
 
           const key = path.posix.basename(route)
           if (indexes.includes(key) && !indexDirs.has(key)) {
@@ -374,28 +362,34 @@ async function fastifyStatic (fastify, opts) {
       for (const [dirname, rootPath] of indexDirs.entries()) {
         const pathname = dirname + (dirname.endsWith('/') ? '' : '/')
         const file = '/' + pathname.replace(prefix, '')
-
-        fastify.head(pathname, routeOpts, function (req, reply) {
-          pumpSendToReply(req, reply, file, rootPath)
-        })
-
-        fastify.get(pathname, routeOpts, function (req, reply) {
-          pumpSendToReply(req, reply, file, rootPath)
-        })
+        setUpHeadAndGet(fastify, routeOpts, pathname, file, rootPath)
 
         if (opts.redirect === true) {
-          fastify.head(pathname.replace(/\/$/, ''), routeOpts, function (req, reply) {
-            pumpSendToReply(req, reply, file.replace(/\/$/, ''), rootPath)
-          })
-          fastify.get(pathname.replace(/\/$/, ''), routeOpts, function (req, reply) {
-            pumpSendToReply(req, reply, file.replace(/\/$/, ''), rootPath)
-          })
+          setUpHeadAndGet(fastify, routeOpts, pathname.replace(/\/$/, ''), file.replace(/\/$/, ''), rootPath)
         }
       }
     }
   }
-}
 
+  function setUpHeadAndGet (fastify, routeOpts, route, file, rootPath) {
+    const toSetUp = {
+      ...routeOpts,
+      method: ['HEAD', 'GET'],
+      url: route,
+      handler: serveFileHandler
+    }
+    toSetUp.config = toSetUp.config || {}
+    toSetUp.config.file = file
+    toSetUp.config.rootPath = rootPath
+    fastify.route(toSetUp)
+  }
+
+  function serveFileHandler (req, reply) {
+    const file = req.routeConfig.file
+    const rootPath = req.routeConfig.rootPath
+    pumpSendToReply(req, reply, file, rootPath)
+  }
+}
 function checkRootPathForErrors (fastify, rootPath) {
   if (rootPath === undefined) {
     throw new Error('"root" option is required')
