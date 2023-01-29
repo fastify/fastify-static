@@ -27,6 +27,10 @@ async function fastifyStatic (fastify, opts) {
     throw invalidDirListOpts
   }
 
+  if (opts.dotfiles === undefined && opts.serveDotFiles) {
+    opts.dotfiles = 'allow'
+  }
+
   const sendOptions = {
     root: opts.root,
     acceptRanges: opts.acceptRanges,
@@ -37,8 +41,7 @@ async function fastifyStatic (fastify, opts) {
     immutable: opts.immutable,
     index: opts.index,
     lastModified: opts.lastModified,
-    maxAge: opts.maxAge,
-    serveDotFiles: opts.serveDotFiles ?? false
+    maxAge: opts.maxAge
   }
 
   const allowedPath = opts.allowedPath
@@ -337,7 +340,7 @@ async function fastifyStatic (fastify, opts) {
       const winSeparatorRegex = new RegExp(`\\${path.win32.sep}`, 'g')
 
       for (const rootPath of Array.isArray(sendOptions.root) ? sendOptions.root : [sendOptions.root]) {
-        const files = await globPromise(path.join(rootPath, globPattern).replace(winSeparatorRegex, path.posix.sep), { nodir: true, dot: sendOptions.serveDotFiles })
+        const files = await globPromise(path.join(rootPath, globPattern).replace(winSeparatorRegex, path.posix.sep), { nodir: true, dot: opts.serveDotFiles })
         const indexes = typeof opts.index === 'undefined' ? ['index.html'] : [].concat(opts.index)
 
         for (let file of files) {
@@ -447,12 +450,7 @@ function checkPath (fastify, rootPath) {
 const supportedEncodings = ['br', 'gzip', 'deflate']
 
 function getContentType (path) {
-  const type = send.mime.lookup(path)
-  const charset = send.mime.charsets.lookup(type)
-  if (!charset) {
-    return type
-  }
-  return `${type}; charset=${charset}`
+  return send.mime.getType(path)
 }
 
 function findIndexFile (pathname, root, indexFiles = ['index.html']) {
