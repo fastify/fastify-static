@@ -451,8 +451,8 @@ const supportedEncodings = ['br', 'gzip', 'deflate']
 
 function getContentType (path) {
   const type = send.mime.getType(path)
- 
-  if (!send.isUtf8Mimetype(type)) {
+
+  if (!send.isUtf8MimeType(type)) {
     return type
   }
   return `${type}; charset=UTF-8`
