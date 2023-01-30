@@ -450,7 +450,12 @@ function checkPath (fastify, rootPath) {
 const supportedEncodings = ['br', 'gzip', 'deflate']
 
 function getContentType (path) {
-  return send.mime.getType(path)
+  const type = send.mime.getType(path)
+ 
+  if (!send.isUtf8Mimetype(type)) {
+    return type
+  }
+  return `${type}; charset=UTF-8`
 }
 
 function findIndexFile (pathname, root, indexFiles = ['index.html']) {
