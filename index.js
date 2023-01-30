@@ -27,7 +27,7 @@ async function fastifyStatic (fastify, opts) {
     throw invalidDirListOpts
   }
 
-  if (opts.dotfiles === undefined && opts.serveDotFiles) {
+  if (opts.dotfiles === undefined) {
     opts.dotfiles = 'allow'
   }
 
