@@ -3646,3 +3646,60 @@ t.test('should serve files into hidden dir without wildcard option', (t) => {
     })
   })
 })
+
+t.test(
+  'will serve pre-compressed files with .gzip if multi-root',
+  async (t) => {
+    const pluginOptions = {
+      root: [path.join(__dirname, '/static-pre-compressed'), path.join(__dirname, '/static')],
+      preCompressed: true
+    }
+
+    const fastify = Fastify()
+
+    fastify.register(fastifyStatic, pluginOptions)
+    t.teardown(fastify.close.bind(fastify))
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: 'all-three.html',
+      headers: {
+        'accept-encoding': '*, *'
+      }
+    })
+
+    genericResponseChecks(t, response)
+    t.equal(response.headers['content-encoding'], 'gzip')
+    t.equal(response.statusCode, 200)
+    t.same(response.rawPayload, allThreeGzip)
+    t.end()
+  }
+)
+
+t.test(
+  'will still serve un-compressed files with multi-root and preCompressed as true',
+  async (t) => {
+    const pluginOptions = {
+      root: [path.join(__dirname, '/static-pre-compressed'), path.join(__dirname, '/static')],
+      preCompressed: true
+    }
+
+    const fastify = Fastify()
+
+    fastify.register(fastifyStatic, pluginOptions)
+    t.teardown(fastify.close.bind(fastify))
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: 'foobar.html',
+      headers: {
+        'accept-encoding': '*, *'
+      }
+    })
+
+    genericResponseChecks(t, response)
+    t.equal(response.statusCode, 200)
+    t.same(response.body, foobarContent)
+    t.end()
+  }
+)
