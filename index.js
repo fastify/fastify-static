@@ -240,7 +240,7 @@ async function fastifyStatic (fastify, opts) {
             reply,
             pathname,
             rootPath,
-            undefined,
+            rootPathOffset,
             undefined,
             checkedEncodings
           )
