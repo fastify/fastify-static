@@ -32,7 +32,7 @@
     "content-disposition": "^0.5.3",
     "@fastify/accept-negotiator": "^1.0.0",
     "fastify-plugin": "^4.0.0",
-    "glob": "^8.0.1",
+    "glob": "^9.3.0",
     "p-limit": "^3.1.0",
     "readable-stream": "^4.0.0",
     "@fastify/send": "^2.0.0"
