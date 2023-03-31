@@ -57,6 +57,8 @@ async function fastifyStatic (fastify, opts) {
         : opts.prefix + '/'
   }
 
+  if (opts.constraints === undefined) opts.constraints = {}
+
   function pumpSendToReply (
     request,
     reply,
@@ -278,6 +280,7 @@ async function fastifyStatic (fastify, opts) {
 
   // Set the schema hide property if defined in opts or true by default
   const routeOpts = {
+    constraints: opts.constraints,
     schema: {
       hide: typeof opts.schemaHide !== 'undefined' ? opts.schemaHide : true
     },

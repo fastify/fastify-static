@@ -625,6 +625,59 @@ t.test('register /static and /static2', (t) => {
   })
 })
 
+t.test('register /static with constraints', (t) => {
+  t.plan(3)
+
+  const pluginOptions = {
+    root: path.join(__dirname, '/static'),
+    prefix: '/static',
+    constraints: {
+      host: 'example.com'
+    }
+  }
+  const fastify = Fastify()
+  fastify.register(fastifyStatic, pluginOptions)
+
+  t.teardown(fastify.close.bind(fastify))
+
+  fastify.listen({ port: 0 }, (err) => {
+    t.error(err)
+
+    fastify.server.unref()
+
+    t.test('example.com/static/index.html', (t) => {
+      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/static/index.html',
+        headers: {
+          host: 'example.com'
+        }
+      }, (err, response, body) => {
+        t.error(err)
+        t.equal(response.statusCode, 200)
+        t.equal(body.toString(), indexContent)
+        genericResponseChecks(t, response)
+      })
+    })
+
+    t.test('not-example.com/static/index.html', (t) => {
+      t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/static/index.html',
+        headers: {
+          host: 'not-example.com'
+        }
+      }, (err, response, body) => {
+        t.error(err)
+        t.equal(response.statusCode, 404)
+        genericErrorResponseChecks(t, response)
+      })
+    })
+  })
+})
+
 t.test('payload.filename is set', (t) => {
   t.plan(3)
 

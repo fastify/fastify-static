@@ -3,7 +3,7 @@ import { Server } from 'http';
 import { expectAssignable, expectError, expectType } from 'tsd'
 import * as fastifyStaticStar from '..';
 import fastifyStatic, {
-  FastifyStaticOptions, 
+  FastifyStaticOptions,
   fastifyStatic as fastifyStaticNamed,
 } from '..'
 
@@ -55,6 +55,10 @@ const options: FastifyStaticOptions = {
   preCompressed: false,
   allowedPath: (pathName: string, root: string, request: FastifyRequest) => {
     return true;
+  },
+  constraints: {
+    host: /.*\.example\.com/,
+    version: '1.0.2'
   }
 }
 
