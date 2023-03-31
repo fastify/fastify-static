@@ -26,6 +26,7 @@ const path = require('path')
 fastify.register(require('@fastify/static'), {
   root: path.join(__dirname, 'public'),
   prefix: '/public/', // optional: default '/'
+  constraints: { host: 'example.com' } // optional: default {}
 })
 
 fastify.get('/another/path', function (req, reply) {
@@ -117,6 +118,13 @@ This is useful for serving multiple static directories under a single prefix. Fi
 Default: `'/'`
 
 A URL path prefix used to create a virtual mount path for the static directory.
+
+#### `constraints`
+
+Default: `{}`
+
+Constraints that will be added to registered routes. See Fastify's documentation for
+[route constraints](https://www.fastify.io/docs/latest/Reference/Routes/#constraints).
 
 #### `prefixAvoidTrailingSlash`
 
