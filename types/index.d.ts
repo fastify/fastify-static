@@ -104,7 +104,7 @@ declare namespace fastifyStatic {
     index?: string[] | string | false;
     lastModified?: boolean;
     maxAge?: string | number;
-    constraints?: RouteOptions['constraints']
+    constraints?: RouteOptions['constraints'];
   }
 
   export const fastifyStatic: FastifyStaticPlugin;
