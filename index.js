@@ -57,8 +57,6 @@ async function fastifyStatic (fastify, opts) {
         : opts.prefix + '/'
   }
 
-  if (opts.constraints === undefined) opts.constraints = {}
-
   function pumpSendToReply (
     request,
     reply,
