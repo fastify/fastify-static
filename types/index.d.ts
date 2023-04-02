@@ -2,7 +2,7 @@
 //                 Leo <https://github.com/leomelzer>
 /// <reference types="node" />
 
-import { FastifyPluginAsync, FastifyRequest } from 'fastify';
+import {FastifyPluginAsync, FastifyRequest, RouteOptions} from 'fastify';
 import { Stats } from 'fs';
 
 declare module "fastify" {
@@ -104,6 +104,7 @@ declare namespace fastifyStatic {
     index?: string[] | string | false;
     lastModified?: boolean;
     maxAge?: string | number;
+    constraints?: RouteOptions['constraints'];
   }
 
   export const fastifyStatic: FastifyStaticPlugin;

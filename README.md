@@ -26,6 +26,7 @@ const path = require('path')
 fastify.register(require('@fastify/static'), {
   root: path.join(__dirname, 'public'),
   prefix: '/public/', // optional: default '/'
+  constraints: { host: 'example.com' } // optional: default {}
 })
 
 fastify.get('/another/path', function (req, reply) {
@@ -118,6 +119,13 @@ Default: `'/'`
 
 A URL path prefix used to create a virtual mount path for the static directory.
 
+#### `constraints`
+
+Default: `{}`
+
+Constraints that will be added to registered routes. See Fastify's documentation for
+[route constraints](https://www.fastify.io/docs/latest/Reference/Routes/#constraints).
+
 #### `prefixAvoidTrailingSlash`
 
 Default: `false`
@@ -201,7 +209,7 @@ Default: `undefined`
 Under the hood we use [send](https://github.com/pillarjs/send#index) lib that by default supports "index.html" files. 
 To disable this set false or to supply a new index pass a string or an array in preferred order.
 
-### `serveDotFiles`
+#### `serveDotFiles`
 
 Default: `false`
 
