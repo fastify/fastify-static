@@ -336,14 +336,15 @@ async function fastifyStatic (fastify, opts) {
         })
       }
     } else {
-      const globPattern = '**/**'
+      const globPattern = opts.globPattern !== undefined ? opts.globPattern : '**/**';
+      const globOptions =  typeof opts.globOptions === 'object' ? { ...{ nodir: true, dot: opts.serveDotFiles }, ...opts.globOptions } : { nodir: true, dot: opts.serveDotFiles }
       const indexDirs = new Map()
       const routes = new Set()
 
       const winSeparatorRegex = new RegExp(`\\${path.win32.sep}`, 'g')
 
       for (const rootPath of Array.isArray(sendOptions.root) ? sendOptions.root : [sendOptions.root]) {
-        const files = await globPromise(path.join(rootPath, globPattern).replace(winSeparatorRegex, path.posix.sep), { nodir: true, dot: opts.serveDotFiles })
+        const files = await globPromise(path.join(rootPath, globPattern).replace(winSeparatorRegex, path.posix.sep), globOptions)
         const indexes = typeof opts.index === 'undefined' ? ['index.html'] : [].concat(opts.index)
 
         for (let file of files) {
