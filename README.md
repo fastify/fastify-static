@@ -445,7 +445,7 @@ Glob pattern used to match files. Please read full description here: [Glob Prime
 
 Default: `{ nodir: true, dot: opts.serveDotFiles }`
 
-Options passed to glob module. All available optios are described here: [Glob Options](https://github.com/isaacs/node-glob#options)
+Options passed to glob module. All available options are described here: [Glob Options](https://github.com/isaacs/node-glob#options)
 
 #### Disable serving
 
