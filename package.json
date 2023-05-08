@@ -40,7 +40,7 @@
   "devDependencies": {
     "@fastify/compress": "^6.0.0",
     "@fastify/pre-commit": "^2.0.2",
-    "@types/node": "^18.0.0",
+    "@types/node": "^20.1.0",
     "@typescript-eslint/eslint-plugin": "^2.29.0",
     "@typescript-eslint/parser": "^2.29.0",
     "concat-stream": "^2.0.0",
