@@ -336,8 +336,8 @@ async function fastifyStatic (fastify, opts) {
         })
       }
     } else {
-      const globPattern = opts.globPattern !== undefined ? opts.globPattern : '**/**'
-      const globOptions = typeof opts.globOptions === 'object' ? { ...{ nodir: true, dot: opts.serveDotFiles }, ...opts.globOptions } : { nodir: true, dot: opts.serveDotFiles }
+      const globPattern = opts.globPattern || '**/**'
+      const globOptions = opts.globOptions || { nodir: true, dot: opts.serveDotFiles }
       const indexDirs = new Map()
       const routes = new Set()
 
