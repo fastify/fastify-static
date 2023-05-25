@@ -12,6 +12,8 @@ const util = require('util')
 const globPromise = util.promisify(glob)
 const encodingNegotiator = require('@fastify/accept-negotiator')
 
+send.mime.default_type = 'application/octet-stream'
+
 const dirList = require('./lib/dirList')
 
 async function fastifyStatic (fastify, opts) {
@@ -476,7 +478,7 @@ function checkPath (fastify, rootPath) {
 const supportedEncodings = ['br', 'gzip', 'deflate']
 
 function getContentType (path) {
-  const type = send.mime.getType(path)
+  const type = send.mime.getType(path) || send.mime.default_type
 
   if (!send.isUtf8MimeType(type)) {
     return type
