@@ -452,6 +452,25 @@ If a request matches the URL `prefix` but a file cannot be found for the
 request, Fastify's 404 handler will be called. You can set a custom 404
 handler with [`fastify.setNotFoundHandler()`](https://www.fastify.io/docs/latest/Reference/Server/#setnotfoundhandler).
 
+When registering `@fastify/static` within an encapsulated context, the `wildcard` option may need to be set to `false` in order to support index resolution and nested not-found-handler:
+
+```js
+const app = require('fastify')();
+
+app.register((childContext, _, done) => {
+    childContext.register(require('@fastify/static'), {
+        root: path.join(__dirname, 'docs'), // docs is a folder that contains `index.html` and `404.html`
+        wildcard: false
+    });
+    childContext.setNotFoundHandler((_, reply) => {
+        return reply.code(404).type('text/html').sendFile('404.html');
+    });
+    done();
+}, { prefix: 'docs' });
+```
+
+This code will send the `index.html` for the paths `docs`, `docs/`, and `docs/index.html`. For all other `docs/<undefined-routes>` it will reply with `404.html`. 
+
 ### Handling Errors
 
 If an error occurs while trying to send a file, the error will be passed
