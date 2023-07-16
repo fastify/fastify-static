@@ -3756,6 +3756,7 @@ t.test(
     t.end()
   }
 )
+
 t.test(
   'converts URL to path',
   async (t) => {
@@ -3801,5 +3802,39 @@ t.test(
     genericResponseChecks(t, response)
     t.equal(response.statusCode, 200)
     t.same(response.body, foobarContent)
+  }
+)
+
+t.test(
+  'serves files that have characters modified by encodeUri when wildcard is false',
+  async (t) => {
+    t.plan(4)
+    const pluginOptions = {
+      root: url.pathToFileURL(path.join(__dirname, '/static-encode')),
+      wildcard: false
+    }
+
+    const fastify = Fastify()
+
+    fastify.register(fastifyStatic, pluginOptions)
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '[...]/a .md',
+      headers: {
+        'accept-encoding': '*, *'
+      }
+    })
+    t.equal(response.statusCode, 200)
+    t.same(response.body, fs.readFileSync(path.join(__dirname, 'static-encode/[...]', 'a .md'), 'utf-8'))
+
+    const response2 = await fastify.inject({
+      method: 'GET',
+      url: '%5B...%5D/a%20.md',
+      headers: {
+        'accept-encoding': '*, *'
+      }
+    })
+    t.equal(response2.statusCode, 200)
+    t.same(response2.body, fs.readFileSync(path.join(__dirname, 'static-encode/[...]', 'a .md'), 'utf-8'))
   }
 )
