@@ -3806,7 +3806,7 @@ t.test(
 )
 
 t.test(
-  'serves files that have characters modified by encodeUri when wildcard is false',
+  'serves files with paths that have characters modified by encodeUri when wildcard is false',
   async (t) => {
     t.plan(4)
     const pluginOptions = {
