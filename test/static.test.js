@@ -3808,6 +3808,8 @@ t.test(
 t.test(
   'serves files with paths that have characters modified by encodeUri when wildcard is false',
   async (t) => {
+    const aContent = fs.readFileSync(path.join(__dirname, 'static-encode/[...]', 'a .md'), 'utf-8')
+
     t.plan(4)
     const pluginOptions = {
       root: url.pathToFileURL(path.join(__dirname, '/static-encode')),
@@ -3825,7 +3827,7 @@ t.test(
       }
     })
     t.equal(response.statusCode, 200)
-    t.same(response.body, fs.readFileSync(path.join(__dirname, 'static-encode/[...]', 'a .md'), 'utf-8'))
+    t.same(response.body, aContent)
 
     const response2 = await fastify.inject({
       method: 'GET',
@@ -3835,6 +3837,6 @@ t.test(
       }
     })
     t.equal(response2.statusCode, 200)
-    t.same(response2.body, fs.readFileSync(path.join(__dirname, 'static-encode/[...]', 'a .md'), 'utf-8'))
+    t.same(response2.body, aContent)
   }
 )
