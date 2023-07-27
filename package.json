@@ -5,14 +5,13 @@
   "main": "index.js",
   "types": "types/index.d.ts",
   "scripts": {
+    "coverage": "npm run test:unit -- --coverage-report=html",
     "lint": "standard | snazzy",
     "lint:fix": "standard --fix",
     "test": "npm run test:unit && npm run test:typescript",
     "test:typescript": "tsd",
-    "test:unit": "tap test/*.test.js",
-    "example": "node example/server.js",
-    "coverage": "tap --cov --coverage-report=html test",
-    "coveralls": "tap test/*test.js  test/*/*.test.js --cov"
+    "test:unit": "tap \"test/**/*.test.js\"",
+    "example": "node example/server.js"
   },
   "repository": {
     "type": "git",
