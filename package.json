@@ -10,7 +10,7 @@
     "lint:fix": "standard --fix",
     "test": "npm run test:unit && npm run test:typescript",
     "test:typescript": "tsd",
-    "test:unit": "tap \"test/**/*.test.js\"",
+    "test:unit": "tap",
     "example": "node example/server.js"
   },
   "repository": {
