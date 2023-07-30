@@ -474,8 +474,6 @@ function checkPath (fastify, rootPath) {
   }
 }
 
-const supportedEncodings = ['br', 'gzip', 'deflate']
-
 function getContentType (path) {
   const type = send.mime.getType(path) || send.mime.default_type
 
@@ -502,6 +500,8 @@ function findIndexFile (pathname, root, indexFiles = ['index.html']) {
   /* istanbul ignore next */
   return false
 }
+
+const supportedEncodings = ['br', 'gzip', 'deflate']
 
 // Adapted from https://github.com/fastify/fastify-compress/blob/665e132fa63d3bf05ad37df3c20346660b71a857/index.js#L451
 function getEncodingHeader (headers, checked) {
