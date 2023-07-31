@@ -384,7 +384,7 @@ async function fastifyStatic (fastify, opts) {
       ...routeOpts,
       method: ['HEAD', 'GET'],
       url: route,
-      handler (req, reply) {
+      handler: function serveFileHandler (req, reply) {
         const file = req.routeConfig.file
         const rootPath = req.routeConfig.rootPath
         pumpSendToReply(req, reply, file, rootPath)
