@@ -358,7 +358,7 @@ async function fastifyStatic (fastify, opts) {
           }
           routes.add(route)
 
-          setUpHeadAndGet(fastify, routeOpts, route, '/' + file, rootPath)
+          setUpHeadAndGet(routeOpts, route, '/' + file, rootPath)
 
           const key = path.posix.basename(route)
           if (indexes.includes(key) && !indexDirs.has(key)) {
@@ -370,16 +370,16 @@ async function fastifyStatic (fastify, opts) {
       for (const [dirname, rootPath] of indexDirs.entries()) {
         const pathname = dirname + (dirname.endsWith('/') ? '' : '/')
         const file = '/' + pathname.replace(prefix, '')
-        setUpHeadAndGet(fastify, routeOpts, pathname, file, rootPath)
+        setUpHeadAndGet(routeOpts, pathname, file, rootPath)
 
         if (opts.redirect === true) {
-          setUpHeadAndGet(fastify, routeOpts, pathname.replace(/\/$/, ''), file.replace(/\/$/, ''), rootPath)
+          setUpHeadAndGet(routeOpts, pathname.replace(/\/$/, ''), file.replace(/\/$/, ''), rootPath)
         }
       }
     }
   }
 
-  function setUpHeadAndGet (fastify, routeOpts, route, file, rootPath) {
+  function setUpHeadAndGet (routeOpts, route, file, rootPath) {
     const toSetUp = {
       ...routeOpts,
       method: ['HEAD', 'GET'],
@@ -398,6 +398,7 @@ async function fastifyStatic (fastify, opts) {
     pumpSendToReply(req, reply, file, rootPath)
   }
 }
+
 function normalizeRoot (root) {
   if (root === undefined) {
     return root
@@ -475,8 +476,6 @@ function checkPath (fastify, rootPath) {
   }
 }
 
-const supportedEncodings = ['br', 'gzip', 'deflate']
-
 function getContentType (path) {
   const type = send.mime.getType(path) || send.mime.default_type
 
@@ -503,6 +502,8 @@ function findIndexFile (pathname, root, indexFiles = ['index.html']) {
   /* istanbul ignore next */
   return false
 }
+
+const supportedEncodings = ['br', 'gzip', 'deflate']
 
 // Adapted from https://github.com/fastify/fastify-compress/blob/665e132fa63d3bf05ad37df3c20346660b71a857/index.js#L451
 function getEncodingHeader (headers, checked) {
