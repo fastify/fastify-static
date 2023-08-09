@@ -2,10 +2,10 @@
 //                 Leo <https://github.com/leomelzer>
 /// <reference types="node" />
 
-import {FastifyPluginAsync, FastifyRequest, RouteOptions} from 'fastify';
-import { Stats } from 'fs';
+import { FastifyPluginAsync, FastifyRequest, RouteOptions } from 'fastify'
+import { Stats } from 'fs'
 
-declare module "fastify" {
+declare module 'fastify' {
   interface FastifyReply {
     sendFile(filename: string, rootPath?: string): FastifyReply;
     sendFile(filename: string, options?: fastifyStatic.SendOptions): FastifyReply;
@@ -107,9 +107,9 @@ declare namespace fastifyStatic {
     constraints?: RouteOptions['constraints'];
   }
 
-  export const fastifyStatic: FastifyStaticPlugin;
+  export const fastifyStatic: FastifyStaticPlugin
 
-  export { fastifyStatic as default };
+  export { fastifyStatic as default }
 }
 
 declare function fastifyStatic(...params: Parameters<FastifyStaticPlugin>): ReturnType<FastifyStaticPlugin>;
