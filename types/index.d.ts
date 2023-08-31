@@ -77,7 +77,7 @@ declare namespace fastifyStatic {
   }
 
   export interface FastifyStaticOptions extends SendOptions {
-    root: string | string[];
+    root: string | string[] | URL | URL[];
     prefix?: string;
     prefixAvoidTrailingSlash?: boolean;
     serve?: boolean;
