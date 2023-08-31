@@ -97,6 +97,18 @@ expectError<FastifyStaticOptions>({
   }
 })
 
+expectAssignable<FastifyStaticOptions>({
+  root: [''],
+})
+
+expectAssignable<FastifyStaticOptions>({
+  root: new URL(''),
+})
+
+expectAssignable<FastifyStaticOptions>({
+  root: [new URL('')],
+})
+
 appWithImplicitHttp
   .register(fastifyStatic, options)
   .after(() => {
@@ -169,6 +181,16 @@ noIndexApp
       reply.send('<h1>fastify-static</h1>')
     })
   })
+
+options.root = new URL('')
+
+const URLRootApp = fastify()
+URLRootApp.register(fastifyStatic, options)
+.after(() => {
+  URLRootApp.get('/', (request, reply) => {
+    reply.send('<h1>fastify-static</h1>')
+  })
+})
 
 const defaultIndexApp = fastify()
 options.index = 'index.html'
