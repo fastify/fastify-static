@@ -9,5 +9,7 @@ fastify
     root: path.join(__dirname, '/public')
   })
   .listen({ port: 3000 }, err => {
-    if (err) throw err
+    if (err) {
+      throw err
+    }
   })
