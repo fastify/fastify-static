@@ -435,6 +435,18 @@ Assume this structure with the compressed asset as a sibling of the un-compresse
 └── index.html
 ```
 
+#### `globPattern`
+
+Default: `'**/**'`
+
+Glob pattern used to match files. Please read full description here: [Glob Primer](https://github.com/isaacs/node-glob#glob-primer)
+
+#### `globOptions`
+
+Default: `{ nodir: true, dot: opts.serveDotFiles }`
+
+Options passed to glob module. All available options are described here: [Glob Options](https://github.com/isaacs/node-glob#options)
+
 #### Disable serving
 
 If you would just like to use the reply decorator and not serve whole directories automatically, you can simply pass the option `{ serve: false }`. This will prevent the plugin from serving everything under `root`.
