@@ -272,7 +272,7 @@ async function fastifyStatic (fastify, opts) {
   }
 
   const errorHandler = (error, request, reply) => {
-    if (error && error.code === 'ERR_STREAM_PREMATURE_CLOSE') {
+    if (error?.code === 'ERR_STREAM_PREMATURE_CLOSE') {
       reply.request.raw.destroy()
       return
     }
