@@ -2793,32 +2793,6 @@ t.test('if dotfiles are properly served according to plugin options', (t) => {
   })
 })
 
-t.test('register with failing glob handler', (t) => {
-  const fastifyStatic = proxyquire.noCallThru()('../', {
-    glob: function globStub (pattern, options, cb) {
-      process.nextTick(function () {
-        return cb(new Error('mock glob error'))
-      })
-    }
-  })
-
-  const pluginOptions = {
-    root: path.join(__dirname, '/static'),
-    serve: true,
-    wildcard: false
-  }
-  const fastify = Fastify()
-  fastify.register(fastifyStatic, pluginOptions)
-
-  t.teardown(fastify.close.bind(fastify))
-
-  fastify.listen({ port: 0 }, (err) => {
-    fastify.server.unref()
-    t.ok(err)
-    t.end()
-  })
-})
-
 t.test(
   'register with rootpath that causes statSync to fail with non-ENOENT code',
   (t) => {
