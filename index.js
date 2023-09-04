@@ -6,9 +6,9 @@ const { statSync } = require('fs')
 const { PassThrough } = require('readable-stream')
 const { glob } = require('glob')
 const send = require('@fastify/send')
-const encodingNegotiator = require('@fastify/accept-negotiator')
 const contentDisposition = require('content-disposition')
 const fp = require('fastify-plugin')
+const encodingNegotiator = require('@fastify/accept-negotiator')
 
 send.mime.default_type = 'application/octet-stream'
 
@@ -343,7 +343,7 @@ async function fastifyStatic (fastify, opts) {
       const winSeparatorRegex = new RegExp(`\\${path.win32.sep}`, 'g')
 
       for (const rootPath of Array.isArray(sendOptions.root) ? sendOptions.root : [sendOptions.root]) {
-        const files = await glob(path.join(rootPath, globPattern).replace(winSeparatorRegex, path.posix.sep), { follow: true, posix: true, nodir: true, dot: opts.serveDotFiles })
+        const files = await glob(path.join(rootPath, globPattern).replace(winSeparatorRegex, path.posix.sep), { follow: true, nodir: true, dot: opts.serveDotFiles })
         const indexes = typeof opts.index === 'undefined' ? ['index.html'] : [].concat(opts.index)
 
         for (let file of files) {
