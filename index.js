@@ -1,15 +1,13 @@
 'use strict'
 
 const path = require('path')
-const url = require('url')
-const statSync = require('fs').statSync
+const { fileURLToPath } = require('url')
+const { statSync } = require('fs')
 const { PassThrough } = require('readable-stream')
-const glob = require('glob')
+const { glob } = require('glob')
 const send = require('@fastify/send')
 const contentDisposition = require('content-disposition')
 const fp = require('fastify-plugin')
-const util = require('util')
-const globPromise = util.promisify(glob)
 const encodingNegotiator = require('@fastify/accept-negotiator')
 
 send.mime.default_type = 'application/octet-stream'
@@ -345,7 +343,7 @@ async function fastifyStatic (fastify, opts) {
       const winSeparatorRegex = new RegExp(`\\${path.win32.sep}`, 'g')
 
       for (const rootPath of Array.isArray(sendOptions.root) ? sendOptions.root : [sendOptions.root]) {
-        const files = await globPromise(path.join(rootPath, globPattern).replace(winSeparatorRegex, path.posix.sep), { nodir: true, dot: opts.serveDotFiles })
+        const files = await glob(path.join(rootPath, globPattern).replace(winSeparatorRegex, path.posix.sep), { nodir: true, dot: opts.serveDotFiles })
         const indexes = typeof opts.index === 'undefined' ? ['index.html'] : [].concat(opts.index)
 
         for (let file of files) {
@@ -404,13 +402,13 @@ function normalizeRoot (root) {
     return root
   }
   if (root instanceof URL && root.protocol === 'file:') {
-    return url.fileURLToPath(root)
+    return fileURLToPath(root)
   }
   if (Array.isArray(root)) {
     const result = []
     for (let i = 0, il = root.length; i < il; ++i) {
       if (root[i] instanceof URL && root[i].protocol === 'file:') {
-        result.push(url.fileURLToPath(root[i]))
+        result.push(fileURLToPath(root[i]))
       } else {
         result.push(root[i])
       }
