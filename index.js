@@ -1,20 +1,21 @@
 'use strict'
 
 const path = require('path')
-const url = require('url')
-const statSync = require('fs').statSync
-const { PassThrough } = require('readable-stream')
+const { fileURLToPath } = require('url')
+const { statSync } = require('fs')
+const { promisify } = require('util')
 const glob = require('glob')
+const globPromise = promisify(glob)
+const { PassThrough } = require('readable-stream')
 const send = require('@fastify/send')
+const encodingNegotiator = require('@fastify/accept-negotiator')
 const contentDisposition = require('content-disposition')
 const fp = require('fastify-plugin')
-const util = require('util')
-const globPromise = util.promisify(glob)
-const encodingNegotiator = require('@fastify/accept-negotiator')
-
-send.mime.default_type = 'application/octet-stream'
 
 const dirList = require('./lib/dirList')
+
+const supportedEncodings = ['br', 'gzip', 'deflate']
+send.mime.default_type = 'application/octet-stream'
 
 async function fastifyStatic (fastify, opts) {
   opts.root = normalizeRoot(opts.root)
@@ -404,13 +405,13 @@ function normalizeRoot (root) {
     return root
   }
   if (root instanceof URL && root.protocol === 'file:') {
-    return url.fileURLToPath(root)
+    return fileURLToPath(root)
   }
   if (Array.isArray(root)) {
     const result = []
     for (let i = 0, il = root.length; i < il; ++i) {
       if (root[i] instanceof URL && root[i].protocol === 'file:') {
-        result.push(url.fileURLToPath(root[i]))
+        result.push(fileURLToPath(root[i]))
       } else {
         result.push(root[i])
       }
@@ -502,8 +503,6 @@ function findIndexFile (pathname, root, indexFiles = ['index.html']) {
   /* istanbul ignore next */
   return false
 }
-
-const supportedEncodings = ['br', 'gzip', 'deflate']
 
 // Adapted from https://github.com/fastify/fastify-compress/blob/665e132fa63d3bf05ad37df3c20346660b71a857/index.js#L451
 function getEncodingHeader (headers, checked) {
