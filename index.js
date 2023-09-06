@@ -344,17 +344,18 @@ async function fastifyStatic (fastify, opts) {
         const files = await glob(path.posix.join(rootPath, globPattern), { posix: true, follow: true, nodir: true, dot: opts.serveDotFiles })
         const indexes = typeof opts.index === 'undefined' ? ['index.html'] : [].concat(opts.index)
 
+        const posixRootPath = rootPath.split(path.win32.sep).join(path.posix.sep)
         for (let file of files) {
           file = file
-            .replace(rootPath.replace(/\\/g, '/'), '')
+            .replace(posixRootPath, '')
             .replace(/^\//, '')
-          const route = (prefix + file).replace(/\/\//g, '/')
+          const route = prefix + file
           if (routes.has(route)) {
             continue
           }
           routes.add(route)
 
-          setUpHeadAndGet(routeOpts, route, '/' + file, rootPath)
+          setUpHeadAndGet(routeOpts, route, `/${file}`, rootPath)
 
           const key = path.posix.basename(route)
           if (indexes.includes(key) && !indexDirs.has(key)) {
