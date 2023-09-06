@@ -61,6 +61,7 @@ async function fastifyStatic (fastify, opts) {
   }
 
   const allowedPath = opts.allowedPath
+
   function pumpSendToReply (
     request,
     reply,
