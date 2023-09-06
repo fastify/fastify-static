@@ -50,16 +50,13 @@ async function fastifyStatic (fastify, opts) {
   }
 
   const allowedPath = opts.allowedPath
-
-  if (opts.prefix === undefined) opts.prefix = '/'
-
-  let prefix = opts.prefix
+  let prefix = (opts.prefix = opts.prefix ?? '/')
 
   if (!opts.prefixAvoidTrailingSlash) {
     prefix =
-      opts.prefix.at(-1) === '/'
-        ? opts.prefix
-        : opts.prefix + '/'
+      prefix.at(-1) === '/'
+        ? prefix
+        : prefix + '/'
   }
 
   function pumpSendToReply (
