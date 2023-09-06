@@ -276,7 +276,7 @@ async function fastifyStatic (fastify, opts) {
       hide: opts.schemaHide !== undefined ? opts.schemaHide : true
     },
     errorHandler (error, request, reply) {
-      if (error && error.code === 'ERR_STREAM_PREMATURE_CLOSE') {
+      if (error?.code === 'ERR_STREAM_PREMATURE_CLOSE') {
         reply.request.raw.destroy()
         return
       }
