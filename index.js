@@ -285,7 +285,7 @@ async function fastifyStatic (fastify, opts) {
   const routeOpts = {
     constraints: opts.constraints,
     schema: {
-      hide: typeof opts.schemaHide !== 'undefined' ? opts.schemaHide : true
+      hide: opts.schemaHide !== undefined ? opts.schemaHide : true
     },
     errorHandler
   }
@@ -347,7 +347,7 @@ async function fastifyStatic (fastify, opts) {
 
       for (const rootPath of Array.isArray(sendOptions.root) ? sendOptions.root : [sendOptions.root]) {
         const files = await globPromise(path.join(rootPath, globPattern).replace(winSeparatorRegex, path.posix.sep), { nodir: true, dot: opts.serveDotFiles })
-        const indexes = typeof opts.index === 'undefined' ? ['index.html'] : [].concat(opts.index)
+        const indexes = opts.index === undefined ? ['index.html'] : [].concat(opts.index)
 
         for (let file of files) {
           file = file
