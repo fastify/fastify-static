@@ -50,7 +50,7 @@ async function fastifyStatic (fastify, opts) {
   }
 
   const allowedPath = opts.allowedPath
-  let prefix = (opts.prefix = opts.prefix ?? '/')
+  let prefix = (opts.prefix ??= '/')
 
   if (!opts.prefixAvoidTrailingSlash) {
     prefix =
