@@ -272,22 +272,20 @@ async function fastifyStatic (fastify, opts) {
     stream.pipe(wrap)
   }
 
-  const errorHandler = (error, request, reply) => {
-    if (error && error.code === 'ERR_STREAM_PREMATURE_CLOSE') {
-      reply.request.raw.destroy()
-      return
-    }
-
-    fastify.errorHandler(error, request, reply)
-  }
-
   // Set the schema hide property if defined in opts or true by default
   const routeOpts = {
     constraints: opts.constraints,
     schema: {
       hide: opts.schemaHide !== undefined ? opts.schemaHide : true
     },
-    errorHandler
+    errorHandler (error, request, reply) {
+      if (error && error.code === 'ERR_STREAM_PREMATURE_CLOSE') {
+        reply.request.raw.destroy()
+        return
+      }
+
+      fastify.errorHandler(error, request, reply)
+    }
   }
 
   if (opts.decorateReply !== false) {
