@@ -57,7 +57,7 @@ async function fastifyStatic (fastify, opts) {
 
   if (!opts.prefixAvoidTrailingSlash) {
     prefix =
-      opts.prefix[opts.prefix.length - 1] === '/'
+      opts.prefix.at(-1) === '/'
         ? opts.prefix
         : opts.prefix + '/'
   }
@@ -528,7 +528,7 @@ function getEncodingExtension (encoding) {
 function getRedirectUrl (url) {
   let i = 0
   // we detect how many slash before a valid path
-  for (; i < url.length; i++) {
+  for (; i < url.length; ++i) {
     if (url[i] !== '/' && url[i] !== '\\') break
   }
   // turns all leading / or \ into a single /
@@ -536,7 +536,7 @@ function getRedirectUrl (url) {
   try {
     const parsed = new URL(url, 'http://localhost.com/')
     const parsedPathname = parsed.pathname
-    return parsedPathname + (parsedPathname[parsedPathname.length - 1] !== '/' ? '/' : '') + (parsed.search || '')
+    return parsedPathname + (parsedPathname.at(-1) !== '/' ? '/' : '') + (parsed.search || '')
   } catch (error) {
     // the try-catch here is actually unreachable, but we keep it for safety and prevent DoS attack
     /* istanbul ignore next */
