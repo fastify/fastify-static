@@ -341,12 +341,12 @@ async function fastifyStatic (fastify, opts) {
       const routes = new Set()
 
       for (const rootPath of Array.isArray(sendOptions.root) ? sendOptions.root : [sendOptions.root]) {
-        const files = await glob(path.posix.join(rootPath, globPattern), { posix: true, follow: true, nodir: true, dot: opts.serveDotFiles })
+        const files = await glob(path.posix.join(rootPath, globPattern), { follow: true, nodir: true, dot: opts.serveDotFiles })
         const indexes = typeof opts.index === 'undefined' ? ['index.html'] : [].concat(opts.index)
 
         const posixRootPath = rootPath.split(path.win32.sep).join(path.posix.sep)
         for (let file of files) {
-          file = file
+          file = file.split(path.win32.sep).join(path.posix.sep)
             .replace(posixRootPath, '')
             .replace(/^\//, '')
           const route = (prefix + file).replace(/\/\//g, '/')
