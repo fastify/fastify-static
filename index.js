@@ -341,7 +341,7 @@ async function fastifyStatic (fastify, opts) {
       const routes = new Set()
 
       for (const rootPath of Array.isArray(sendOptions.root) ? sendOptions.root : [sendOptions.root]) {
-        const files = await glob(path.join(rootPath, globPattern).replaceAll(path.win32.sep, path.posix.sep), { follow: true, nodir: true, dot: opts.serveDotFiles })
+        const files = await glob(path.join(rootPath, globPattern).split(path.win32.sep).join(path.posix.sep), { follow: true, nodir: true, dot: opts.serveDotFiles })
         const indexes = typeof opts.index === 'undefined' ? ['index.html'] : [].concat(opts.index)
 
         for (let file of files) {
