@@ -339,18 +339,22 @@ async function fastifyStatic (fastify, opts) {
       const globPattern = '**/**'
       const indexDirs = new Map()
       const routes = new Set()
-      const winSeparatorRegex = new RegExp(`\\${path.win32.sep}`, 'g')
+      const winSeparatorRegex = /\\\\/g
+      const backslashRegex = /\\/g
+      const beginningForwardSlashRegex = /^\//
+      const endForwardSlashRegex = /\/$/
+      const doubleForwardSlashRegex = /\/\//g
 
       const roots = Array.isArray(sendOptions.root) ? sendOptions.root : [sendOptions.root]
       for (let i = 0; i < roots.length; ++i) {
         const rootPath = roots[i]
-        const files = await globPromise(path.join(rootPath, globPattern).replace(winSeparatorRegex, path.posix.sep), { nodir: true, dot: opts.serveDotFiles })
+        const files = await globPromise(path.join(rootPath, globPattern).replace(winSeparatorRegex, '/'), { nodir: true, dot: opts.serveDotFiles })
         const indexes = opts.index === undefined ? ['index.html'] : [].concat(opts.index)
 
         for (let i = 0; i < files.length; ++i) {
-          const file = files[i].replace(rootPath.replace(/\\/g, '/'), '')
-            .replace(/^\//, '')
-          const route = (prefix + file).replace(/\/\//g, '/')
+          const file = files[i].replace(rootPath.replace(backslashRegex, '/'), '')
+            .replace(beginningForwardSlashRegex, '')
+          const route = (prefix + file).replace(doubleForwardSlashRegex, '/')
 
           if (routes.has(route)) {
             continue
@@ -373,7 +377,7 @@ async function fastifyStatic (fastify, opts) {
         setUpHeadAndGet(routeOpts, pathname, file, rootPath)
 
         if (opts.redirect === true) {
-          setUpHeadAndGet(routeOpts, pathname.replace(/\/$/, ''), file.replace(/\/$/, ''), rootPath)
+          setUpHeadAndGet(routeOpts, pathname.replace(endForwardSlashRegex, ''), file.replace(endForwardSlashRegex, ''), rootPath)
         }
       }
     }
@@ -507,7 +511,8 @@ function findIndexFile (pathname, root, indexFiles = ['index.html']) {
 function getEncodingHeader (headers, checked) {
   if (!('accept-encoding' in headers)) return
 
-  const header = headers['accept-encoding'].toLowerCase().replace(/\*/g, 'gzip')
+  const header = headers['accept-encoding'].toLowerCase().replace(/\*/g, 'gzip') // consider the no-preference token as gzip for downstream compat
+
   return encodingNegotiator.negotiate(
     header,
     supportedEncodings.filter((enc) => !checked.has(enc))
