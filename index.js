@@ -346,7 +346,6 @@ async function fastifyStatic (fastify, opts) {
 
         const posixRootPath = rootPath.split(path.win32.sep).join(path.posix.sep)
         for (let file of files) {
-          console.log(file)
           file = file.split(path.win32.sep).join(path.posix.sep)
             .replace(posixRootPath, '')
             .replace(/^\//, '')
