@@ -22,7 +22,6 @@ async function fastifyStatic (fastify, opts) {
   checkRootPathForErrors(fastify, opts.root)
 
   const setHeaders = opts.setHeaders
-
   if (setHeaders !== undefined && typeof setHeaders !== 'function') {
     throw new TypeError('The `setHeaders` option must be a function')
   }
@@ -49,8 +48,10 @@ async function fastifyStatic (fastify, opts) {
     maxAge: opts.maxAge
   }
 
-  const allowedPath = opts.allowedPath
-  let prefix = (opts.prefix ??= '/')
+  let prefix = opts.prefix
+  if (prefix === undefined) {
+    prefix = (opts.prefix = '/')
+  }
 
   if (!opts.prefixAvoidTrailingSlash) {
     prefix =
@@ -59,6 +60,7 @@ async function fastifyStatic (fastify, opts) {
         : prefix + '/'
   }
 
+  const allowedPath = opts.allowedPath
   function pumpSendToReply (
     request,
     reply,
