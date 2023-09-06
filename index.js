@@ -387,12 +387,11 @@ async function fastifyStatic (fastify, opts) {
   }
 
   function setUpHeadAndGet (routeOpts, route, file, rootPath) {
-    const toSetUp = {
-      ...routeOpts,
+    const toSetUp = Object.assign({}, routeOpts, {
       method: ['HEAD', 'GET'],
       url: route,
       handler: serveFileHandler
-    }
+    })
     toSetUp.config = toSetUp.config || {}
     toSetUp.config.file = file
     toSetUp.config.rootPath = rootPath
@@ -400,9 +399,8 @@ async function fastifyStatic (fastify, opts) {
   }
 
   function serveFileHandler (req, reply) {
-    const file = req.routeConfig.file
-    const rootPath = req.routeConfig.rootPath
-    pumpSendToReply(req, reply, file, rootPath)
+    const routeConfig = req.routeConfig
+    pumpSendToReply(req, reply, routeConfig.file, routeConfig.rootPath)
   }
 }
 
