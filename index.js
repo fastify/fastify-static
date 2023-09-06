@@ -14,6 +14,13 @@ const fp = require('fastify-plugin')
 
 const dirList = require('./lib/dirList')
 
+const winSeparatorRegex = new RegExp(`\\${path.win32.sep}`, 'g')
+const backslashRegex = /\\/g
+const startForwardSlashRegex = /^\//
+const endForwardSlashRegex = /\/$/
+const doubleForwardSlashRegex = /\/\//g
+const asteriskRegex = /\*/g
+
 const supportedEncodings = ['br', 'gzip', 'deflate']
 send.mime.default_type = 'application/octet-stream'
 
@@ -340,11 +347,6 @@ async function fastifyStatic (fastify, opts) {
       const globPattern = '**/**'
       const indexDirs = new Map()
       const routes = new Set()
-      const winSeparatorRegex = new RegExp(`\\${path.win32.sep}`, 'g')
-      const backslashRegex = /\\/g
-      const startForwardSlashRegex = /^\//
-      const endForwardSlashRegex = /\/$/
-      const doubleForwardSlashRegex = /\/\//g
 
       const roots = Array.isArray(sendOptions.root) ? sendOptions.root : [sendOptions.root]
       for (let i = 0; i < roots.length; ++i) {
@@ -513,7 +515,7 @@ function getEncodingHeader (headers, checked) {
   if (!('accept-encoding' in headers)) return
 
   // consider the no-preference token as gzip for downstream compat
-  const header = headers['accept-encoding'].toLowerCase().replace(/\*/g, 'gzip')
+  const header = headers['accept-encoding'].toLowerCase().replace(asteriskRegex, 'gzip')
 
   return encodingNegotiator.negotiate(
     header,
