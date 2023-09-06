@@ -349,7 +349,7 @@ async function fastifyStatic (fastify, opts) {
           file = file
             .replace(posixRootPath, '')
             .replace(/^\//, '')
-          const route = prefix + file
+          const route = (prefix + file).replace(/\/\//g, '/')
           if (routes.has(route)) {
             continue
           }
