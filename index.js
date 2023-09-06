@@ -528,14 +528,15 @@ function getEncodingExtension (encoding) {
 function getRedirectUrl (url) {
   let i = 0
   // we detect how many slash before a valid path
-  for (i; i < url.length; i++) {
+  for (; i < url.length; i++) {
     if (url[i] !== '/' && url[i] !== '\\') break
   }
   // turns all leading / or \ into a single /
   url = '/' + url.substr(i)
   try {
     const parsed = new URL(url, 'http://localhost.com/')
-    return parsed.pathname + (parsed.pathname[parsed.pathname.length - 1] !== '/' ? '/' : '') + (parsed.search || '')
+    const parsedPathname = parsed.pathname
+    return parsedPathname + (parsedPathname[parsedPathname.length - 1] !== '/' ? '/' : '') + (parsed.search || '')
   } catch (error) {
     // the try-catch here is actually unreachable, but we keep it for safety and prevent DoS attack
     /* istanbul ignore next */
