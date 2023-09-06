@@ -341,7 +341,7 @@ async function fastifyStatic (fastify, opts) {
       const routes = new Set()
       const winSeparatorRegex = /\\\\/g
       const backslashRegex = /\\/g
-      const beginningForwardSlashRegex = /^\//
+      const startForwardSlashRegex = /^\//
       const endForwardSlashRegex = /\/$/
       const doubleForwardSlashRegex = /\/\//g
 
@@ -353,7 +353,7 @@ async function fastifyStatic (fastify, opts) {
 
         for (let i = 0; i < files.length; ++i) {
           const file = files[i].replace(rootPath.replace(backslashRegex, '/'), '')
-            .replace(beginningForwardSlashRegex, '')
+            .replace(startForwardSlashRegex, '')
           const route = (prefix + file).replace(doubleForwardSlashRegex, '/')
 
           if (routes.has(route)) {
