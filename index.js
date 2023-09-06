@@ -55,7 +55,7 @@ async function fastifyStatic (fastify, opts) {
 
   if (!opts.prefixAvoidTrailingSlash) {
     prefix =
-      prefix.at(-1) === '/'
+      prefix[prefix.length - 1] === '/'
         ? prefix
         : prefix + '/'
   }
@@ -540,7 +540,7 @@ function getRedirectUrl (url) {
   try {
     const parsed = new URL(url, 'http://localhost.com/')
     const parsedPathname = parsed.pathname
-    return parsedPathname + (parsedPathname.at(-1) !== '/' ? '/' : '') + (parsed.search || '')
+    return parsedPathname + (parsedPathname[parsedPathname.length - 1] !== '/' ? '/' : '') + (parsed.search || '')
   } catch (error) {
     // the try-catch here is actually unreachable, but we keep it for safety and prevent DoS attack
     /* istanbul ignore next */
