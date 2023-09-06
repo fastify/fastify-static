@@ -340,21 +340,23 @@ async function fastifyStatic (fastify, opts) {
       const globPattern = '**/**'
       const indexDirs = new Map()
       const routes = new Set()
-
       const winSeparatorRegex = new RegExp(`\\${path.win32.sep}`, 'g')
 
-      for (const rootPath of Array.isArray(sendOptions.root) ? sendOptions.root : [sendOptions.root]) {
+      const roots = Array.isArray(sendOptions.root) ? sendOptions.root : [sendOptions.root]
+      for (let i = 0; i < roots.length; ++i) {
+        const rootPath = roots[i]
         const files = await globPromise(path.join(rootPath, globPattern).replace(winSeparatorRegex, path.posix.sep), { nodir: true, dot: opts.serveDotFiles })
         const indexes = opts.index === undefined ? ['index.html'] : [].concat(opts.index)
 
-        for (let file of files) {
-          file = file
-            .replace(rootPath.replace(/\\/g, '/'), '')
+        for (let i = 0; i < files.length; ++i) {
+          const file = files[i].replace(rootPath.replace(/\\/g, '/'), '')
             .replace(/^\//, '')
           const route = (prefix + file).replace(/\/\//g, '/')
+
           if (routes.has(route)) {
             continue
           }
+
           routes.add(route)
 
           setUpHeadAndGet(routeOpts, route, '/' + file, rootPath)
