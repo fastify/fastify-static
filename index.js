@@ -511,7 +511,8 @@ function findIndexFile (pathname, root, indexFiles = ['index.html']) {
 function getEncodingHeader (headers, checked) {
   if (!('accept-encoding' in headers)) return
 
-  const header = headers['accept-encoding'].toLowerCase().replace(/\*/g, 'gzip') // consider the no-preference token as gzip for downstream compat
+  // consider the no-preference token as gzip for downstream compat
+  const header = headers['accept-encoding'].toLowerCase().replace(/\*/g, 'gzip')
 
   return encodingNegotiator.negotiate(
     header,
