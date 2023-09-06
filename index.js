@@ -339,7 +339,7 @@ async function fastifyStatic (fastify, opts) {
       const globPattern = '**/**'
       const indexDirs = new Map()
       const routes = new Set()
-      const winSeparatorRegex = /\\\\/g
+      const winSeparatorRegex = new RegExp(`\\${path.win32.sep}`, 'g')
       const backslashRegex = /\\/g
       const startForwardSlashRegex = /^\//
       const endForwardSlashRegex = /\/$/
@@ -348,7 +348,7 @@ async function fastifyStatic (fastify, opts) {
       const roots = Array.isArray(sendOptions.root) ? sendOptions.root : [sendOptions.root]
       for (let i = 0; i < roots.length; ++i) {
         const rootPath = roots[i]
-        const files = await globPromise(path.join(rootPath, globPattern).replace(winSeparatorRegex, '/'), { nodir: true, dot: opts.serveDotFiles })
+        const files = await globPromise(path.join(rootPath, globPattern).replace(winSeparatorRegex, path.posix.sep), { nodir: true, dot: opts.serveDotFiles })
         const indexes = opts.index === undefined ? ['index.html'] : [].concat(opts.index)
 
         for (let i = 0; i < files.length; ++i) {
