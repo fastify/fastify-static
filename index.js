@@ -134,7 +134,7 @@ async function fastifyStatic (fastify, opts) {
       for (let i = 0; i < roots.length; ++i) {
         const rootPath = roots[i]
         const posixRootPath = rootPath.split(path.win32.sep).join(path.posix.sep)
-        const files = await glob(path.join(rootPath, globPattern).split(path.win32.sep).join(path.posix.sep), { follow: true, nodir: true, dot: opts.serveDotFiles })
+        const files = await glob(`${posixRootPath}/${globPattern}`, { follow: true, nodir: true, dot: opts.serveDotFiles })
 
         for (let i = 0; i < files.length; ++i) {
           const file = files[i].split(path.win32.sep).join(path.posix.sep)
@@ -148,7 +148,7 @@ async function fastifyStatic (fastify, opts) {
 
           routes.add(route)
 
-          setUpHeadAndGet(routeOpts, route, '/' + file, rootPath)
+          setUpHeadAndGet(routeOpts, route, `/${file}`, rootPath)
 
           const key = path.posix.basename(route)
           if (indexes.includes(key) && !indexDirs.has(key)) {
