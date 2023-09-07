@@ -1,27 +1,34 @@
 'use strict'
 
 const path = require('path')
-const url = require('url')
-const statSync = require('fs').statSync
-const { PassThrough } = require('readable-stream')
+const { fileURLToPath } = require('url')
+const { statSync } = require('fs')
+const { promisify } = require('util')
 const glob = require('glob')
+const globPromise = promisify(glob)
+const { PassThrough } = require('readable-stream')
 const send = require('@fastify/send')
+const encodingNegotiator = require('@fastify/accept-negotiator')
 const contentDisposition = require('content-disposition')
 const fp = require('fastify-plugin')
-const util = require('util')
-const globPromise = util.promisify(glob)
-const encodingNegotiator = require('@fastify/accept-negotiator')
-
-send.mime.default_type = 'application/octet-stream'
 
 const dirList = require('./lib/dirList')
+
+const winSeparatorRegex = new RegExp(`\\${path.win32.sep}`, 'g')
+const backslashRegex = /\\/g
+const startForwardSlashRegex = /^\//
+const endForwardSlashRegex = /\/$/
+const doubleForwardSlashRegex = /\/\//g
+const asteriskRegex = /\*/g
+
+const supportedEncodings = ['br', 'gzip', 'deflate']
+send.mime.default_type = 'application/octet-stream'
 
 async function fastifyStatic (fastify, opts) {
   opts.root = normalizeRoot(opts.root)
   checkRootPathForErrors(fastify, opts.root)
 
   const setHeaders = opts.setHeaders
-
   if (setHeaders !== undefined && typeof setHeaders !== 'function') {
     throw new TypeError('The `setHeaders` option must be a function')
   }
@@ -48,18 +55,123 @@ async function fastifyStatic (fastify, opts) {
     maxAge: opts.maxAge
   }
 
-  const allowedPath = opts.allowedPath
-
-  if (opts.prefix === undefined) opts.prefix = '/'
-
-  let prefix = opts.prefix
+  let prefix = opts.prefix ?? (opts.prefix = '/')
 
   if (!opts.prefixAvoidTrailingSlash) {
     prefix =
-      opts.prefix[opts.prefix.length - 1] === '/'
-        ? opts.prefix
-        : opts.prefix + '/'
+      prefix[prefix.length - 1] === '/'
+        ? prefix
+        : prefix + '/'
   }
+
+  // Set the schema hide property if defined in opts or true by default
+  const routeOpts = {
+    constraints: opts.constraints,
+    schema: {
+      hide: opts.schemaHide !== undefined ? opts.schemaHide : true
+    },
+    errorHandler (error, request, reply) {
+      if (error?.code === 'ERR_STREAM_PREMATURE_CLOSE') {
+        reply.request.raw.destroy()
+        return
+      }
+
+      fastify.errorHandler(error, request, reply)
+    }
+  }
+
+  if (opts.decorateReply !== false) {
+    fastify.decorateReply('sendFile', function (filePath, rootPath, options) {
+      const opts = typeof rootPath === 'object' ? rootPath : options
+      const root = typeof rootPath === 'string' ? rootPath : opts && opts.root
+      pumpSendToReply(
+        this.request,
+        this,
+        filePath,
+        root || sendOptions.root,
+        0,
+        opts
+      )
+      return this
+    })
+
+    fastify.decorateReply(
+      'download',
+      function (filePath, fileName, options = {}) {
+        const { root, ...opts } =
+          typeof fileName === 'object' ? fileName : options
+        fileName = typeof fileName === 'string' ? fileName : filePath
+
+        // Set content disposition header
+        this.header('content-disposition', contentDisposition(fileName))
+
+        pumpSendToReply(this.request, this, filePath, root, 0, opts)
+
+        return this
+      }
+    )
+  }
+
+  if (opts.serve !== false) {
+    if (opts.wildcard && typeof opts.wildcard !== 'boolean') {
+      throw new Error('"wildcard" option must be a boolean')
+    }
+    if (opts.wildcard === undefined || opts.wildcard === true) {
+      fastify.head(prefix + '*', routeOpts, function (req, reply) {
+        pumpSendToReply(req, reply, '/' + req.params['*'], sendOptions.root)
+      })
+      fastify.get(prefix + '*', routeOpts, function (req, reply) {
+        pumpSendToReply(req, reply, '/' + req.params['*'], sendOptions.root)
+      })
+      if (opts.redirect === true && prefix !== opts.prefix) {
+        fastify.get(opts.prefix, routeOpts, function (req, reply) {
+          reply.redirect(301, getRedirectUrl(req.raw.url))
+        })
+      }
+    } else {
+      const globPattern = '**/**'
+      const indexDirs = new Map()
+      const routes = new Set()
+
+      const roots = Array.isArray(sendOptions.root) ? sendOptions.root : [sendOptions.root]
+      for (let i = 0; i < roots.length; ++i) {
+        const rootPath = roots[i]
+        const files = await globPromise(path.join(rootPath, globPattern).replace(winSeparatorRegex, path.posix.sep), { nodir: true, dot: opts.serveDotFiles })
+        const indexes = opts.index === undefined ? ['index.html'] : [].concat(opts.index)
+
+        for (let i = 0; i < files.length; ++i) {
+          const file = files[i].replace(rootPath.replace(backslashRegex, '/'), '')
+            .replace(startForwardSlashRegex, '')
+          const route = (prefix + file).replace(doubleForwardSlashRegex, '/')
+
+          if (routes.has(route)) {
+            continue
+          }
+
+          routes.add(route)
+
+          setUpHeadAndGet(routeOpts, route, '/' + file, rootPath)
+
+          const key = path.posix.basename(route)
+          if (indexes.includes(key) && !indexDirs.has(key)) {
+            indexDirs.set(path.posix.dirname(route), rootPath)
+          }
+        }
+      }
+
+      for (const [dirname, rootPath] of indexDirs.entries()) {
+        const pathname = dirname + (dirname.endsWith('/') ? '' : '/')
+        const file = '/' + pathname.replace(prefix, '')
+        setUpHeadAndGet(routeOpts, pathname, file, rootPath)
+
+        if (opts.redirect === true) {
+          setUpHeadAndGet(routeOpts, pathname.replace(endForwardSlashRegex, ''), file.replace(endForwardSlashRegex, ''), rootPath)
+        }
+      }
+    }
+  }
+
+  const allowedPath = opts.allowedPath
 
   function pumpSendToReply (
     request,
@@ -271,121 +383,12 @@ async function fastifyStatic (fastify, opts) {
     stream.pipe(wrap)
   }
 
-  const errorHandler = (error, request, reply) => {
-    if (error?.code === 'ERR_STREAM_PREMATURE_CLOSE') {
-      reply.request.raw.destroy()
-      return
-    }
-
-    fastify.errorHandler(error, request, reply)
-  }
-
-  // Set the schema hide property if defined in opts or true by default
-  const routeOpts = {
-    constraints: opts.constraints,
-    schema: {
-      hide: typeof opts.schemaHide !== 'undefined' ? opts.schemaHide : true
-    },
-    errorHandler
-  }
-
-  if (opts.decorateReply !== false) {
-    fastify.decorateReply('sendFile', function (filePath, rootPath, options) {
-      const opts = typeof rootPath === 'object' ? rootPath : options
-      const root = typeof rootPath === 'string' ? rootPath : opts && opts.root
-      pumpSendToReply(
-        this.request,
-        this,
-        filePath,
-        root || sendOptions.root,
-        0,
-        opts
-      )
-      return this
-    })
-
-    fastify.decorateReply(
-      'download',
-      function (filePath, fileName, options = {}) {
-        const { root, ...opts } =
-          typeof fileName === 'object' ? fileName : options
-        fileName = typeof fileName === 'string' ? fileName : filePath
-
-        // Set content disposition header
-        this.header('content-disposition', contentDisposition(fileName))
-
-        pumpSendToReply(this.request, this, filePath, root, 0, opts)
-
-        return this
-      }
-    )
-  }
-
-  if (opts.serve !== false) {
-    if (opts.wildcard && typeof opts.wildcard !== 'boolean') {
-      throw new Error('"wildcard" option must be a boolean')
-    }
-    if (opts.wildcard === undefined || opts.wildcard === true) {
-      fastify.head(prefix + '*', routeOpts, function (req, reply) {
-        pumpSendToReply(req, reply, '/' + req.params['*'], sendOptions.root)
-      })
-      fastify.get(prefix + '*', routeOpts, function (req, reply) {
-        pumpSendToReply(req, reply, '/' + req.params['*'], sendOptions.root)
-      })
-      if (opts.redirect === true && prefix !== opts.prefix) {
-        fastify.get(opts.prefix, routeOpts, function (req, reply) {
-          reply.redirect(301, getRedirectUrl(req.raw.url))
-        })
-      }
-    } else {
-      const globPattern = '**/**'
-      const indexDirs = new Map()
-      const routes = new Set()
-
-      const winSeparatorRegex = new RegExp(`\\${path.win32.sep}`, 'g')
-
-      for (const rootPath of Array.isArray(sendOptions.root) ? sendOptions.root : [sendOptions.root]) {
-        const files = await globPromise(path.join(rootPath, globPattern).replace(winSeparatorRegex, path.posix.sep), { nodir: true, dot: opts.serveDotFiles })
-        const indexes = typeof opts.index === 'undefined' ? ['index.html'] : [].concat(opts.index)
-
-        for (let file of files) {
-          file = file
-            .replace(rootPath.replace(/\\/g, '/'), '')
-            .replace(/^\//, '')
-          const route = (prefix + file).replace(/\/\//g, '/')
-          if (routes.has(route)) {
-            continue
-          }
-          routes.add(route)
-
-          setUpHeadAndGet(routeOpts, route, '/' + file, rootPath)
-
-          const key = path.posix.basename(route)
-          if (indexes.includes(key) && !indexDirs.has(key)) {
-            indexDirs.set(path.posix.dirname(route), rootPath)
-          }
-        }
-      }
-
-      for (const [dirname, rootPath] of indexDirs.entries()) {
-        const pathname = dirname + (dirname.endsWith('/') ? '' : '/')
-        const file = '/' + pathname.replace(prefix, '')
-        setUpHeadAndGet(routeOpts, pathname, file, rootPath)
-
-        if (opts.redirect === true) {
-          setUpHeadAndGet(routeOpts, pathname.replace(/\/$/, ''), file.replace(/\/$/, ''), rootPath)
-        }
-      }
-    }
-  }
-
   function setUpHeadAndGet (routeOpts, route, file, rootPath) {
-    const toSetUp = {
-      ...routeOpts,
+    const toSetUp = Object.assign({}, routeOpts, {
       method: ['HEAD', 'GET'],
       url: route,
       handler: serveFileHandler
-    }
+    })
     toSetUp.config = toSetUp.config || {}
     toSetUp.config.file = file
     toSetUp.config.rootPath = rootPath
@@ -393,9 +396,8 @@ async function fastifyStatic (fastify, opts) {
   }
 
   function serveFileHandler (req, reply) {
-    const file = req.routeConfig.file
-    const rootPath = req.routeConfig.rootPath
-    pumpSendToReply(req, reply, file, rootPath)
+    const routeConfig = req.routeConfig
+    pumpSendToReply(req, reply, routeConfig.file, routeConfig.rootPath)
   }
 }
 
@@ -404,13 +406,13 @@ function normalizeRoot (root) {
     return root
   }
   if (root instanceof URL && root.protocol === 'file:') {
-    return url.fileURLToPath(root)
+    return fileURLToPath(root)
   }
   if (Array.isArray(root)) {
     const result = []
     for (let i = 0, il = root.length; i < il; ++i) {
       if (root[i] instanceof URL && root[i].protocol === 'file:') {
-        result.push(url.fileURLToPath(root[i]))
+        result.push(fileURLToPath(root[i]))
       } else {
         result.push(root[i])
       }
@@ -503,13 +505,13 @@ function findIndexFile (pathname, root, indexFiles = ['index.html']) {
   return false
 }
 
-const supportedEncodings = ['br', 'gzip', 'deflate']
-
 // Adapted from https://github.com/fastify/fastify-compress/blob/665e132fa63d3bf05ad37df3c20346660b71a857/index.js#L451
 function getEncodingHeader (headers, checked) {
   if (!('accept-encoding' in headers)) return
 
-  const header = headers['accept-encoding'].toLowerCase().replace(/\*/g, 'gzip')
+  // consider the no-preference token as gzip for downstream compat
+  const header = headers['accept-encoding'].toLowerCase().replace(asteriskRegex, 'gzip')
+
   return encodingNegotiator.negotiate(
     header,
     supportedEncodings.filter((enc) => !checked.has(enc))
@@ -529,14 +531,15 @@ function getEncodingExtension (encoding) {
 function getRedirectUrl (url) {
   let i = 0
   // we detect how many slash before a valid path
-  for (i; i < url.length; i++) {
+  for (; i < url.length; ++i) {
     if (url[i] !== '/' && url[i] !== '\\') break
   }
   // turns all leading / or \ into a single /
   url = '/' + url.substr(i)
   try {
     const parsed = new URL(url, 'http://localhost.com/')
-    return parsed.pathname + (parsed.pathname[parsed.pathname.length - 1] !== '/' ? '/' : '') + (parsed.search || '')
+    const parsedPathname = parsed.pathname
+    return parsedPathname + (parsedPathname[parsedPathname.length - 1] !== '/' ? '/' : '') + (parsed.search || '')
   } catch (error) {
     // the try-catch here is actually unreachable, but we keep it for safety and prevent DoS attack
     /* istanbul ignore next */
