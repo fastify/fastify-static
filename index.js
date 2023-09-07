@@ -126,9 +126,9 @@ async function fastifyStatic (fastify, opts) {
       }
     } else {
       const indexes = opts.index === undefined ? ['index.html'] : [].concat(opts.index)
-      const globPattern = '**/**'
       const indexDirs = new Map()
       const routes = new Set()
+      const globPattern = '**/**'
 
       const roots = Array.isArray(sendOptions.root) ? sendOptions.root : [sendOptions.root]
       for (let i = 0; i < roots.length; ++i) {
