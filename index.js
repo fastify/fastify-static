@@ -133,8 +133,8 @@ async function fastifyStatic (fastify, opts) {
       const roots = Array.isArray(sendOptions.root) ? sendOptions.root : [sendOptions.root]
       for (let i = 0; i < roots.length; ++i) {
         const rootPath = roots[i]
+        const files = await glob(path.join(rootPath, globPattern).split(path.win32.sep).join(path.posix.sep), { follow: true, nodir: true, dot: opts.serveDotFiles })
         const posixRootPath = rootPath.split(path.win32.sep).join(path.posix.sep)
-        const files = await glob(path.posix.join(rootPath, globPattern), { follow: true, nodir: true, dot: opts.serveDotFiles })
 
         for (let i = 0; i < files.length; ++i) {
           const file = files[i].split(path.win32.sep).join(path.posix.sep)
