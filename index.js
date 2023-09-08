@@ -1,8 +1,8 @@
 'use strict'
 
-const path = require('path')
-const { fileURLToPath } = require('url')
-const { statSync } = require('fs')
+const path = require('node:path')
+const { fileURLToPath } = require('node:url')
+const { statSync } = require('node:fs')
 const { glob } = require('glob')
 const { PassThrough } = require('readable-stream')
 const send = require('@fastify/send')

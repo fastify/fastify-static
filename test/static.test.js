@@ -2,10 +2,10 @@
 
 /* eslint n/no-deprecated-api: "off" */
 
-const path = require('path')
-const fs = require('fs')
-const url = require('url')
-const http = require('http')
+const path = require('node:path')
+const fs = require('node:fs')
+const url = require('node:url')
+const http = require('node:http')
 const t = require('tap')
 const simple = require('simple-get')
 const Fastify = require('fastify')
@@ -2823,7 +2823,7 @@ t.test(
   'register with rootpath that causes statSync to fail with non-ENOENT code',
   (t) => {
     const fastifyStatic = proxyquire('../', {
-      fs: {
+      'node:fs': {
         statSync: function statSyncStub (path) {
           throw new Error({ code: 'MOCK' })
         }

@@ -21,7 +21,7 @@ Plugin for serving static files as fast as possible. Supports Fastify version `4
 
 ```js
 const fastify = require('fastify')({logger: true})
-const path = require('path')
+const path = require('node:path')
 
 fastify.register(require('@fastify/static'), {
   root: path.join(__dirname, 'public'),
@@ -57,7 +57,7 @@ fastify.listen({ port: 3000 }, (err, address) => {
 ```js
 const fastify = require('fastify')()
 const fastifyStatic = require('@fastify/static')
-const path = require('path')
+const path = require('node:path')
 // first plugin
 fastify.register(fastifyStatic, {
   root: path.join(__dirname, 'public')
@@ -76,7 +76,7 @@ fastify.register(fastifyStatic, {
 
 ```js
 const fastify = require('fastify')()
-const path = require('path')
+const path = require('node:path')
 
 fastify.register(require('@fastify/static'), {
   root: path.join(__dirname, 'public'),

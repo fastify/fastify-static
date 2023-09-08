@@ -2,7 +2,7 @@
 
 /* eslint n/no-deprecated-api: "off" */
 
-const path = require('path')
+const path = require('node:path')
 const { test } = require('tap')
 const simple = require('simple-get')
 const Fastify = require('fastify')
