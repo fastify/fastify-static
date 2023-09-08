@@ -2823,7 +2823,7 @@ t.test(
   'register with rootpath that causes statSync to fail with non-ENOENT code',
   (t) => {
     const fastifyStatic = proxyquire('../', {
-      fs: {
+      'node:fs': {
         statSync: function statSyncStub (path) {
           throw new Error({ code: 'MOCK' })
         }
