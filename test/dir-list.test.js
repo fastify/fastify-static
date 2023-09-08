@@ -2,8 +2,8 @@
 
 /* eslint n/no-deprecated-api: "off" */
 
-const fs = require('fs')
-const path = require('path')
+const fs = require('node:fs')
+const path = require('node:path')
 const t = require('tap')
 const simple = require('simple-get')
 const Fastify = require('fastify')
