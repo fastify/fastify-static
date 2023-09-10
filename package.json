@@ -35,8 +35,7 @@
     "content-disposition": "^0.5.3",
     "fastify-plugin": "^4.0.0",
     "glob": "^8.0.1",
-    "p-limit": "^3.1.0",
-    "readable-stream": "^4.0.0"
+    "p-limit": "^3.1.0"
   },
   "devDependencies": {
     "@fastify/compress": "^6.0.0",
