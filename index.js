@@ -1,16 +1,16 @@
 'use strict'
 
+const { PassThrough } = require('node:stream')
 const path = require('node:path')
 const { fileURLToPath } = require('node:url')
 const { statSync } = require('node:fs')
 const { promisify } = require('node:util')
 const glob = require('glob')
 const globPromise = promisify(glob)
-const { PassThrough } = require('readable-stream')
+const fp = require('fastify-plugin')
 const send = require('@fastify/send')
 const encodingNegotiator = require('@fastify/accept-negotiator')
 const contentDisposition = require('content-disposition')
-const fp = require('fastify-plugin')
 
 const dirList = require('./lib/dirList')
 
