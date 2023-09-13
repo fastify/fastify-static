@@ -396,7 +396,7 @@ async function fastifyStatic (fastify, opts) {
   }
 
   function serveFileHandler (req, reply) {
-    const routeConfig = req.routeConfig
+    const routeConfig = req.routeOptions.config
     pumpSendToReply(req, reply, routeConfig.file, routeConfig.rootPath)
   }
 }
