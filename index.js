@@ -552,7 +552,7 @@ function getRedirectUrl (url) {
 }
 
 module.exports = fp(fastifyStatic, {
-  fastify: '4.23.x',
+  fastify: '~4.23.0',
   name: '@fastify/static'
 })
 module.exports.default = fastifyStatic
