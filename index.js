@@ -12,7 +12,6 @@ const fp = require('fastify-plugin')
 
 const dirList = require('./lib/dirList')
 
-const startForwardSlashRegex = /^\//
 const endForwardSlashRegex = /\/$/
 const doubleForwardSlashRegex = /\/\//g
 const asteriskRegex = /\*/g
@@ -138,8 +137,7 @@ async function fastifyStatic (fastify, opts) {
 
         for (let i = 0; i < files.length; ++i) {
           const file = files[i].split(path.win32.sep).join(path.posix.sep)
-            .replace(posixRootPath, '')
-            .replace(startForwardSlashRegex, '')
+            .replace(`${posixRootPath}/`, '')
           const route = (prefix + file).replace(doubleForwardSlashRegex, '/')
 
           if (routes.has(route)) {
