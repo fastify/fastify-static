@@ -396,7 +396,7 @@ async function fastifyStatic (fastify, opts) {
   }
 
   function serveFileHandler (req, reply) {
-    const routeConfig = req.routeConfig
+    const routeConfig = req.routeOptions.config
     pumpSendToReply(req, reply, routeConfig.file, routeConfig.rootPath)
   }
 }
@@ -552,7 +552,7 @@ function getRedirectUrl (url) {
 }
 
 module.exports = fp(fastifyStatic, {
-  fastify: '4.x',
+  fastify: '^4.23.0',
   name: '@fastify/static'
 })
 module.exports.default = fastifyStatic
