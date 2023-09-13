@@ -1,14 +1,14 @@
 'use strict'
 
+const { PassThrough } = require('node:stream')
 const path = require('node:path')
 const { fileURLToPath } = require('node:url')
 const { statSync } = require('node:fs')
 const { glob } = require('glob')
-const { PassThrough } = require('readable-stream')
+const fp = require('fastify-plugin')
 const send = require('@fastify/send')
 const encodingNegotiator = require('@fastify/accept-negotiator')
 const contentDisposition = require('content-disposition')
-const fp = require('fastify-plugin')
 
 const dirList = require('./lib/dirList')
 
@@ -392,7 +392,7 @@ async function fastifyStatic (fastify, opts) {
   }
 
   function serveFileHandler (req, reply) {
-    const routeConfig = req.routeConfig
+    const routeConfig = req.routeOptions.config
     pumpSendToReply(req, reply, routeConfig.file, routeConfig.rootPath)
   }
 }
@@ -548,7 +548,7 @@ function getRedirectUrl (url) {
 }
 
 module.exports = fp(fastifyStatic, {
-  fastify: '4.x',
+  fastify: '^4.23.0',
   name: '@fastify/static'
 })
 module.exports.default = fastifyStatic
