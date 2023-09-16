@@ -398,7 +398,7 @@ async function fastifyStatic (fastify, opts) {
   function serveFileHandler (req, reply) {
     // TODO: remove the fallback branch when bump major
     /* istanbul ignore next */
-    const routeConfig = (req.routeOptions && req.routeConfig.config) || req.routeConfig
+    const routeConfig = req.routeOptions?.config || req.routeConfig
     pumpSendToReply(req, reply, routeConfig.file, routeConfig.rootPath)
   }
 }
