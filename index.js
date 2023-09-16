@@ -396,7 +396,9 @@ async function fastifyStatic (fastify, opts) {
   }
 
   function serveFileHandler (req, reply) {
-    const routeConfig = req.routeOptions.config
+    // TODO: remove the fallback branch when bump major
+    /* istanbul ignore next */
+    const routeConfig = (req.routeOptions && req.routeConfig.config) || req.routeConfig
     pumpSendToReply(req, reply, routeConfig.file, routeConfig.rootPath)
   }
 }
@@ -552,7 +554,7 @@ function getRedirectUrl (url) {
 }
 
 module.exports = fp(fastifyStatic, {
-  fastify: '^4.23.0',
+  fastify: '4.x',
   name: '@fastify/static'
 })
 module.exports.default = fastifyStatic
