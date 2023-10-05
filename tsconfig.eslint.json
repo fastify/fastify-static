@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "es6",
-    "lib": ["ES2015", "ES2018"],
+    "lib": ["ES2018"],
     "module": "commonjs",
     "noEmit": true,
     "strict": true
