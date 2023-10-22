@@ -436,7 +436,7 @@ function checkRootPathForErrors (fastify, rootPath) {
       throw new Error('"root" option array requires one or more paths')
     }
 
-    if ([...new Set(rootPath)].length !== rootPath.length) {
+    if (new Set(rootPath).size !== rootPath.length) {
       throw new Error(
         '"root" option array contains one or more duplicate paths'
       )
