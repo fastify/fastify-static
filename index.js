@@ -498,7 +498,7 @@ function findIndexFile (pathname, root, indexFiles = ['index.html']) {
       try {
         const stats = statSync(p)
         return !stats.isDirectory()
-      } catch (e) {
+      } catch {
         return false
       }
     })
@@ -542,7 +542,7 @@ function getRedirectUrl (url) {
     const parsed = new URL(url, 'http://localhost.com/')
     const parsedPathname = parsed.pathname
     return parsedPathname + (parsedPathname[parsedPathname.length - 1] !== '/' ? '/' : '') + (parsed.search || '')
-  } catch (error) {
+  } catch {
     // the try-catch here is actually unreachable, but we keep it for safety and prevent DoS attack
     /* istanbul ignore next */
     const err = new Error(`Invalid redirect URL: ${url}`)
