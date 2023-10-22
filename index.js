@@ -14,12 +14,12 @@ const contentDisposition = require('content-disposition')
 
 const dirList = require('./lib/dirList')
 
-const winSeparatorRegex = new RegExp(`\\${path.win32.sep}`, 'g')
-const backslashRegex = /\\/g
-const startForwardSlashRegex = /^\//
-const endForwardSlashRegex = /\/$/
-const doubleForwardSlashRegex = /\/\//g
-const asteriskRegex = /\*/g
+const winSeparatorRegex = new RegExp(`\\${path.win32.sep}`, 'gu')
+const backslashRegex = /\\/gu
+const startForwardSlashRegex = /^\//u
+const endForwardSlashRegex = /\/$/u
+const doubleForwardSlashRegex = /\/\//gu
+const asteriskRegex = /\*/gu
 
 const supportedEncodings = ['br', 'gzip', 'deflate']
 send.mime.default_type = 'application/octet-stream'
