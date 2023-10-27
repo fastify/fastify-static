@@ -3,6 +3,7 @@
   "version": "6.11.2",
   "description": "Plugin for serving static files as fast as possible.",
   "main": "index.js",
+  "type": "commonjs",
   "types": "types/index.d.ts",
   "scripts": {
     "coverage": "npm run test:unit -- --coverage-report=html",
