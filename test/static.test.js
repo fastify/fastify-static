@@ -1000,7 +1000,7 @@ t.test('sendFile disabled', (t) => {
   fastify.register(fastifyStatic, pluginOptions)
 
   fastify.get('/foo/bar', function (req, reply) {
-    if (typeof reply.sendFile === 'undefined') {
+    if (reply.sendFile === undefined) {
       reply.send('pass')
     } else {
       reply.send('fail')
@@ -1277,7 +1277,7 @@ t.test('sendFile disabled', (t) => {
   fastify.register(fastifyStatic, pluginOptions)
 
   fastify.get('/foo/bar', function (req, reply) {
-    if (typeof reply.sendFile === 'undefined') {
+    if (reply.sendFile === undefined) {
       reply.send('pass')
     } else {
       reply.send('fail')
@@ -1316,7 +1316,7 @@ t.test('download disabled', (t) => {
   fastify.register(fastifyStatic, pluginOptions)
 
   fastify.get('/foo/bar', function (req, reply) {
-    if (typeof reply.download === 'undefined') {
+    if (reply.download === undefined) {
       t.equal(reply.download, undefined)
       reply.send('pass')
     } else {
