@@ -124,7 +124,7 @@ A URL path prefix used to create a virtual mount path for the static directory.
 Default: `{}`
 
 Constraints that will be added to registered routes. See Fastify's documentation for
-[route constraints](https://www.fastify.io/docs/latest/Reference/Routes/#constraints).
+[route constraints](https://www.fastify.dev/docs/latest/Reference/Routes/#constraints).
 
 #### `prefixAvoidTrailingSlash`
 
@@ -450,7 +450,7 @@ decorators.
 
 If a request matches the URL `prefix` but a file cannot be found for the
 request, Fastify's 404 handler will be called. You can set a custom 404
-handler with [`fastify.setNotFoundHandler()`](https://www.fastify.io/docs/latest/Reference/Server/#setnotfoundhandler).
+handler with [`fastify.setNotFoundHandler()`](https://www.fastify.dev/docs/latest/Reference/Server/#setnotfoundhandler).
 
 When registering `@fastify/static` within an encapsulated context, the `wildcard` option may need to be set to `false` in order to support index resolution and nested not-found-handler:
 
