@@ -475,7 +475,7 @@ This code will send the `index.html` for the paths `docs`, `docs/`, and `docs/in
 
 If an error occurs while trying to send a file, the error will be passed
 to Fastify's error handler. You can set a custom error handler with
-[`fastify.setErrorHandler()`](https://www.fastify.io/docs/latest/Reference/Server/#seterrorhandler).
+[`fastify.setErrorHandler()`](https://www.fastify.dev/docs/latest/Reference/Server/#seterrorhandler).
 
 ### Payload `stream.filename`
 
