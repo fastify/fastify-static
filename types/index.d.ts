@@ -2,18 +2,16 @@
 //                 Leo <https://github.com/leomelzer>
 /// <reference types="node" />
 
-import { FastifyPluginAsync, FastifyRequest, RouteOptions } from 'fastify'
+import { FastifyPluginAsync, FastifyRequest, RouteOptions, FastifyReply } from 'fastify'
 import { Stats } from 'fs'
 
-declare module 'fastify' {
-  interface FastifyReply {
-    sendFile(filename: string, rootPath?: string): FastifyReply;
-    sendFile(filename: string, options?: fastifyStatic.SendOptions): FastifyReply;
-    sendFile(filename: string, rootPath?: string, options?: fastifyStatic.SendOptions): FastifyReply;
-    download(filepath: string, options?: fastifyStatic.SendOptions): FastifyReply;
-    download(filepath: string, filename?: string): FastifyReply;
-    download(filepath: string, filename?: string, options?: fastifyStatic.SendOptions): FastifyReply;
-  }
+export class StaticReplyMixin {
+  sendFile(filename: string, rootPath?: string): FastifyReply;
+  sendFile(filename: string, options?: fastifyStatic.SendOptions): FastifyReply;
+  sendFile(filename: string, rootPath?: string, options?: fastifyStatic.SendOptions): FastifyReply;
+  download(filepath: string, options?: fastifyStatic.SendOptions): FastifyReply;
+  download(filepath: string, filename?: string): FastifyReply;
+  download(filepath: string, filename?: string, options?: fastifyStatic.SendOptions): FastifyReply;
 }
 
 type FastifyStaticPlugin = FastifyPluginAsync<NonNullable<fastifyStatic.FastifyStaticOptions>>;
