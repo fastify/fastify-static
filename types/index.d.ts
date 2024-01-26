@@ -2,7 +2,7 @@
 //                 Leo <https://github.com/leomelzer>
 /// <reference types="node" />
 
-import { FastifyPluginAsync, FastifyRequest, RouteOptions } from 'fastify'
+import { FastifyPluginAsync, FastifyReply, FastifyRequest, RouteOptions } from 'fastify'
 import { Stats } from 'fs'
 
 declare module 'fastify' {
@@ -19,6 +19,13 @@ declare module 'fastify' {
 type FastifyStaticPlugin = FastifyPluginAsync<NonNullable<fastifyStatic.FastifyStaticOptions>>;
 
 declare namespace fastifyStatic {
+  export interface SetHeadersResponse {
+    getHeader: FastifyReply['getHeader'];
+    setHeader: FastifyReply['header'];
+    readonly filename: string;
+    statusCode: number;
+  }
+
   export interface ExtendedInformation {
     fileCount: number;
     totalFileCount: number;
@@ -83,7 +90,7 @@ declare namespace fastifyStatic {
     serve?: boolean;
     decorateReply?: boolean;
     schemaHide?: boolean;
-    setHeaders?: (...args: any[]) => void;
+    setHeaders?: (res: SetHeadersResponse, path: string, stat: Stats) => void;
     redirect?: boolean;
     wildcard?: boolean;
     list?: boolean | ListOptionsJsonFormat | ListOptionsHtmlFormat;
