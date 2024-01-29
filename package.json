@@ -1,8 +1,9 @@
 {
   "name": "@fastify/static",
-  "version": "6.11.0",
+  "version": "6.12.0",
   "description": "Plugin for serving static files as fast as possible.",
   "main": "index.js",
+  "type": "commonjs",
   "types": "types/index.d.ts",
   "scripts": {
     "coverage": "npm run test:unit -- --coverage-report=html",
@@ -17,7 +18,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/fastify/fastify-static.git"
+    "url": "git+https://github.com/fastify/fastify-static.git"
   },
   "keywords": [
     "fastify",
@@ -54,7 +55,7 @@
     "snazzy": "^9.0.0",
     "standard": "^17.0.0",
     "tap": "^16.0.0",
-    "tsd": "^0.29.0",
+    "tsd": "^0.30.0",
     "typescript": "^5.1.6"
   },
   "tsd": {

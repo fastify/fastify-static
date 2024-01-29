@@ -1,5 +1,6 @@
-import fastify, { FastifyInstance, FastifyPluginAsync, FastifyRequest } from 'fastify'
+import fastify, { FastifyInstance, FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify'
 import { Server } from 'http'
+import { Stats } from 'fs'
 import { expectAssignable, expectError, expectType } from 'tsd'
 import * as fastifyStaticStar from '..'
 import fastifyStatic, {
@@ -49,8 +50,15 @@ const options: FastifyStaticOptions = {
   serve: true,
   wildcard: true,
   list: false,
-  setHeaders: (res: any, pathName: any) => {
-    res.setHeader('test', pathName)
+  setHeaders: (res, path, stat) => {
+    expectType<string>(res.filename)
+    expectType<number>(res.statusCode)
+    expectType<ReturnType<FastifyReply['getHeader']>>(res.getHeader('X-Test'))
+    res.setHeader('X-Test', 'string')
+
+    expectType<string>(path)
+
+    expectType<Stats>(stat)
   },
   preCompressed: false,
   allowedPath: (pathName: string, root: string, request: FastifyRequest) => {

@@ -12,9 +12,9 @@ const contentDisposition = require('content-disposition')
 
 const dirList = require('./lib/dirList')
 
-const endForwardSlashRegex = /\/$/
-const doubleForwardSlashRegex = /\/\//g
-const asteriskRegex = /\*/g
+const endForwardSlashRegex = /\/$/u
+const doubleForwardSlashRegex = /\/\//gu
+const asteriskRegex = /\*/gu
 
 const supportedEncodings = ['br', 'gzip', 'deflate']
 send.mime.default_type = 'application/octet-stream'
@@ -392,7 +392,9 @@ async function fastifyStatic (fastify, opts) {
   }
 
   function serveFileHandler (req, reply) {
-    const routeConfig = req.routeOptions.config
+    // TODO: remove the fallback branch when bump major
+    /* istanbul ignore next */
+    const routeConfig = req.routeOptions?.config || req.routeConfig
     pumpSendToReply(req, reply, routeConfig.file, routeConfig.rootPath)
   }
 }
@@ -430,7 +432,7 @@ function checkRootPathForErrors (fastify, rootPath) {
       throw new Error('"root" option array requires one or more paths')
     }
 
-    if ([...new Set(rootPath)].length !== rootPath.length) {
+    if (new Set(rootPath).size !== rootPath.length) {
       throw new Error(
         '"root" option array contains one or more duplicate paths'
       )
@@ -492,7 +494,7 @@ function findIndexFile (pathname, root, indexFiles = ['index.html']) {
       try {
         const stats = statSync(p)
         return !stats.isDirectory()
-      } catch (e) {
+      } catch {
         return false
       }
     })
@@ -536,7 +538,7 @@ function getRedirectUrl (url) {
     const parsed = new URL(url, 'http://localhost.com/')
     const parsedPathname = parsed.pathname
     return parsedPathname + (parsedPathname[parsedPathname.length - 1] !== '/' ? '/' : '') + (parsed.search || '')
-  } catch (error) {
+  } catch {
     // the try-catch here is actually unreachable, but we keep it for safety and prevent DoS attack
     /* istanbul ignore next */
     const err = new Error(`Invalid redirect URL: ${url}`)
@@ -548,7 +550,7 @@ function getRedirectUrl (url) {
 }
 
 module.exports = fp(fastifyStatic, {
-  fastify: '^4.23.0',
+  fastify: '4.x',
   name: '@fastify/static'
 })
 module.exports.default = fastifyStatic
