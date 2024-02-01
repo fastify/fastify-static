@@ -198,7 +198,7 @@ with `ignoreTrailingSlash` set to `true`.
 
 Default: `undefined`
 
-To enable `hash`, you must first disable the `wildcard` option. When enabled, `hash` lets the user access assets dynamically using the decorated `getHashedAsset` function. This in turn enables the usage of a very high `maxAge` so that the content can be cached as long as possible. If any modifications are made, the hash will simply update and the cache will bust.
+To enable `hash`, you must first disable the `wildcard` option. When enabled, `hash` lets the user access assets dynamically using the decorated `getHashedAsset` function. This in turn makes possible the usage of a very high `maxAge` so that the content can be cached as long as possible. If any modifications are made, the hash will simply update and the cache will bust.
 
 #### Example:
 
