@@ -23,7 +23,7 @@ const doubleForwardSlashRegex = /\/\//gu
 const asteriskRegex = /\*/gu
 
 const supportedEncodings = ['br', 'gzip', 'deflate']
-const fileHashes = new Map()
+let fileHashes = null
 
 send.mime.default_type = 'application/octet-stream'
 
@@ -426,6 +426,7 @@ async function fastifyStatic (fastify, opts) {
   }
 
   async function generateHashForFiles () {
+    fileHashes = new Map()
     const root = opts.root
     const files = await globPromise(`${root}/**/**`, { nodir: true })
 
