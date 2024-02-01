@@ -4,9 +4,7 @@ const { PassThrough } = require('node:stream')
 const path = require('node:path')
 const { fileURLToPath } = require('node:url')
 const { statSync } = require('node:fs')
-const { promisify } = require('node:util')
-const glob = require('glob')
-const globPromise = promisify(glob)
+const { glob } = require('glob')
 const fp = require('fastify-plugin')
 const send = require('@fastify/send')
 const encodingNegotiator = require('@fastify/accept-negotiator')
@@ -14,9 +12,6 @@ const contentDisposition = require('content-disposition')
 
 const dirList = require('./lib/dirList')
 
-const winSeparatorRegex = new RegExp(`\\${path.win32.sep}`, 'gu')
-const backslashRegex = /\\/gu
-const startForwardSlashRegex = /^\//u
 const endForwardSlashRegex = /\/$/u
 const doubleForwardSlashRegex = /\/\//gu
 const asteriskRegex = /\*/gu
@@ -129,19 +124,20 @@ async function fastifyStatic (fastify, opts) {
         })
       }
     } else {
-      const globPattern = '**/**'
+      const indexes = opts.index === undefined ? ['index.html'] : [].concat(opts.index)
       const indexDirs = new Map()
       const routes = new Set()
+      const globPattern = '**/**'
 
       const roots = Array.isArray(sendOptions.root) ? sendOptions.root : [sendOptions.root]
       for (let i = 0; i < roots.length; ++i) {
         const rootPath = roots[i]
-        const files = await globPromise(path.join(rootPath, globPattern).replace(winSeparatorRegex, path.posix.sep), { nodir: true, dot: opts.serveDotFiles })
-        const indexes = opts.index === undefined ? ['index.html'] : [].concat(opts.index)
+        const posixRootPath = rootPath.split(path.win32.sep).join(path.posix.sep)
+        const files = await glob(`${posixRootPath}/${globPattern}`, { follow: true, nodir: true, dot: opts.serveDotFiles })
 
         for (let i = 0; i < files.length; ++i) {
-          const file = files[i].replace(rootPath.replace(backslashRegex, '/'), '')
-            .replace(startForwardSlashRegex, '')
+          const file = files[i].split(path.win32.sep).join(path.posix.sep)
+            .replace(`${posixRootPath}/`, '')
           const route = (prefix + file).replace(doubleForwardSlashRegex, '/')
 
           if (routes.has(route)) {
@@ -150,7 +146,7 @@ async function fastifyStatic (fastify, opts) {
 
           routes.add(route)
 
-          setUpHeadAndGet(routeOpts, route, '/' + file, rootPath)
+          setUpHeadAndGet(routeOpts, route, `/${file}`, rootPath)
 
           const key = path.posix.basename(route)
           if (indexes.includes(key) && !indexDirs.has(key)) {
