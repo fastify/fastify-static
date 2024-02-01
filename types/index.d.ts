@@ -14,6 +14,13 @@ declare module 'fastify' {
     download(filepath: string, filename?: string): FastifyReply;
     download(filepath: string, filename?: string, options?: fastifyStatic.SendOptions): FastifyReply;
   }
+
+  interface FastifyInstance {
+    /**
+    * If the `hash` option is enabled, this method must be used to get the hashed asset path.
+    */
+    getHashedAsset(relativePath: string): string;
+  }
 }
 
 type FastifyStaticPlugin = FastifyPluginAsync<NonNullable<fastifyStatic.FastifyStaticOptions>>;

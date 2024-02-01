@@ -163,6 +163,16 @@ appWithHttp2
     })
   })
 
+const appWithHash = fastify({ http2: true })
+
+appWithHash
+  .register(fastifyStatic, { ...options, hash: true })
+  .after(() => {
+    appWithHttp2.get('/', (request, reply) => {
+      reply.sendFile(appWithHash.getHashedAsset('hello.css'))
+    })
+  })
+
 const multiRootAppWithImplicitHttp = fastify()
 options.root = ['']
 
