@@ -140,17 +140,18 @@ async function fastifyStatic (fastify, opts) {
       const indexes = opts.index === undefined ? ['index.html'] : [].concat(opts.index)
       const indexDirs = new Map()
       const routes = new Set()
-      const globPattern = '**/**'
 
       const roots = Array.isArray(sendOptions.root) ? sendOptions.root : [sendOptions.root]
-      for (let i = 0; i < roots.length; ++i) {
-        const rootPath = roots[i]
-        const posixRootPath = rootPath.split(path.win32.sep).join(path.posix.sep)
-        const files = await glob(posixRootPath + globPattern, { follow: true, nodir: true, dot: opts.serveDotFiles })
+      for (const rootPath of roots) {
+        let posixRootPath = rootPath.split(path.win32.sep).join(path.posix.sep)
+        if (!posixRootPath.endsWith('/')) {
+          posixRootPath += '/'
+        }
 
-        for (let i = 0; i < files.length; ++i) {
-          const file = files[i].split(path.win32.sep).join(path.posix.sep).replace(posixRootPath, '')
-          const route = opts.hash ? getHashedAssetPath(file) : (prefix + file).replace(doubleForwardSlashRegex, '/')
+        const files = await glob(`${posixRootPath}**/**`, { follow: true, nodir: true, dot: opts.serveDotFiles })
+        for (const file of files) {
+          const posixFile = file.split(path.win32.sep).join(path.posix.sep).replace(posixRootPath, '')
+          const route = opts.hash ? getHashedAssetPath(posixFile) : (prefix + posixFile).replace(doubleForwardSlashRegex, '/')
 
           if (routes.has(route)) {
             continue
@@ -158,7 +159,7 @@ async function fastifyStatic (fastify, opts) {
 
           routes.add(route)
 
-          setUpHeadAndGet(routeOpts, route, `/${file}`, rootPath)
+          setUpHeadAndGet(routeOpts, route, `/${posixFile}`, rootPath)
 
           const key = path.posix.basename(route)
           if (indexes.includes(key) && !indexDirs.has(key)) {
@@ -414,13 +415,14 @@ async function fastifyStatic (fastify, opts) {
   async function generateHashForFiles () {
     fileHashes = new Map()
     const root = opts.root
-    const files = await glob(`${root}/**/**`, { nodir: true })
+    const files = await glob(`${root}**/**`, { nodir: true })
 
-    files.forEach((file) => {
+    for (const file of files) {
       if (opts.hashSkip?.includes(file)) {
+        const relativePath = path.relative(root, file)
         fileHashes.set(
-          path.relative(root, file),
-          path.relative(root, file)
+          relativePath,
+          relativePath
         )
         return
       }
@@ -434,7 +436,7 @@ async function fastifyStatic (fastify, opts) {
         relativePath,
         relativePathArray.join('/')
       )
-    })
+    }
   }
 
   function getHashedAssetPath (unhashedRelativePath) {
