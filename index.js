@@ -14,7 +14,6 @@ const contentDisposition = require('content-disposition')
 const dirList = require('./lib/dirList')
 
 const asteriskRegex = /\*/gu
-const doubleForwardSlashRegex = /\/\//gu
 const endForwardSlashRegex = /\/$/u
 
 const supportedEncodings = ['br', 'gzip', 'deflate']
@@ -45,7 +44,12 @@ async function fastifyStatic (fastify, opts) {
       throw new Error('"wildcard" has to be disabled to use "hash"')
     }
 
-    for (const rootPath of Array.isArray(opts.root) ? opts.root : [opts.root]) {
+    for (let rootPath of Array.isArray(opts.root) ? opts.root : [opts.root]) {
+      rootPath = rootPath.split(path.win32.sep).join(path.posix.sep)
+      if (!rootPath.endsWith('/')) {
+        rootPath += '/'
+      }
+
       await generateHashForFiles(rootPath)
     }
 
@@ -145,15 +149,16 @@ async function fastifyStatic (fastify, opts) {
       const routes = new Set()
 
       const roots = Array.isArray(sendOptions.root) ? sendOptions.root : [sendOptions.root]
-      for (const rootPath of roots) {
-        let posixRootPath = rootPath.split(path.win32.sep).join(path.posix.sep)
-        if (!posixRootPath.endsWith('/')) {
-          posixRootPath += '/'
+      for (let rootPath of roots) {
+        rootPath = rootPath.split(path.win32.sep).join(path.posix.sep)
+        if (!rootPath.endsWith('/')) {
+          rootPath += '/'
         }
 
-        const files = await glob('**/**', { cwd: posixRootPath, absolute: false, follow: true, nodir: true, dot: opts.serveDotFiles })
-        for (const file of files) {
-          const route = opts.hash ? getHashedAssetPath(file) : (prefix + file).replace(doubleForwardSlashRegex, '/')
+        const files = await glob('**/**', { cwd: rootPath, absolute: false, follow: true, nodir: true, dot: opts.serveDotFiles })
+        for (let file of files) {
+          file = file.split(path.win32.sep).join(path.posix.sep)
+          const route = opts.hash ? getHashedAssetPath(file) : prefix + file
 
           if (routes.has(route)) {
             continue
@@ -163,9 +168,9 @@ async function fastifyStatic (fastify, opts) {
 
           setUpHeadAndGet(routeOpts, route, `/${file}`, rootPath)
 
-          const key = path.posix.basename(route)
+          const key = path.basename(route)
           if (indexes.includes(key) && !indexDirs.has(key)) {
-            indexDirs.set(path.posix.dirname(route), rootPath)
+            indexDirs.set(path.dirname(route), rootPath)
           }
         }
       }
@@ -416,30 +421,25 @@ async function fastifyStatic (fastify, opts) {
 
   async function generateHashForFiles (rootPath) {
     fileHashes ||= new Map()
+    const files = await glob(`${rootPath}**/**`, { follow: true, nodir: true, dot: opts.serveDotFiles })
 
-    let posixRootPath = rootPath.split(path.win32.sep).join(path.posix.sep)
-    if (!posixRootPath.endsWith('/')) {
-      posixRootPath += '/'
-    }
-
-    const files = await glob(`${posixRootPath}**/**`, { follow: true, nodir: true, dot: opts.serveDotFiles })
-
-    for (const file of files) {
-      const relativePath = path.posix.relative(posixRootPath, file)
-      if (opts.hashSkip?.includes(relativePath)) {
+    for (let file of files) {
+      file = file.split(path.win32.sep).join(path.posix.sep)
+      const fileRelative = path.relative(rootPath, file).split(path.win32.sep).join(path.posix.sep)
+      if (opts.hashSkip?.includes(fileRelative)) {
         fileHashes.set(
-          relativePath,
-          relativePath
+          fileRelative,
+          fileRelative
         )
         return
       }
 
       const hash = generateFileHash(file)
-      const relativePathArray = relativePath.split('/')
+      const relativePathArray = fileRelative.split('/')
       relativePathArray.pop()
-      relativePathArray.push(`${hash}-${path.basename(relativePath)}`)
+      relativePathArray.push(`${hash}-${path.basename(fileRelative)}`)
       fileHashes.set(
-        relativePath,
+        fileRelative,
         relativePathArray.join('/')
       )
     }
@@ -447,7 +447,7 @@ async function fastifyStatic (fastify, opts) {
 
   function getHashedAssetPath (unhashedRelativePath) {
     const hashedRelativePath = fileHashes.get(unhashedRelativePath)
-    return path.posix.join(prefix, hashedRelativePath)
+    return path.join(prefix, hashedRelativePath).split(path.win32.sep).join(path.posix.sep)
   }
 }
 
