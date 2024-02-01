@@ -39,23 +39,6 @@ async function fastifyStatic (fastify, opts) {
     opts.dotfiles = 'allow'
   }
 
-  if (opts.hash === true) {
-    if (opts.wildcard === undefined || opts.wildcard === true) {
-      throw new Error('"wildcard" has to be disabled to use "hash"')
-    }
-
-    for (let rootPath of Array.isArray(opts.root) ? opts.root : [opts.root]) {
-      rootPath = rootPath.split(path.win32.sep).join(path.posix.sep)
-      if (!rootPath.endsWith('/')) {
-        rootPath += '/'
-      }
-
-      await generateHashForFiles(rootPath)
-    }
-
-    fastify.decorate('getHashedAsset', getHashedAssetPath)
-  }
-
   const sendOptions = {
     root: opts.root,
     acceptRanges: opts.acceptRanges,
@@ -76,6 +59,15 @@ async function fastifyStatic (fastify, opts) {
       prefix[prefix.length - 1] === '/'
         ? prefix
         : prefix + '/'
+  }
+
+  if (opts.hash === true) {
+    if (opts.wildcard === undefined || opts.wildcard === true) {
+      throw new Error('"wildcard" has to be disabled to use "hash"')
+    }
+
+    await generateHashForFiles()
+    fastify.decorate('getHashedAsset', getHashedAssetPath)
   }
 
   // Set the schema hide property if defined in opts or true by default
@@ -419,29 +411,37 @@ async function fastifyStatic (fastify, opts) {
     pumpSendToReply(req, reply, routeConfig.file, routeConfig.rootPath)
   }
 
-  async function generateHashForFiles (rootPath) {
-    fileHashes ||= new Map()
-    const files = await glob(`${rootPath}**/**`, { follow: true, nodir: true, dot: opts.serveDotFiles })
+  async function generateHashForFiles () {
+    fileHashes = new Map()
 
-    for (let file of files) {
-      file = file.split(path.win32.sep).join(path.posix.sep)
-      const fileRelative = path.relative(rootPath, file).split(path.win32.sep).join(path.posix.sep)
-      if (opts.hashSkip?.includes(fileRelative)) {
-        fileHashes.set(
-          fileRelative,
-          fileRelative
-        )
-        return
+    const roots = Array.isArray(sendOptions.root) ? sendOptions.root : [sendOptions.root]
+    for (let rootPath of roots) {
+      rootPath = rootPath.split(path.win32.sep).join(path.posix.sep)
+      if (!rootPath.endsWith('/')) {
+        rootPath += '/'
       }
 
-      const hash = generateFileHash(file)
-      const relativePathArray = fileRelative.split('/')
-      relativePathArray.pop()
-      relativePathArray.push(`${hash}-${path.basename(fileRelative)}`)
-      fileHashes.set(
-        fileRelative,
-        relativePathArray.join('/')
-      )
+      const files = await glob(`${rootPath}**/**`, { follow: true, nodir: true, dot: opts.serveDotFiles })
+      for (let file of files) {
+        file = file.split(path.win32.sep).join(path.posix.sep)
+        const fileRelative = path.relative(rootPath, file).split(path.win32.sep).join(path.posix.sep)
+        if (opts.hashSkip?.includes(fileRelative)) {
+          fileHashes.set(
+            fileRelative,
+            fileRelative
+          )
+          continue
+        }
+
+        const hash = generateFileHash(file)
+        const relativePathArray = fileRelative.split('/')
+        relativePathArray.pop()
+        relativePathArray.push(`${hash}-${path.basename(fileRelative)}`)
+        fileHashes.set(
+          fileRelative,
+          relativePathArray.join('/')
+        )
+      }
     }
   }
 
