@@ -440,9 +440,7 @@ async function fastifyStatic (fastify, opts) {
 
   function getHashedAssetPath (unhashedRelativePath) {
     const hashedRelativePath = fileHashes.get(unhashedRelativePath)
-    if (hashedRelativePath) {
-      return path.posix.join(prefix, hashedRelativePath)
-    }
+    return path.posix.join(prefix, hashedRelativePath)
   }
 }
 

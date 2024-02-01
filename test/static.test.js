@@ -374,6 +374,93 @@ t.test('register /static', (t) => {
   })
 })
 
+t.test('register /static with hash', async (t) => {
+  const pluginOptions = {
+    root: path.join(__dirname, '/static'),
+    prefix: '/static/',
+    hash: true,
+    // hashSkip: ['foo.html'],
+    wildcard: false
+  }
+  const fastify = Fastify()
+  await fastify.register(fastifyStatic, pluginOptions)
+
+  t.teardown(fastify.close.bind(fastify))
+
+  fastify.listen({ port: 0 }, async (err) => {
+    t.error(err)
+
+    fastify.server.unref()
+
+    await t.test('/static/index.html', async (t) => {
+      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + fastify.getHashedAssetPath('index.html')
+      }, (err, response, body) => {
+        t.error(err)
+        t.equal(response.statusCode, 200)
+        t.equal(body.toString(), indexContent)
+        genericResponseChecks(t, response)
+      })
+    })
+  })
+})
+
+t.test('register /static with hash', async (t) => {
+  const pluginOptions = {
+    root: [path.join(__dirname, '/static/')],
+    prefix: '/static/',
+    hash: true,
+    hashSkip: ['foo.html'],
+    wildcard: false
+  }
+  const fastify = Fastify()
+  await fastify.register(fastifyStatic, pluginOptions)
+
+  t.teardown(fastify.close.bind(fastify))
+
+  fastify.listen({ port: 0 }, async (err) => {
+    t.error(err)
+
+    fastify.server.unref()
+
+    await t.test('/static/index.html', async (t) => {
+      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + fastify.getHashedAssetPath('index.html')
+      }, (err, response, body) => {
+        t.error(err)
+        t.equal(response.statusCode, 200)
+        t.equal(body.toString(), indexContent)
+        genericResponseChecks(t, response)
+      })
+    })
+  })
+})
+
+t.test('register /static with hash (incorrect)', async (t) => {
+  const pluginOptions = {
+    root: path.join(__dirname, '/static'),
+    prefix: '/static/',
+    hash: true
+  }
+  const fastify = Fastify()
+  try {
+    await fastify.register(fastifyStatic, pluginOptions)
+  } catch (error) {
+    t.ok(error instanceof Error)
+  }
+
+  t.teardown(fastify.close.bind(fastify))
+
+  fastify.listen({ port: 0 }, async (err) => {
+    t.error(err)
+    fastify.server.unref()
+  })
+})
+
 t.test('register /static/', t => {
   t.plan(12)
 
