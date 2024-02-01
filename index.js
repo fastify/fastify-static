@@ -6,7 +6,7 @@ const path = require('node:path')
 const { fileURLToPath } = require('node:url')
 const { statSync, readFileSync, readdirSync } = require('node:fs')
 const { promisify } = require('node:util')
-const glob = require('glob')
+const { glob } = require('glob')
 const globPromise = promisify(glob)
 const fp = require('fastify-plugin')
 const send = require('@fastify/send')
@@ -46,7 +46,7 @@ async function fastifyStatic (fastify, opts) {
   }
 
   if (opts.hash === true) {
-    generateHashForFiles(opts.root)
+    await generateHashForFiles(opts.root)
     fastify.decorate('getHashedAsset', getHashedAssetPath)
   }
 
@@ -425,9 +425,9 @@ async function fastifyStatic (fastify, opts) {
     pumpSendToReply(req, reply, routeConfig.file, routeConfig.rootPath)
   }
 
-  function generateHashForFiles () {
+  async function generateHashForFiles () {
     const root = opts.root
-    const files = recursiveReadDir(root)
+    const files = await globPromise(`${root}/**/**`, { nodir: true })
 
     files.forEach((file) => {
       if (opts.hashSkip?.includes(file)) {
@@ -624,20 +624,6 @@ function generateFileHash (filePath) {
     hashSum.update(fileBuffer)
     return hashSum.digest('hex').slice(0, 16)
   } catch {}
-}
-
-function recursiveReadDir (dir) {
-  let results = []
-  const list = readdirSync(dir, { withFileTypes: true })
-  for (const dirent of list) {
-    const res = path.resolve(dir, dirent.name)
-    if (dirent.isDirectory()) {
-      results = results.concat(recursiveReadDir(res))
-    } else {
-      results.push(res)
-    }
-  }
-  return results
 }
 
 module.exports = fp(fastifyStatic, {
