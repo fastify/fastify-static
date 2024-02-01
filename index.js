@@ -47,7 +47,7 @@ async function fastifyStatic (fastify, opts) {
 
   if (opts.hash === true) {
     generateHashForFiles(opts.root)
-    fastify.decorate('getHashedAsset', getHashedAsset)
+    fastify.decorate('getHashedAsset', getHashedAssetPath)
   }
 
   const sendOptions = {
@@ -134,10 +134,10 @@ async function fastifyStatic (fastify, opts) {
       //   }
       // })
       fastify.head(prefix + '*', routeOpts, function (req, reply) {
-        pumpSendToReply(req, reply, opts.hash ? '/' + unhashAsset(req.params['*']) : '/' + req.params['*'], sendOptions.root)
+        pumpSendToReply(req, reply, `/${opts.hash ? getUnhashedAssetPath(req.params['*']) : req.params['*']}`, sendOptions.root)
       })
       fastify.get(prefix + '*', routeOpts, function (req, reply) {
-        pumpSendToReply(req, reply, opts.hash ? '/' + unhashAsset(req.params['*']) : '/' + req.params['*'], sendOptions.root)
+        pumpSendToReply(req, reply, `/${opts.hash ? getUnhashedAssetPath(req.params['*']) : req.params['*']}`, sendOptions.root)
       })
       if (opts.redirect === true && prefix !== opts.prefix) {
         fastify.get(opts.prefix, routeOpts, function (req, reply) {
@@ -161,7 +161,7 @@ async function fastifyStatic (fastify, opts) {
 
           let route
           if (opts.hash) {
-            route = getHashedAsset(file)
+            route = getHashedAssetPath(file)
           } else {
             route = (prefix + file).replace(doubleForwardSlashRegex, '/')
           }
@@ -450,14 +450,14 @@ async function fastifyStatic (fastify, opts) {
     })
   }
 
-  function getHashedAsset (unhashedRelativePath) {
+  function getHashedAssetPath (unhashedRelativePath) {
     const hashedRelativePath = fileHashes.get(unhashedRelativePath)
     if (hashedRelativePath) {
       return path.join(prefix, hashedRelativePath)
     }
   }
 
-  function unhashAsset (hashedPath) {
+  function getUnhashedAssetPath (hashedPath) {
     for (const [unhashedRelativePath, hashedRelativePath] of fileHashes) {
       if (hashedPath === hashedRelativePath) {
         return unhashedRelativePath
