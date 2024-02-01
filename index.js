@@ -1,9 +1,10 @@
 'use strict'
 
+const crypto = require('node:crypto')
 const { PassThrough } = require('node:stream')
 const path = require('node:path')
 const { fileURLToPath } = require('node:url')
-const { statSync } = require('node:fs')
+const { statSync, readFileSync, readdirSync } = require('node:fs')
 const { promisify } = require('node:util')
 const glob = require('glob')
 const globPromise = promisify(glob)
@@ -22,6 +23,8 @@ const doubleForwardSlashRegex = /\/\//gu
 const asteriskRegex = /\*/gu
 
 const supportedEncodings = ['br', 'gzip', 'deflate']
+const fileHashes = new Map()
+
 send.mime.default_type = 'application/octet-stream'
 
 async function fastifyStatic (fastify, opts) {
@@ -40,6 +43,11 @@ async function fastifyStatic (fastify, opts) {
 
   if (opts.dotfiles === undefined) {
     opts.dotfiles = 'allow'
+  }
+
+  if (opts.hash === true) {
+    generateHashForFiles(opts.root)
+    fastify.decorate('getHashedAsset', getHashedAsset)
   }
 
   const sendOptions = {
@@ -117,11 +125,19 @@ async function fastifyStatic (fastify, opts) {
       throw new Error('"wildcard" option must be a boolean')
     }
     if (opts.wildcard === undefined || opts.wildcard === true) {
+      // fastify.route({
+      //   ...routeOpts,
+      //   method: ['HEAD', 'GET'],
+      //   url: prefix + '*',
+      //   handler (req, reply) {
+      //     pumpSendToReply(req, reply, '/' + req.params['*'], sendOptions.root)
+      //   }
+      // })
       fastify.head(prefix + '*', routeOpts, function (req, reply) {
-        pumpSendToReply(req, reply, '/' + req.params['*'], sendOptions.root)
+        pumpSendToReply(req, reply, opts.hash ? '/' + unhashAsset(req.params['*']) : '/' + req.params['*'], sendOptions.root)
       })
       fastify.get(prefix + '*', routeOpts, function (req, reply) {
-        pumpSendToReply(req, reply, '/' + req.params['*'], sendOptions.root)
+        pumpSendToReply(req, reply, opts.hash ? '/' + unhashAsset(req.params['*']) : '/' + req.params['*'], sendOptions.root)
       })
       if (opts.redirect === true && prefix !== opts.prefix) {
         fastify.get(opts.prefix, routeOpts, function (req, reply) {
@@ -142,7 +158,13 @@ async function fastifyStatic (fastify, opts) {
         for (let i = 0; i < files.length; ++i) {
           const file = files[i].replace(rootPath.replace(backslashRegex, '/'), '')
             .replace(startForwardSlashRegex, '')
-          const route = (prefix + file).replace(doubleForwardSlashRegex, '/')
+
+          let route
+          if (opts.hash) {
+            route = getHashedAsset(file)
+          } else {
+            route = (prefix + file).replace(doubleForwardSlashRegex, '/')
+          }
 
           if (routes.has(route)) {
             continue
@@ -389,6 +411,7 @@ async function fastifyStatic (fastify, opts) {
       url: route,
       handler: serveFileHandler
     })
+
     toSetUp.config = toSetUp.config || {}
     toSetUp.config.file = file
     toSetUp.config.rootPath = rootPath
@@ -400,6 +423,46 @@ async function fastifyStatic (fastify, opts) {
     /* istanbul ignore next */
     const routeConfig = req.routeOptions?.config || req.routeConfig
     pumpSendToReply(req, reply, routeConfig.file, routeConfig.rootPath)
+  }
+
+  function generateHashForFiles () {
+    const root = opts.root
+    const files = recursiveReadDir(root)
+
+    files.forEach((file) => {
+      if (opts.hashSkip?.includes(file)) {
+        fileHashes.set(
+          path.relative(root, file),
+          path.relative(root, file)
+        )
+        return
+      }
+
+      const hash = generateFileHash(file)
+      const relativePath = path.relative(root, file)
+      const relativePathArray = relativePath.split('/')
+      relativePathArray.pop()
+      relativePathArray.push(`${hash}-${path.basename(relativePath)}`)
+      fileHashes.set(
+        relativePath,
+        relativePathArray.join('/')
+      )
+    })
+  }
+
+  function getHashedAsset (unhashedRelativePath) {
+    const hashedRelativePath = fileHashes.get(unhashedRelativePath)
+    if (hashedRelativePath) {
+      return path.join(prefix, hashedRelativePath)
+    }
+  }
+
+  function unhashAsset (hashedPath) {
+    for (const [unhashedRelativePath, hashedRelativePath] of fileHashes) {
+      if (hashedPath === hashedRelativePath) {
+        return unhashedRelativePath
+      }
+    }
   }
 }
 
@@ -551,6 +614,30 @@ function getRedirectUrl (url) {
     /* istanbul ignore next */
     throw err
   }
+}
+
+function generateFileHash (filePath) {
+  const hashSum = crypto.createHash('md5')
+
+  try {
+    const fileBuffer = readFileSync(filePath)
+    hashSum.update(fileBuffer)
+    return hashSum.digest('hex').slice(0, 16)
+  } catch {}
+}
+
+function recursiveReadDir (dir) {
+  let results = []
+  const list = readdirSync(dir, { withFileTypes: true })
+  for (const dirent of list) {
+    const res = path.resolve(dir, dirent.name)
+    if (dirent.isDirectory()) {
+      results = results.concat(recursiveReadDir(res))
+    } else {
+      results.push(res)
+    }
+  }
+  return results
 }
 
 module.exports = fp(fastifyStatic, {
