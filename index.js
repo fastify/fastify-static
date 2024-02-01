@@ -443,14 +443,6 @@ async function fastifyStatic (fastify, opts) {
       return path.join(prefix, hashedRelativePath)
     }
   }
-
-  function getUnhashedAssetPath (hashedPath) {
-    for (const [unhashedRelativePath, hashedRelativePath] of fileHashes) {
-      if (hashedPath === hashedRelativePath) {
-        return unhashedRelativePath
-      }
-    }
-  }
 }
 
 function normalizeRoot (root) {
