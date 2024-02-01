@@ -378,8 +378,8 @@ t.test('register /static with hash', async (t) => {
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
     prefix: '/static/',
+    maxAge: 3600,
     hash: true,
-    // hashSkip: ['foo.html'],
     wildcard: false
   }
   const fastify = Fastify()
