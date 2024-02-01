@@ -75,6 +75,22 @@ expectError<FastifyStaticOptions>({
   wildcard: '**/**'
 })
 
+expectError<FastifyStaticOptions>({
+  root: '',
+  hash: '**/**'
+})
+
+expectAssignable<FastifyStaticOptions>({
+  root: '',
+  hash: true
+})
+
+expectAssignable<FastifyStaticOptions>({
+  root: '',
+  hash: true,
+  hashSkip: ['index.html']
+})
+
 expectAssignable<FastifyStaticOptions>({
   root: '',
   list: {
