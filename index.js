@@ -425,6 +425,7 @@ async function fastifyStatic (fastify, opts) {
       for (let file of files) {
         file = file.split(path.win32.sep).join(path.posix.sep)
         const fileRelative = path.relative(rootPath, file).split(path.win32.sep).join(path.posix.sep)
+
         if (opts.hashSkip?.includes(fileRelative)) {
           fileHashes.set(
             fileRelative,
