@@ -194,6 +194,35 @@ for getting the file list.
 This option cannot be set to `false` with `redirect` set to `true` on a server
 with `ignoreTrailingSlash` set to `true`.
 
+#### `hash`
+
+Default: `undefined`
+
+To enable `hash`, you must first disable the `wildcard` option. When enabled, `hash` lets the user access assets dynamically using the decorated `getHashedAsset` function. This in turn enables the usage of a very high `maxAge` so that the content can be cached as long as possible. If any modifications are made, the hash will simply update and the cache will bust.
+
+#### Example:
+
+```js
+const fastify = require('fastify')()
+fastify.register(require('fastify-static'), {
+  root: path.join(__dirname, 'public'),
+  hash: true,
+  wildcard: false
+})
+
+fastify.listen(3000, (err) => {
+  if (err) throw err
+  console.log('Server listening at http://localhost:3000')
+})
+```
+
+Then in your templates:
+
+```handlebars
+<script src="{{ fastify.getHashedAsset('js/main.js') }}"></script>
+<link href="{{ fastify.getHashedAsset('css/main.css') }}" rel="stylesheet">
+```
+
 #### `allowedPath`
 
 Default: `(pathName, root, request) => true`
