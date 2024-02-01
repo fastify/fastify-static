@@ -386,7 +386,6 @@ t.test('register /static with hash', (t) => {
   const fastify = Fastify()
 
   fastify.register(fastifyStatic, pluginOptions)
-  fastify.get('/foo', (req, rep) => { rep.sendFile('index.html', false) })
   t.teardown(fastify.close.bind(fastify))
 
   fastify.listen({ port: 0 }, (err) => {
@@ -397,7 +396,7 @@ t.test('register /static with hash', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/foo'
+        url: 'http://localhost:' + fastify.server.address().port + fastify.getHashedAsset('index.html')
       }, (err, response, body) => {
         t.error(err)
         t.equal(response.statusCode, 200)
@@ -408,7 +407,9 @@ t.test('register /static with hash', (t) => {
   })
 })
 
-t.test('register /static with hash', async (t) => {
+t.test('register /static with hash', (t) => {
+  t.plan(2)
+
   const pluginOptions = {
     root: [path.join(__dirname, '/static')],
     prefix: '/static/',
@@ -417,16 +418,16 @@ t.test('register /static with hash', async (t) => {
     wildcard: false
   }
   const fastify = Fastify()
-  await fastify.register(fastifyStatic, pluginOptions)
 
+  fastify.register(fastifyStatic, pluginOptions)
   t.teardown(fastify.close.bind(fastify))
 
-  fastify.listen({ port: 0 }, async (err) => {
+  fastify.listen({ port: 0 }, (err) => {
     t.error(err)
 
     fastify.server.unref()
 
-    await t.test('/static/index.html', async (t) => {
+    t.test('/static/index.html', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
