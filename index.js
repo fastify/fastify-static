@@ -67,7 +67,7 @@ async function fastifyStatic (fastify, opts) {
     }
 
     generateHashes()
-    fastify.decorate('getHashedAsset', getHashedAssetPath)
+    fastify.decorate('getHashedAsset', getHashedAsset)
   }
 
   // Set the schema hide property if defined in opts or true by default
@@ -150,7 +150,7 @@ async function fastifyStatic (fastify, opts) {
         const files = globSync('**/**', { cwd: rootPath, absolute: false, follow: true, nodir: true, dot: opts.serveDotFiles })
         for (let file of files) {
           file = file.split(path.win32.sep).join(path.posix.sep)
-          const route = opts.hash ? getHashedAssetPath(file) : prefix + file
+          const route = opts.hash ? getHashedAsset(file) : prefix + file
 
           if (routes.has(route)) {
             continue
@@ -446,9 +446,9 @@ async function fastifyStatic (fastify, opts) {
     }
   }
 
-  function getHashedAssetPath (unhashedRelativePath) {
+  function getHashedAsset (unhashedRelativePath) {
     const hashedRelativePath = fileHashes.get(unhashedRelativePath)
-    return path.join(prefix, hashedRelativePath).split(path.win32.sep).join(path.posix.sep)
+    return path.join(prefix, hashedRelativePath)
   }
 }
 
