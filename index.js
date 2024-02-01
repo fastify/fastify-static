@@ -4,10 +4,8 @@ const crypto = require('node:crypto')
 const { PassThrough } = require('node:stream')
 const path = require('node:path')
 const { fileURLToPath } = require('node:url')
-const { statSync, readFileSync, readdirSync } = require('node:fs')
-const { promisify } = require('node:util')
+const { statSync, readFileSync } = require('node:fs')
 const { glob } = require('glob')
-const globPromise = promisify(glob)
 const fp = require('fastify-plugin')
 const send = require('@fastify/send')
 const encodingNegotiator = require('@fastify/accept-negotiator')
@@ -15,9 +13,6 @@ const contentDisposition = require('content-disposition')
 
 const dirList = require('./lib/dirList')
 
-const winSeparatorRegex = new RegExp(`\\${path.win32.sep}`, 'gu')
-const backslashRegex = /\\/gu
-const startForwardSlashRegex = /^\//u
 const endForwardSlashRegex = /\/$/u
 const doubleForwardSlashRegex = /\/\//gu
 const asteriskRegex = /\*/gu
@@ -46,6 +41,10 @@ async function fastifyStatic (fastify, opts) {
   }
 
   if (opts.hash === true) {
+    if (opts.wildcard === undefined || opts.wildcard === true) {
+      throw new Error('"hash" and "wildcard" options cannot be used together')
+    }
+
     await generateHashForFiles(opts.root)
     fastify.decorate('getHashedAsset', getHashedAssetPath)
   }
@@ -125,19 +124,12 @@ async function fastifyStatic (fastify, opts) {
       throw new Error('"wildcard" option must be a boolean')
     }
     if (opts.wildcard === undefined || opts.wildcard === true) {
-      // fastify.route({
-      //   ...routeOpts,
-      //   method: ['HEAD', 'GET'],
-      //   url: prefix + '*',
-      //   handler (req, reply) {
-      //     pumpSendToReply(req, reply, '/' + req.params['*'], sendOptions.root)
-      //   }
-      // })
+      // TODO: change to full declaration
       fastify.head(prefix + '*', routeOpts, function (req, reply) {
-        pumpSendToReply(req, reply, `/${opts.hash ? getUnhashedAssetPath(req.params['*']) : req.params['*']}`, sendOptions.root)
+        pumpSendToReply(req, reply, `/${req.params['*']}`, sendOptions.root)
       })
       fastify.get(prefix + '*', routeOpts, function (req, reply) {
-        pumpSendToReply(req, reply, `/${opts.hash ? getUnhashedAssetPath(req.params['*']) : req.params['*']}`, sendOptions.root)
+        pumpSendToReply(req, reply, `/${req.params['*']}`, sendOptions.root)
       })
       if (opts.redirect === true && prefix !== opts.prefix) {
         fastify.get(opts.prefix, routeOpts, function (req, reply) {
@@ -145,26 +137,20 @@ async function fastifyStatic (fastify, opts) {
         })
       }
     } else {
-      const globPattern = '**/**'
+      const indexes = opts.index === undefined ? ['index.html'] : [].concat(opts.index)
       const indexDirs = new Map()
       const routes = new Set()
+      const globPattern = '**/**'
 
       const roots = Array.isArray(sendOptions.root) ? sendOptions.root : [sendOptions.root]
       for (let i = 0; i < roots.length; ++i) {
         const rootPath = roots[i]
-        const files = await globPromise(path.join(rootPath, globPattern).replace(winSeparatorRegex, path.posix.sep), { nodir: true, dot: opts.serveDotFiles })
-        const indexes = opts.index === undefined ? ['index.html'] : [].concat(opts.index)
+        const posixRootPath = rootPath.split(path.win32.sep).join(path.posix.sep)
+        const files = await glob(`${posixRootPath}/${globPattern}`, { follow: true, nodir: true, dot: opts.serveDotFiles })
 
         for (let i = 0; i < files.length; ++i) {
-          const file = files[i].replace(rootPath.replace(backslashRegex, '/'), '')
-            .replace(startForwardSlashRegex, '')
-
-          let route
-          if (opts.hash) {
-            route = getHashedAssetPath(file)
-          } else {
-            route = (prefix + file).replace(doubleForwardSlashRegex, '/')
-          }
+          const file = files[i].split(path.win32.sep).join(path.posix.sep).replace(`${posixRootPath}/`, '')
+          const route = opts.hash ? getHashedAssetPath(file) : (prefix + file).replace(doubleForwardSlashRegex, '/')
 
           if (routes.has(route)) {
             continue
@@ -172,7 +158,7 @@ async function fastifyStatic (fastify, opts) {
 
           routes.add(route)
 
-          setUpHeadAndGet(routeOpts, route, '/' + file, rootPath)
+          setUpHeadAndGet(routeOpts, route, `/${file}`, rootPath)
 
           const key = path.posix.basename(route)
           if (indexes.includes(key) && !indexDirs.has(key)) {
@@ -428,7 +414,7 @@ async function fastifyStatic (fastify, opts) {
   async function generateHashForFiles () {
     fileHashes = new Map()
     const root = opts.root
-    const files = await globPromise(`${root}/**/**`, { nodir: true })
+    const files = await glob(`${root}/**/**`, { nodir: true })
 
     files.forEach((file) => {
       if (opts.hashSkip?.includes(file)) {
