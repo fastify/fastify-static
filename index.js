@@ -42,7 +42,7 @@ async function fastifyStatic (fastify, opts) {
 
   if (opts.hash === true) {
     if (opts.wildcard === undefined || opts.wildcard === true) {
-      throw new Error('"hash" and "wildcard" options cannot be used together')
+      throw new Error('"wildcard" has to be disabled to use "hash"')
     }
 
     await generateHashForFiles(opts.root)
