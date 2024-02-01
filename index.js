@@ -5,7 +5,7 @@ const { PassThrough } = require('node:stream')
 const path = require('node:path')
 const { fileURLToPath } = require('node:url')
 const { statSync, readFileSync } = require('node:fs')
-const { glob } = require('glob')
+const { globSync } = require('glob')
 const fp = require('fastify-plugin')
 const send = require('@fastify/send')
 const encodingNegotiator = require('@fastify/accept-negotiator')
@@ -66,7 +66,7 @@ async function fastifyStatic (fastify, opts) {
       throw new Error('"wildcard" has to be disabled to use "hash"')
     }
 
-    await generateHashForFiles()
+    generateHashes()
     fastify.decorate('getHashedAsset', getHashedAssetPath)
   }
 
@@ -147,7 +147,7 @@ async function fastifyStatic (fastify, opts) {
           rootPath += '/'
         }
 
-        const files = await glob('**/**', { cwd: rootPath, absolute: false, follow: true, nodir: true, dot: opts.serveDotFiles })
+        const files = globSync('**/**', { cwd: rootPath, absolute: false, follow: true, nodir: true, dot: opts.serveDotFiles })
         for (let file of files) {
           file = file.split(path.win32.sep).join(path.posix.sep)
           const route = opts.hash ? getHashedAssetPath(file) : prefix + file
@@ -411,7 +411,7 @@ async function fastifyStatic (fastify, opts) {
     pumpSendToReply(req, reply, routeConfig.file, routeConfig.rootPath)
   }
 
-  async function generateHashForFiles () {
+  function generateHashes () {
     fileHashes = new Map()
 
     const roots = Array.isArray(sendOptions.root) ? sendOptions.root : [sendOptions.root]
@@ -421,7 +421,7 @@ async function fastifyStatic (fastify, opts) {
         rootPath += '/'
       }
 
-      const files = await glob(`${rootPath}**/**`, { follow: true, nodir: true, dot: opts.serveDotFiles })
+      const files = globSync(`${rootPath}**/**`, { follow: true, nodir: true, dot: opts.serveDotFiles })
       for (let file of files) {
         file = file.split(path.win32.sep).join(path.posix.sep)
         const fileRelative = path.relative(rootPath, file).split(path.win32.sep).join(path.posix.sep)
