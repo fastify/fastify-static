@@ -13,8 +13,9 @@ const contentDisposition = require('content-disposition')
 
 const dirList = require('./lib/dirList')
 
-const endForwardSlashRegex = /\/$/u
 const asteriskRegex = /\*/gu
+const doubleForwardSlashRegex = /\/\//gu
+const endForwardSlashRegex = /\/$/u
 
 const supportedEncodings = ['br', 'gzip', 'deflate']
 let fileHashes = null
@@ -152,7 +153,7 @@ async function fastifyStatic (fastify, opts) {
 
         const files = await glob('**/**', { cwd: posixRootPath, absolute: false, follow: true, nodir: true, dot: opts.serveDotFiles })
         for (const file of files) {
-          const route = opts.hash ? getHashedAssetPath(file) : prefix + file
+          const route = opts.hash ? getHashedAssetPath(file) : (prefix + file).replace(doubleForwardSlashRegex, '/')
 
           if (routes.has(route)) {
             continue
@@ -415,10 +416,16 @@ async function fastifyStatic (fastify, opts) {
 
   async function generateHashForFiles (rootPath) {
     fileHashes ||= new Map()
-    const files = await glob(`${rootPath}/**/**`, { follow: true, nodir: true, dot: opts.serveDotFiles })
+
+    let posixRootPath = rootPath.split(path.win32.sep).join(path.posix.sep)
+    if (!posixRootPath.endsWith('/')) {
+      posixRootPath += '/'
+    }
+
+    const files = await glob(`${posixRootPath}**/**`, { follow: true, nodir: true, dot: opts.serveDotFiles })
 
     for (const file of files) {
-      const relativePath = path.relative(rootPath, file)
+      const relativePath = path.posix.relative(posixRootPath, file)
       if (opts.hashSkip?.includes(relativePath)) {
         fileHashes.set(
           relativePath,
