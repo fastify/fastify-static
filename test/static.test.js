@@ -518,6 +518,45 @@ t.test('register /static with hash prebuilt hashes', (t) => {
   })
 })
 
+t.test('register /static with hash prebuilt hashes, two roots', (t) => {
+  t.plan(2)
+
+  const pluginOptions = {
+    root: [path.join(__dirname, '/static'), path.join(__dirname, '/static-pre-compressed')],
+    prefix: '/static/',
+    maxAge: 365 * 24 * 60 * 60 * 1000,
+    serveDotFiles: true,
+    hash: true,
+    immutable: true,
+    wildcard: false
+  }
+
+  generateHashes(pluginOptions.root, [], true, true).then(() => {
+    const fastify = Fastify()
+    fastify.register(fastifyStatic, pluginOptions)
+    t.teardown(fastify.close.bind(fastify))
+
+    fastify.listen({ port: 0 }, (err) => {
+      t.error(err)
+
+      fastify.server.unref()
+
+      t.test('/static/foo.html', (t) => {
+        t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+        simple.concat({
+          method: 'GET',
+          url: 'http://localhost:' + fastify.server.address().port + fastify.getHashedAsset('uncompressed.html')
+        }, (err, response, body) => {
+          t.error(err)
+          t.equal(response.statusCode, 200)
+          t.equal(body.toString(), uncompressedStatic)
+          genericResponseChecks(t, response)
+        })
+      })
+    })
+  })
+})
+
 t.test('register /static with hash (incorrect)', async (t) => {
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
