@@ -207,6 +207,8 @@ const fastify = require('fastify')()
 fastify.register(require('fastify-static'), {
   root: path.join(__dirname, 'public'),
   hash: true,
+  immutable: true,
+  maxAge: 31536000, // You can set a very long maxAge
   wildcard: false
 })
 

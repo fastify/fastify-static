@@ -381,6 +381,7 @@ t.test('register /static with hash', (t) => {
     root: path.join(__dirname, '/static/'),
     prefix: '/static/',
     hash: true,
+    maxAge: 365 * 24 * 60 * 60 * 1000,
     wildcard: false
   }
   const fastify = Fastify()
@@ -393,13 +394,14 @@ t.test('register /static with hash', (t) => {
     fastify.server.unref()
 
     t.test('/static/index.html', (t) => {
-      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+      t.plan(4 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + fastify.getHashedAsset('index.html')
       }, (err, response, body) => {
         t.error(err)
         t.equal(response.statusCode, 200)
+        t.equal(response.headers['cache-control'], 'public, max-age=31536000')
         t.equal(body.toString(), indexContent)
         genericResponseChecks(t, response)
       })
