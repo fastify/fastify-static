@@ -437,7 +437,7 @@ async function fastifyStatic (fastify, opts) {
         const hash = generateFileHash(file)
         const relativePathArray = fileRelative.split('/')
         relativePathArray.pop()
-        relativePathArray.push(`${hash}-${path.basename(fileRelative)}`)
+        relativePathArray.push(hash + path.basename(fileRelative))
         fileHashes.set(
           fileRelative,
           relativePathArray.join('/')
@@ -605,8 +605,10 @@ function getRedirectUrl (url) {
 function generateFileHash (filePath) {
   try {
     const fileBuffer = readFileSync(filePath)
-    return crypto.createHash('md5').update(fileBuffer).digest('hex').slice(0, 16)
-  } catch {}
+    return `${crypto.createHash('md5').update(fileBuffer).digest('hex').slice(0, 16)}-`
+  } catch {
+    return ''
+  }
 }
 
 module.exports = fp(fastifyStatic, {
