@@ -30,10 +30,5 @@ server.get('/', async (request, reply) => {
 })
 
 // Start the server
-server.listen({ port: 3000 }, (err) => {
-  if (err) {
-    console.error(err)
-    process.exit(1)
-  }
-  console.log('Server is running on port 3000')
-})
+await server.listen({ port: 3000 })
+console.log('Server is running on port 3000')
