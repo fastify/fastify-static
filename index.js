@@ -4,12 +4,14 @@ const crypto = require('node:crypto')
 const { PassThrough } = require('node:stream')
 const path = require('node:path')
 const { fileURLToPath } = require('node:url')
-const { statSync, readFileSync } = require('node:fs')
+const { readFile } = require('node:fs/promises')
+const { statSync } = require('node:fs')
 const { globSync } = require('glob')
 const fp = require('fastify-plugin')
 const send = require('@fastify/send')
 const encodingNegotiator = require('@fastify/accept-negotiator')
 const contentDisposition = require('content-disposition')
+const fastq = require('fastq')
 
 const dirList = require('./lib/dirList')
 
@@ -147,7 +149,10 @@ async function fastifyStatic (fastify, opts) {
           rootPath += '/'
         }
 
-        const files = globSync('**/**', { cwd: rootPath, absolute: false, follow: true, nodir: true, dot: opts.serveDotFiles })
+        const files = globSync('**/**', {
+          cwd: rootPath, absolute: false, follow: true, nodir: true, dot: opts.serveDotFiles
+        })
+
         for (let file of files) {
           file = file.split(path.win32.sep).join(path.posix.sep)
           const route = opts.hash ? getHashedAsset(file) : prefix + file
@@ -411,7 +416,7 @@ async function fastifyStatic (fastify, opts) {
     pumpSendToReply(req, reply, routeConfig.file, routeConfig.rootPath)
   }
 
-  function generateHashes () {
+  async function generateHashes () {
     fileHashes = new Map()
 
     const roots = Array.isArray(sendOptions.root) ? sendOptions.root : [sendOptions.root]
@@ -421,13 +426,19 @@ async function fastifyStatic (fastify, opts) {
         rootPath += '/'
       }
 
-      const files = globSync('**/**', { absolute: true, cwd: rootPath, ignore: opts.hashSkip, follow: true, nodir: true, dot: opts.serveDotFiles })
-      for (let file of files) {
-        file = file.split(path.win32.sep).join(path.posix.sep)
-        const hash = generateFileHash(file)
+      const files = globSync('**/**', {
+        cwd: rootPath, absolute: true, follow: true, nodir: true, dot: opts.serveDotFiles, ignore: opts.hashSkip
+      })
+      const hashQueue = fastq.promise(generateFileHash, 5)
+      const hashes = files.map((file) => hashQueue.push(file))
+      await Promise.all(hashes)
 
+      for (let [index, file] of files.entries()) {
+        file = file.split(path.win32.sep).join(path.posix.sep)
+        const hash = hashes[index]
         const fileRelative = path.posix.relative(rootPath, file)
         const relativePathArray = fileRelative.split('/')
+
         relativePathArray.pop()
         relativePathArray.push(hash + path.basename(fileRelative))
         fileHashes.set(
@@ -594,9 +605,9 @@ function getRedirectUrl (url) {
   }
 }
 
-function generateFileHash (filePath) {
+async function generateFileHash (filePath) {
   try {
-    const fileBuffer = readFileSync(filePath)
+    const fileBuffer = await readFile(filePath)
     return `${crypto.createHash('md5').update(fileBuffer).digest('hex').slice(0, 16)}-`
   } catch {
     return ''
