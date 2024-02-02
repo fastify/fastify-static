@@ -421,12 +421,14 @@ async function fastifyStatic (fastify, opts) {
         rootPath += '/'
       }
 
+      let hashSkip
+      if (opts.hashSkip) hashSkip = globSync(opts.hashSkip, { cwd: rootPath, absolute: false, follow: true, nodir: true, dot: opts.serveDotFiles })
       const files = globSync(`${rootPath}**/**`, { follow: true, nodir: true, dot: opts.serveDotFiles })
       for (let file of files) {
         file = file.split(path.win32.sep).join(path.posix.sep)
         const fileRelative = path.posix.relative(rootPath, file)
 
-        if (opts.hashSkip?.includes(fileRelative)) {
+        if (hashSkip?.includes(fileRelative)) {
           fileHashes.set(
             fileRelative,
             fileRelative
