@@ -430,8 +430,8 @@ async function fastifyStatic (fastify, opts) {
         cwd: rootPath, absolute: true, follow: true, nodir: true, dot: opts.serveDotFiles, ignore: opts.hashSkip
       })
       const hashQueue = fastq.promise(generateFileHash, 5)
-      const hashes = files.map((file) => hashQueue.push(file))
-      await Promise.all(hashes)
+      const hashPromises = files.map((file) => hashQueue.push(file))
+      const hashes = await Promise.all(hashPromises)
 
       for (let [index, file] of files.entries()) {
         file = file.split(path.win32.sep).join(path.posix.sep)
