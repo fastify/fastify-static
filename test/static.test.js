@@ -427,15 +427,15 @@ t.test('register /static with hash', (t) => {
 
     fastify.server.unref()
 
-    t.test('/static/index.html', (t) => {
+    t.test('/static/foo.html', (t) => {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + fastify.getHashedAsset('index.html')
+        url: 'http://localhost:' + fastify.server.address().port + '/static/foo.html'
       }, (err, response, body) => {
         t.error(err)
         t.equal(response.statusCode, 200)
-        t.equal(body.toString(), indexContent)
+        t.equal(body.toString(), fooContent)
         genericResponseChecks(t, response)
       })
     })
