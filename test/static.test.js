@@ -445,7 +445,7 @@ t.test('register /static with hash', (t) => {
   })
 })
 
-t.test('register /static with hash prebuilt', (t) => {
+t.test('register /static with hash prebuilt hashes', (t) => {
   t.plan(2)
 
   const pluginOptions = {
@@ -471,6 +471,42 @@ t.test('register /static with hash prebuilt', (t) => {
         simple.concat({
           method: 'GET',
           url: 'http://localhost:' + fastify.server.address().port + '/static/foo.html'
+        }, (err, response, body) => {
+          t.error(err)
+          t.equal(response.statusCode, 200)
+          t.equal(body.toString(), fooContent)
+          genericResponseChecks(t, response)
+        })
+      })
+    })
+  })
+})
+
+t.test('register /static with hash prebuilt hashes', (t) => {
+  t.plan(2)
+
+  const pluginOptions = {
+    root: [path.join(__dirname, '/static')],
+    prefix: '/static/',
+    hash: true,
+    wildcard: false
+  }
+
+  generateHashes(pluginOptions.root, [], true, true).then(() => {
+    const fastify = Fastify()
+    fastify.register(fastifyStatic, pluginOptions)
+    t.teardown(fastify.close.bind(fastify))
+
+    fastify.listen({ port: 0 }, (err) => {
+      t.error(err)
+
+      fastify.server.unref()
+
+      t.test('/static/foo.html', (t) => {
+        t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+        simple.concat({
+          method: 'GET',
+          url: 'http://localhost:' + fastify.server.address().port + fastify.getHashedAsset('foo.html')
         }, (err, response, body) => {
           t.error(err)
           t.equal(response.statusCode, 200)
