@@ -13,6 +13,7 @@ const contentDisposition = require('content-disposition')
 
 const dirList = require('./lib/dirList')
 const { generateHashes } = require('./lib/hash')
+const hashesFilePath = path.join('.tmp', 'hashes.json')
 let fileHashes
 
 const asteriskRegex = /\*/gu
@@ -67,7 +68,6 @@ async function fastifyStatic (fastify, opts) {
       throw new Error('"wildcard" has to be disabled to use "hash"')
     }
 
-    const hashesFilePath = path.join('.tmp', 'hashes.json')
     try {
       const hashesContent = await readFile(hashesFilePath, 'utf8')
       fileHashes = new Map(Object.entries(JSON.parse(hashesContent)))
