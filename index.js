@@ -430,7 +430,7 @@ async function fastifyStatic (fastify, opts) {
       const files = globSync('**/**', {
         cwd: rootPath, absolute: true, follow: true, nodir: true, dot: opts.serveDotFiles, ignore: opts.hashSkip
       })
-      const hashQueue = fastq.promise(generateFileHash, os.availableParallelism)
+      const hashQueue = fastq.promise(generateFileHash, os.availableParallelism())
       const hashPromises = files.map((file) => hashQueue.push(file))
       const hashes = await Promise.all(hashPromises)
 
