@@ -1,26 +1,24 @@
 'use strict'
 
-const crypto = require('node:crypto')
+const { readFile } = require('node:fs/promises')
 const { PassThrough } = require('node:stream')
 const path = require('node:path')
-const os = require('node:os')
 const { fileURLToPath } = require('node:url')
-const { readFile } = require('node:fs/promises')
 const { statSync } = require('node:fs')
 const { Glob } = require('glob')
 const fp = require('fastify-plugin')
 const send = require('@fastify/send')
 const encodingNegotiator = require('@fastify/accept-negotiator')
 const contentDisposition = require('content-disposition')
-const fastq = require('fastq')
 
 const dirList = require('./lib/dirList')
+const { generateHashes } = require('./lib/hash')
+let fileHashes
 
 const asteriskRegex = /\*/gu
 const endForwardSlashRegex = /\/$/u
 
 const supportedEncodings = ['br', 'gzip', 'deflate']
-let fileHashes
 
 send.mime.default_type = 'application/octet-stream'
 
@@ -69,7 +67,16 @@ async function fastifyStatic (fastify, opts) {
       throw new Error('"wildcard" has to be disabled to use "hash"')
     }
 
-    generateHashes()
+    const hashesFilePath = path.join('.tmp', 'hashes.json')
+    try {
+      const hashesContent = await readFile(hashesFilePath, 'utf8')
+      fileHashes = new Map(Object.entries(JSON.parse(hashesContent)))
+      console.log('Using pre-generated hashes.')
+    } catch (err) {
+      console.log('Pre-generated hashes not found, generating hashes...')
+      fileHashes = await generateHashes(opts.root, opts.hashSkip, opts.serveDotFiles)
+    }
+
     fastify.decorate('getHashedAsset', getHashedAsset)
   }
 
@@ -415,46 +422,6 @@ async function fastifyStatic (fastify, opts) {
     pumpSendToReply(req, reply, routeConfig.file, routeConfig.rootPath)
   }
 
-  async function generateHashes () {
-    fileHashes = new Map()
-
-    const roots = Array.isArray(sendOptions.root) ? sendOptions.root : [sendOptions.root]
-    for (let rootPath of roots) {
-      rootPath = rootPath.split(path.win32.sep).join(path.posix.sep)
-      if (!rootPath.endsWith('/')) {
-        rootPath += '/'
-      }
-
-      // istanbul ignore next pollyfill
-      const queue = fastq.promise(generateFileHash, os.availableParallelism?.() || 4)
-      const hashPromises = []
-      const files = []
-
-      for await (let file of new Glob('**/**', {
-        cwd: rootPath, absolute: true, follow: true, nodir: true, dot: opts.serveDotFiles, ignore: opts.hashSkip
-      })) {
-        file = file.split(path.win32.sep).join(path.posix.sep)
-        files.push(file)
-        hashPromises.push(queue.push(file))
-      }
-
-      const hashes = await Promise.all(hashPromises)
-
-      for (const [index, file] of files.entries()) {
-        const hash = hashes[index]
-        const fileRelative = path.posix.relative(rootPath, file)
-        const relativePathArray = fileRelative.split('/')
-
-        relativePathArray.pop()
-        relativePathArray.push(hash + path.basename(fileRelative))
-        fileHashes.set(
-          fileRelative,
-          relativePathArray.join('/')
-        )
-      }
-    }
-  }
-
   function getHashedAsset (unhashedRelativePath) {
     const hashedRelativePath = fileHashes.get(unhashedRelativePath)
     return `${prefix}${hashedRelativePath ?? unhashedRelativePath}`
@@ -608,15 +575,6 @@ function getRedirectUrl (url) {
     err.statusCode = 400
     /* istanbul ignore next */
     throw err
-  }
-}
-
-async function generateFileHash (filePath) {
-  try {
-    const fileBuffer = await readFile(filePath)
-    return `${crypto.createHash('md5').update(fileBuffer).digest('hex').slice(0, 16)}-`
-  } catch {
-    return ''
   }
 }
 
