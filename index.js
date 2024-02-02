@@ -7,7 +7,7 @@ const os = require('node:os')
 const { fileURLToPath } = require('node:url')
 const { readFile } = require('node:fs/promises')
 const { statSync } = require('node:fs')
-const { globSync } = require('glob')
+const { Glob, globSync } = require('glob')
 const fp = require('fastify-plugin')
 const send = require('@fastify/send')
 const encodingNegotiator = require('@fastify/accept-negotiator')
@@ -427,16 +427,21 @@ async function fastifyStatic (fastify, opts) {
         rootPath += '/'
       }
 
-      const files = globSync('**/**', {
+      const queue = fastq.promise(generateFileHash, os.availableParallelism?.() || 4)
+      const hashPromises = []
+      const files = []
+
+      for await (let file of new Glob('**/**', {
         cwd: rootPath, absolute: true, follow: true, nodir: true, dot: opts.serveDotFiles, ignore: opts.hashSkip
-      })
-      // istanbul ignore next because it's a pollyfill
-      const hashQueue = fastq.promise(generateFileHash, os.availableParallelism?.() || 4)
-      const hashPromises = files.map((file) => hashQueue.push(file))
+      })) {
+        file = file.split(path.win32.sep).join(path.posix.sep)
+        files.push(file)
+        hashPromises.push(queue.push(file))
+      }
+
       const hashes = await Promise.all(hashPromises)
 
-      for (let [index, file] of files.entries()) {
-        file = file.split(path.win32.sep).join(path.posix.sep)
+      for (const [index, file] of files.entries()) {
         const hash = hashes[index]
         const fileRelative = path.posix.relative(rootPath, file)
         const relativePathArray = fileRelative.split('/')
