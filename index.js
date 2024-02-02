@@ -3,6 +3,7 @@
 const crypto = require('node:crypto')
 const { PassThrough } = require('node:stream')
 const path = require('node:path')
+const os = require('node:os')
 const { fileURLToPath } = require('node:url')
 const { readFile } = require('node:fs/promises')
 const { statSync } = require('node:fs')
@@ -429,7 +430,7 @@ async function fastifyStatic (fastify, opts) {
       const files = globSync('**/**', {
         cwd: rootPath, absolute: true, follow: true, nodir: true, dot: opts.serveDotFiles, ignore: opts.hashSkip
       })
-      const hashQueue = fastq.promise(generateFileHash, 5)
+      const hashQueue = fastq.promise(generateFileHash, os.availableParallelism)
       const hashPromises = files.map((file) => hashQueue.push(file))
       const hashes = await Promise.all(hashPromises)
 
