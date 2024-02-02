@@ -427,6 +427,7 @@ async function fastifyStatic (fastify, opts) {
         rootPath += '/'
       }
 
+      // istanbul ignore next pollyfill
       const queue = fastq.promise(generateFileHash, os.availableParallelism?.() || 4)
       const hashPromises = []
       const files = []
