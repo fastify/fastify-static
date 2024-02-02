@@ -603,12 +603,9 @@ function getRedirectUrl (url) {
 }
 
 function generateFileHash (filePath) {
-  const hashSum = crypto.createHash('md5')
-
   try {
     const fileBuffer = readFileSync(filePath)
-    hashSum.update(fileBuffer)
-    return hashSum.digest('hex').slice(0, 16)
+    return crypto.createHash('md5').update(fileBuffer).digest('hex').slice(0, 16)
   } catch {}
 }
 
