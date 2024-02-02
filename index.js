@@ -421,21 +421,12 @@ async function fastifyStatic (fastify, opts) {
         rootPath += '/'
       }
 
-      const hashSkip = opts.hashSkip ? globSync(opts.hashSkip, { cwd: rootPath, absolute: false, follow: true, nodir: true, dot: opts.serveDotFiles }) : null
-      const files = globSync(`${rootPath}**/**`, { follow: true, nodir: true, dot: opts.serveDotFiles })
+      const files = globSync('**/**', { absolute: true, cwd: rootPath, ignore: opts.hashSkip, follow: true, nodir: true, dot: opts.serveDotFiles })
       for (let file of files) {
         file = file.split(path.win32.sep).join(path.posix.sep)
-        const fileRelative = path.posix.relative(rootPath, file)
-
-        if (hashSkip?.includes(fileRelative)) {
-          fileHashes.set(
-            fileRelative,
-            fileRelative
-          )
-          continue
-        }
-
         const hash = generateFileHash(file)
+
+        const fileRelative = path.posix.relative(rootPath, file)
         const relativePathArray = fileRelative.split('/')
         relativePathArray.pop()
         relativePathArray.push(hash + path.basename(fileRelative))
@@ -449,7 +440,7 @@ async function fastifyStatic (fastify, opts) {
 
   function getHashedAsset (unhashedRelativePath) {
     const hashedRelativePath = fileHashes.get(unhashedRelativePath)
-    return prefix + hashedRelativePath
+    return prefix + (hashedRelativePath ?? unhashedRelativePath)
   }
 }
 
