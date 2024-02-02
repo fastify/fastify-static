@@ -48,6 +48,7 @@
     "coveralls": "^3.0.4",
     "eslint-plugin-typescript": "^0.14.0",
     "fastify": "^4.0.0-rc.2",
+    "fastify-html": "^0.3.3",
     "handlebars": "^4.7.6",
     "pino": "^8.4.2",
     "proxyquire": "^2.1.0",
