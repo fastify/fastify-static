@@ -20,7 +20,7 @@ const asteriskRegex = /\*/gu
 const endForwardSlashRegex = /\/$/u
 
 const supportedEncodings = ['br', 'gzip', 'deflate']
-let fileHashes = null
+let fileHashes
 
 send.mime.default_type = 'application/octet-stream'
 
