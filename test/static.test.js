@@ -488,10 +488,11 @@ t.test('register /static with hash prebuilt hashes', (t) => {
     root: [path.join(__dirname, '/static')],
     prefix: '/static/',
     hash: true,
+    serveDotFiles: true,
     wildcard: false
   }
 
-  generateHashes(pluginOptions.root, true, [], true).then(() => {
+  generateHashes(pluginOptions.root, true, undefined, true).then(() => {
     const fastify = Fastify()
     fastify.register(fastifyStatic, pluginOptions)
     t.teardown(fastify.close.bind(fastify))

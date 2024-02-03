@@ -75,7 +75,7 @@ async function fastifyStatic (fastify, opts) {
     try {
       const hashesContent = await readFile(hashesFilePath, 'utf8')
       fastify[kFileHashes] = new Map(Object.entries(JSON.parse(hashesContent)))
-    } catch (err) {
+    } catch {
       fastify[kFileHashes] = await generateHashes(opts.root, opts.serveDotFiles, opts.hashSkip)
     }
   }
