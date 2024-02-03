@@ -71,9 +71,7 @@ async function fastifyStatic (fastify, opts) {
     try {
       const hashesContent = await readFile(hashesFilePath, 'utf8')
       fileHashes = new Map(Object.entries(JSON.parse(hashesContent)))
-      console.log('Using pre-generated hashes.')
     } catch (err) {
-      console.log('Pre-generated hashes not found, generating hashes...')
       fileHashes = await generateHashes(opts.root, opts.serveDotFiles, opts.hashSkip)
     }
 
@@ -133,12 +131,14 @@ async function fastifyStatic (fastify, opts) {
       throw new Error('"wildcard" option must be a boolean')
     }
     if (opts.wildcard === undefined || opts.wildcard === true) {
-      // TODO: change to full declaration
-      fastify.head(prefix + '*', routeOpts, function (req, reply) {
-        pumpSendToReply(req, reply, `/${req.params['*']}`, sendOptions.root)
-      })
-      fastify.get(prefix + '*', routeOpts, function (req, reply) {
-        pumpSendToReply(req, reply, `/${req.params['*']}`, sendOptions.root)
+      fastify.route({
+        ...routeOpts,
+        exposeHeadRoute: true,
+        method: 'GET',
+        url: `${prefix}*`,
+        handler (req, reply) {
+          pumpSendToReply(req, reply, `/${req.params['*']}`, sendOptions.root)
+        }
       })
       if (opts.redirect === true && prefix !== opts.prefix) {
         fastify.get(opts.prefix, routeOpts, function (req, reply) {
@@ -404,7 +404,8 @@ async function fastifyStatic (fastify, opts) {
 
   function setUpHeadAndGet (routeOpts, route, file, rootPath) {
     const toSetUp = Object.assign({}, routeOpts, {
-      method: ['HEAD', 'GET'],
+      exposeHeadRoute: true,
+      method: 'GET',
       url: route,
       handler: serveFileHandler
     })
