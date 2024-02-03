@@ -534,7 +534,10 @@ t.test('register /static with hash prebuilt hashes, two roots', (t) => {
   generateHashes(pluginOptions.root, true, [], true).then(() => {
     const fastify = Fastify()
     fastify.register(fastifyStatic, pluginOptions)
-    t.teardown(fastify.close.bind(fastify))
+    t.teardown(() => {
+      fastify.close.bind(fastify)
+      fs.unlinkSync(path.join(__dirname, '../.tmp/hashes.json'))
+    })
 
     fastify.listen({ port: 0 }, (err) => {
       t.error(err)
