@@ -70,13 +70,11 @@ async function fastifyStatic (fastify, opts) {
     }
 
     fastify.decorate('getHashedAsset', getHashedAsset)
-    fastify.decorate(kFileHashes, null)
-
     try {
       const hashesContent = await readFile(hashesFilePath, 'utf8')
-      fastify[kFileHashes] = new Map(Object.entries(JSON.parse(hashesContent)))
+      fastify.decorate(kFileHashes, new Map(Object.entries(JSON.parse(hashesContent))))
     } catch {
-      fastify[kFileHashes] = await generateHashes(opts.root, opts.serveDotFiles, opts.hashSkip)
+      fastify.decorate(kFileHashes, await generateHashes(opts.root, opts.serveDotFiles, opts.hashSkip))
     }
   }
 
