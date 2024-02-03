@@ -74,7 +74,7 @@ async function fastifyStatic (fastify, opts) {
       console.log('Using pre-generated hashes.')
     } catch (err) {
       console.log('Pre-generated hashes not found, generating hashes...')
-      fileHashes = await generateHashes(opts.root, opts.hashSkip, opts.serveDotFiles)
+      fileHashes = await generateHashes(opts.root, opts.serveDotFiles, opts.hashSkip)
     }
 
     fastify.decorate('getHashedAsset', getHashedAsset)

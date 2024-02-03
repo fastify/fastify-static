@@ -456,7 +456,7 @@ t.test('register /static with hash prebuilt hashes', (t) => {
     wildcard: false
   }
 
-  generateHashes(pluginOptions.root, ['foo.html'], true, true).then(() => {
+  generateHashes(pluginOptions.root, true, ['foo.html'], true).then(() => {
     const fastify = Fastify()
     fastify.register(fastifyStatic, pluginOptions)
     t.teardown(fastify.close.bind(fastify))
@@ -492,7 +492,7 @@ t.test('register /static with hash prebuilt hashes', (t) => {
     wildcard: false
   }
 
-  generateHashes(pluginOptions.root, [], true, true).then(() => {
+  generateHashes(pluginOptions.root, true, [], true).then(() => {
     const fastify = Fastify()
     fastify.register(fastifyStatic, pluginOptions)
     t.teardown(fastify.close.bind(fastify))
@@ -531,7 +531,7 @@ t.test('register /static with hash prebuilt hashes, two roots', (t) => {
     wildcard: false
   }
 
-  generateHashes(pluginOptions.root, [], true, true).then(() => {
+  generateHashes(pluginOptions.root, true, [], true).then(() => {
     const fastify = Fastify()
     fastify.register(fastifyStatic, pluginOptions)
     t.teardown(fastify.close.bind(fastify))
