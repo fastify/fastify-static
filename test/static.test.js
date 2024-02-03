@@ -375,7 +375,6 @@ t.test('register /static', (t) => {
   })
 })
 
-
 t.test('register /static', (t) => {
   t.plan(11)
 
