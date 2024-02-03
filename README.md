@@ -200,7 +200,7 @@ Default: `undefined`
 
 To enable `hash`, the `wildcard` option must first be disabled explicitly. When enabled, `hash` lets the user access assets dynamically using the decorated `getHashedAsset` function. This in turn makes possible the usage of a very high `maxAge` so that the content can be cached as long as possible. If any modifications are made to a file, its hash will simply be recalculated during the next startup and the cache will bust for that asset.
 
-**Note:** A custom script can be used to generate the hashes in advance, ideally during the build phase.
+**Note:** A custom script can be used to generate the hashes in advance to speed up cold start times, ideally during the build phase.
 
 ##### Example:
 
@@ -259,6 +259,8 @@ async function run () {
 
 run()
 ```
+
+The hashes are created in the following directory: `.tmp/hashes.json`.
 
 #### `allowedPath`
 
