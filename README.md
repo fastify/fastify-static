@@ -227,7 +227,7 @@ Then in your templates:
 <link href="{{ fastify.getHashedAsset('css/main.css') }}" rel="stylesheet">
 ```
 
-##### Example of a custom script that can pregenerate the hashes
+##### Example of a custom script that can pregenerate the hashes:
 
 ```js
 #!/usr/bin/env node
