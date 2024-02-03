@@ -198,9 +198,9 @@ with `ignoreTrailingSlash` set to `true`.
 
 Default: `undefined`
 
-To enable `hash`, you must first disable the `wildcard` option. When enabled, `hash` lets the user access assets dynamically using the decorated `getHashedAsset` function. This in turn makes possible the usage of a very high `maxAge` so that the content can be cached as long as possible. If any modifications are made to a file, its hash will simply be recalculated during the next startup (or after running `npm run hash:build <rootList> <serveDotfiles?> <ignoreList>`) and the cache will bust for that asset.
+To enable `hash`, you must first disable the `wildcard` option. When enabled, `hash` lets the user access assets dynamically using the decorated `getHashedAsset` function. This in turn makes possible the usage of a very high `maxAge` so that the content can be cached as long as possible. If any modifications are made to a file, its hash will simply be recalculated during the next startup (or after running `npm run hash <rootList> <serveDotfiles?> <globIgnoreList>`) and the cache will bust for that asset.
 
-**Note:** Once you generate the hashes using the `hash:build` script, you need to make sure it's rerun after each file modification.
+**Note:** Once you generate the hashes using the `npm run hash` script, you need to make sure it's rerun after each file modification.
 
 #### Example:
 
