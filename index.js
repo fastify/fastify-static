@@ -13,8 +13,9 @@ const contentDisposition = require('content-disposition')
 
 const dirList = require('./lib/dirList')
 const { generateHashes } = require('./lib/hash')
+
 const hashesFilePath = path.join('.tmp', 'hashes.json')
-let fileHashes
+const kFileHashes = Symbol('fileHashes')
 
 const asteriskRegex = /\*/gu
 const endForwardSlashRegex = /\/$/u
@@ -68,14 +69,15 @@ async function fastifyStatic (fastify, opts) {
       throw new Error('"wildcard" has to be disabled to use "hash"')
     }
 
+    fastify.decorate('getHashedAsset', getHashedAsset)
+    fastify.decorate(kFileHashes, null)
+
     try {
       const hashesContent = await readFile(hashesFilePath, 'utf8')
-      fileHashes = new Map(Object.entries(JSON.parse(hashesContent)))
+      fastify[kFileHashes] = new Map(Object.entries(JSON.parse(hashesContent)))
     } catch (err) {
-      fileHashes = await generateHashes(opts.root, opts.serveDotFiles, opts.hashSkip)
+      fastify[kFileHashes] = await generateHashes(opts.root, opts.serveDotFiles, opts.hashSkip)
     }
-
-    fastify.decorate('getHashedAsset', getHashedAsset)
   }
 
   // Set the schema hide property if defined in opts or true by default
@@ -424,7 +426,7 @@ async function fastifyStatic (fastify, opts) {
   }
 
   function getHashedAsset (unhashedRelativePath) {
-    const hashedRelativePath = fileHashes.get(unhashedRelativePath)
+    const hashedRelativePath = fastify[kFileHashes].get(unhashedRelativePath)
     return `${prefix}${hashedRelativePath ?? unhashedRelativePath}`
   }
 }

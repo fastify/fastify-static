@@ -260,7 +260,7 @@ async function run () {
 run()
 ```
 
-The hashes are created in the following directory: `.tmp/hashes.json`.
+The hashes are created in the following path: `.tmp/hashes.json`.
 
 #### `allowedPath`
 
