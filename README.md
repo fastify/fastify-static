@@ -202,12 +202,6 @@ To enable `hash`, you must first disable the `wildcard` option. When enabled, `h
 
 **Note:** Once you generate the hashes using the `npm run hash` script, you need to make sure it's rerun after each file modification.
 
-### Example usage of `npm run hash`
-
-```sh
-npm run hash 'test/static/,test/static-dotfiles' true '*.css'
-```
-
 #### Example:
 
 ```js
@@ -231,6 +225,12 @@ Then in your templates:
 ```handlebars
 <script src="{{ fastify.getHashedAsset('js/main.js') }}"></script>
 <link href="{{ fastify.getHashedAsset('css/main.css') }}" rel="stylesheet">
+```
+
+#### Example usage of `npm run hash`
+
+```sh
+npm run hash 'test/static/,test/static-dotfiles' true '*.css'
 ```
 
 #### `allowedPath`
