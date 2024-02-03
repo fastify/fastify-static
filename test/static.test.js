@@ -452,7 +452,6 @@ t.test('register /static with hash prebuilt hashes', (t) => {
     root: [path.join(__dirname, '/static')],
     prefix: '/static/',
     hash: true,
-    hashSkip: ['foo.html'],
     wildcard: false
   }
 
