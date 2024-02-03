@@ -202,6 +202,12 @@ To enable `hash`, you must first disable the `wildcard` option. When enabled, `h
 
 **Note:** Once you generate the hashes using the `npm run hash` script, you need to make sure it's rerun after each file modification.
 
+### Example usage of `npm run hash`
+
+```sh
+npm run hash 'test/static/,test/static-dotfiles' true '*.css'
+```
+
 #### Example:
 
 ```js

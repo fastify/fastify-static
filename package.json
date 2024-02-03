@@ -14,7 +14,7 @@
     "test": "npm run test:unit && npm run test:typescript",
     "test:typescript": "tsd",
     "test:unit": "tap",
-    "hash": "node lib/hash-build.js",
+    "hash": "node lib/hash-script.js",
     "example": "node example/server.js"
   },
   "repository": {
