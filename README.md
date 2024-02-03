@@ -198,11 +198,11 @@ with `ignoreTrailingSlash` set to `true`.
 
 Default: `undefined`
 
-To enable `hash`, `wildcard` option must first be disabled explicitly. When enabled, `hash` lets the user access assets dynamically using the decorated `getHashedAsset` function. This in turn makes possible the usage of a very high `maxAge` so that the content can be cached as long as possible. If any modifications are made to a file, its hash will simply be recalculated during the next startup (or after running `npm run hash <rootList> <serveDotfiles?> <globIgnoreList>`) and the cache will bust for that asset.
+To enable `hash`, the `wildcard` option must first be disabled explicitly. When enabled, `hash` lets the user access assets dynamically using the decorated `getHashedAsset` function. This in turn makes possible the usage of a very high `maxAge` so that the content can be cached as long as possible. If any modifications are made to a file, its hash will simply be recalculated during the next startup and the cache will bust for that asset.
 
-**Note:** Once the hashes are pregenerated using the `npm run hash` script, it needs to be rerun after each file modification (or during the build phase of your application).
+**Note:** A custom script can be used to generate the hashes in advance, ideally during the build phase.
 
-#### Example:
+##### Example:
 
 ```js
 const fastify = require('fastify')()
@@ -227,10 +227,37 @@ Then in your templates:
 <link href="{{ fastify.getHashedAsset('css/main.css') }}" rel="stylesheet">
 ```
 
-#### Example usage of `npm run hash`
+##### Example of a custom script that can pregenerate the hashes
 
-```sh
-npm run hash 'test/static/,test/static-dotfiles' true '*.css'
+```js
+#!/usr/bin/env node
+
+'use strict'
+
+const { generateHashes } = require('@fastify/static')
+const path = require('path')
+
+async function run () {
+  let [rootPaths, includeDotFiles, ignorePatterns] = process.argv.slice(2)
+
+  if (!rootPaths) {
+    console.error('Usage: hash <root-path> <include-dot-files> <ignore-patterns>')
+    process.exit(1)
+  }
+
+  rootPaths = rootPaths.split(',').map(p => path.resolve(p.trim()))
+  includeDotFiles = includeDotFiles === 'true'
+  ignorePatterns = ignorePatterns ? ignorePatterns.split(',') : []
+
+  try {
+    await generateHashes(rootPaths, includeDotFiles, ignorePatterns, true)
+    console.log('Hashes generated successfully.')
+  } catch (error) {
+    console.error('Error generating hashes:', error)
+  }
+}
+
+run()
 ```
 
 #### `allowedPath`
