@@ -26,7 +26,8 @@ async function fastifyStatic (fastify, opts) {
   opts.root = normalizeRoot(opts.root)
   checkRootPathForErrors(fastify, opts.root)
 
-  if (opts.setHeaders !== undefined && typeof opts.setHeaders !== 'function') {
+  const setHeaders = opts.setHeaders
+  if (setHeaders !== undefined && typeof setHeaders !== 'function') {
     throw new TypeError('The `setHeaders` option must be a function')
   }
 
@@ -156,9 +157,11 @@ async function fastifyStatic (fastify, opts) {
           rootPath += '/'
         }
 
-        for (let file of new Glob('**/**', {
+        const globIterable = new Glob('**/**', {
           cwd: rootPath, absolute: false, follow: true, nodir: true, dot: opts.serveDotFiles
-        })) {
+        })
+
+        for (let file of globIterable) {
           file = file.split(path.win32.sep).join(path.posix.sep)
           const route = opts.hash ? getHashedAsset(file) : prefix + file
 
