@@ -64,10 +64,12 @@ async function fastifyStatic (fastify, opts) {
         : prefix + '/'
   }
 
-  if (opts.hash === true) {
-    if (opts.wildcard === undefined || opts.wildcard === true) {
+  if (opts.hash) {
+    if (opts.wildcard) {
       throw new Error('"wildcard" has to be disabled to use "hash"')
     }
+
+    opts.wildcard = false
 
     fastify.decorate('getHashedAsset', getHashedAsset)
     try {

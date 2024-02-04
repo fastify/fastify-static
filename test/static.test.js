@@ -564,6 +564,7 @@ t.test('register /static with hash (incorrect)', async (t) => {
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
     prefix: '/static/',
+    wildcard: true,
     hash: true
   }
   const fastify = Fastify()
