@@ -200,7 +200,7 @@ async function fastifyStatic (fastify, opts) {
     pathname,
     rootPath,
     rootPathOffset = 0,
-    pumpOptions = {},
+    pumpOptions,
     checkedEncodings
   ) {
     const options = Object.assign({}, sendOptions, pumpOptions)
