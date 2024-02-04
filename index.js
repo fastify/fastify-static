@@ -428,7 +428,7 @@ async function fastifyStatic (fastify, opts) {
     const relativeDirectory = path.posix.dirname(unhashedRelativePath)
     const fileName = path.basename(unhashedRelativePath)
     const hash = fastify[kFileHashes].get(unhashedRelativePath)
-    return `${prefix}${relativeDirectory === '.' ? '' : relativeDirectory}${hash ?? ''}${fileName}`
+    return `${prefix}${relativeDirectory === '.' ? '' : `${relativeDirectory}/`}${hash ?? ''}${fileName}`
   }
 }
 
