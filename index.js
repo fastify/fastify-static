@@ -14,10 +14,10 @@ const contentDisposition = require('content-disposition')
 const dirList = require('./lib/dirList')
 const { generateHashes } = require('./lib/hash')
 
-const kFileHashes = Symbol('fileHashes')
-
 const asteriskRegex = /\*/gu
 const endForwardSlashRegex = /\/$/u
+
+const kFileHashes = Symbol('fileHashes')
 
 const defaultHashPath = path.join('.tmp', 'hashes.json')
 const supportedEncodings = ['br', 'gzip', 'deflate']
