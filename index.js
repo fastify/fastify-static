@@ -290,8 +290,8 @@ async function fastifyStatic (fastify, opts) {
       })
     }
 
-    if (opts.setHeaders !== undefined) {
-      stream.on('headers', opts.setHeaders)
+    if (setHeaders !== undefined) {
+      stream.on('headers', setHeaders)
     }
 
     stream.on('directory', function (_, path) {
