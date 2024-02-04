@@ -7,6 +7,7 @@ await server.register(fastifyStatic, {
   root: new URL('./public', import.meta.url).pathname,
   prefix: '/assets/',
   hash: true,
+  hashPath: new URL('hashes.json', import.meta.url).pathname,
   immutable: true,
   maxAge: 31536000 * 1000 // 1 year
 })
