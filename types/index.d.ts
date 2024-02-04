@@ -96,7 +96,7 @@ declare namespace fastifyStatic {
     prefixAvoidTrailingSlash?: boolean;
     hash?: boolean;
     hashSkip?: string | string[];
-    hashLocation?: string;
+    hashPath?: string;
     serve?: boolean;
     decorateReply?: boolean;
     schemaHide?: boolean;

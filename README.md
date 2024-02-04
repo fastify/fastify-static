@@ -266,7 +266,7 @@ const fastify = require('fastify')()
 fastify.register(require('fastify-static'), {
   root: path.join(__dirname, 'public'),
   hash: true,
-  hashLocation: path.join(__dirname, 'path/to/generated/hashes.json'),
+  hashPath: path.join(__dirname, 'path/to/generated/hashes.json'),
   immutable: true,
   maxAge: 31536000
 })
