@@ -14,22 +14,20 @@ const contentDisposition = require('content-disposition')
 const dirList = require('./lib/dirList')
 const { generateHashes } = require('./lib/hash')
 
-const hashesFilePath = path.join('.tmp', 'hashes.json')
 const kFileHashes = Symbol('fileHashes')
 
 const asteriskRegex = /\*/gu
 const endForwardSlashRegex = /\/$/u
 
+const defaultHashPath = path.join('.tmp', 'hashes.json')
 const supportedEncodings = ['br', 'gzip', 'deflate']
-
 send.mime.default_type = 'application/octet-stream'
 
 async function fastifyStatic (fastify, opts) {
   opts.root = normalizeRoot(opts.root)
   checkRootPathForErrors(fastify, opts.root)
 
-  const setHeaders = opts.setHeaders
-  if (setHeaders !== undefined && typeof setHeaders !== 'function') {
+  if (opts.setHeaders !== undefined && typeof opts.setHeaders !== 'function') {
     throw new TypeError('The `setHeaders` option must be a function')
   }
 
@@ -73,7 +71,7 @@ async function fastifyStatic (fastify, opts) {
 
     fastify.decorate('getHashedAsset', getHashedAsset)
     try {
-      const hashesContent = await readFile(hashesFilePath, 'utf8')
+      const hashesContent = await readFile(defaultHashPath, 'utf8')
       fastify.decorate(kFileHashes, new Map(Object.entries(JSON.parse(hashesContent))))
     } catch {
       fastify.decorate(kFileHashes, await generateHashes(opts.root, opts.serveDotFiles, opts.hashSkip))
@@ -192,8 +190,6 @@ async function fastifyStatic (fastify, opts) {
     }
   }
 
-  const allowedPath = opts.allowedPath
-
   function pumpSendToReply (
     request,
     reply,
@@ -213,7 +209,7 @@ async function fastifyStatic (fastify, opts) {
       }
     }
 
-    if (allowedPath && !allowedPath(pathname, options.root, request)) {
+    if (opts.allowedPath && !opts.allowedPath(pathname, options.root, request)) {
       return reply.callNotFound()
     }
 
@@ -262,7 +258,7 @@ async function fastifyStatic (fastify, opts) {
 
     wrap.getHeader = reply.getHeader.bind(reply)
     wrap.setHeader = reply.header.bind(reply)
-    wrap.removeHeader = () => {}
+    wrap.removeHeader = noop
     wrap.finished = false
 
     Object.defineProperty(wrap, 'filename', {
@@ -291,8 +287,8 @@ async function fastifyStatic (fastify, opts) {
       })
     }
 
-    if (setHeaders !== undefined) {
-      stream.on('headers', setHeaders)
+    if (opts.setHeaders !== undefined) {
+      stream.on('headers', opts.setHeaders)
     }
 
     stream.on('directory', function (_, path) {
@@ -580,6 +576,8 @@ function getRedirectUrl (url) {
     throw err
   }
 }
+
+function noop () {}
 
 module.exports = fp(fastifyStatic, {
   fastify: '4.x',
