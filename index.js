@@ -19,7 +19,6 @@ const endForwardSlashRegex = /\/$/u
 
 const kFileHashes = Symbol('fileHashes')
 
-const defaultHashPath = path.join('.tmp', 'hashes.json')
 const supportedEncodings = ['br', 'gzip', 'deflate']
 send.mime.default_type = 'application/octet-stream'
 
@@ -70,10 +69,10 @@ async function fastifyStatic (fastify, opts) {
     opts.wildcard = false
 
     fastify.decorate('getHashedAsset', getHashedAsset)
-    try {
-      const hashesContent = await readFile(defaultHashPath, 'utf8')
+    if (opts.hashLocation) {
+      const hashesContent = await readFile(opts.hashLocation, 'utf8')
       fastify.decorate(kFileHashes, new Map(Object.entries(JSON.parse(hashesContent))))
-    } catch {
+    } else {
       fastify.decorate(kFileHashes, await generateHashes(opts.root, opts.serveDotFiles, opts.hashSkip))
     }
   }

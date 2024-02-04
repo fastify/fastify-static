@@ -445,20 +445,25 @@ t.test('register /static with hash', (t) => {
   })
 })
 
-t.test('register /static with hash prebuilt hashes', (t) => {
+t.test('register /static with hash pregenerated hashes', (t) => {
   t.plan(2)
 
+  const hashLocation = path.join(__dirname, 'asset-hashes.json')
   const pluginOptions = {
     root: [path.join(__dirname, '/static')],
     prefix: '/static/',
+    serveDotFiles: true,
     hash: true,
-    wildcard: false
+    hashLocation
   }
 
-  generateHashes(pluginOptions.root, true, ['foo.html'], true).then(() => {
+  generateHashes(pluginOptions.root, true, ['foo.html'], true, hashLocation).then(() => {
     const fastify = Fastify()
     fastify.register(fastifyStatic, pluginOptions)
-    t.teardown(fastify.close.bind(fastify))
+    t.teardown(() => {
+      fastify.close.bind(fastify)
+      fs.unlinkSync(hashLocation)
+    })
 
     fastify.listen({ port: 0 }, (err) => {
       t.error(err)
@@ -481,22 +486,26 @@ t.test('register /static with hash prebuilt hashes', (t) => {
   })
 })
 
-t.test('register /static with hash prebuilt hashes', (t) => {
+t.test('register /static with hash pregenerated hashes', (t) => {
   t.plan(2)
 
+  const hashLocation = path.join(__dirname, 'asset-hashes.json')
   const pluginOptions = {
     root: [path.join(__dirname, '/static')],
     prefix: '/static/',
     hash: true,
+    hashLocation,
     serveDotFiles: true,
     wildcard: false
   }
 
-  generateHashes(pluginOptions.root, true, undefined, true).then(() => {
+  generateHashes(pluginOptions.root, true, undefined, true, hashLocation).then(() => {
     const fastify = Fastify()
     fastify.register(fastifyStatic, pluginOptions)
-    t.teardown(fastify.close.bind(fastify))
-
+    t.teardown(() => {
+      fastify.close.bind(fastify)
+      fs.unlinkSync(hashLocation)
+    })
     fastify.listen({ port: 0 }, (err) => {
       t.error(err)
 
@@ -521,22 +530,68 @@ t.test('register /static with hash prebuilt hashes', (t) => {
 t.test('register /static with hash prebuilt hashes, two roots', (t) => {
   t.plan(2)
 
+  const hashLocation = path.join(__dirname, 'asset-hashes.json')
   const pluginOptions = {
     root: [path.join(__dirname, '/static'), path.join(__dirname, '/static-pre-compressed')],
     prefix: '/static/',
     maxAge: 365 * 24 * 60 * 60 * 1000,
     serveDotFiles: true,
     hash: true,
+    hashLocation,
     immutable: true,
     wildcard: false
   }
 
-  generateHashes(pluginOptions.root, true, [], true).then(() => {
+  generateHashes(pluginOptions.root, true, [], true, hashLocation).then(() => {
     const fastify = Fastify()
     fastify.register(fastifyStatic, pluginOptions)
     t.teardown(() => {
       fastify.close.bind(fastify)
-      fs.unlinkSync(path.join(__dirname, '../.tmp/hashes.json'))
+      fs.unlinkSync(hashLocation)
+    })
+
+    fastify.listen({ port: 0 }, (err) => {
+      t.error(err)
+
+      fastify.server.unref()
+
+      t.test('/static/foo.html', (t) => {
+        t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+        simple.concat({
+          method: 'GET',
+          url: 'http://localhost:' + fastify.server.address().port + fastify.getHashedAsset('uncompressed.html')
+        }, (err, response, body) => {
+          t.error(err)
+          t.equal(response.statusCode, 200)
+          t.equal(body.toString(), uncompressedStatic)
+          genericResponseChecks(t, response)
+        })
+      })
+    })
+  })
+})
+
+t.test('register /static with hash prebuilt hashes with custom location', (t) => {
+  t.plan(2)
+
+  const hashLocation = path.join(__dirname, 'asset-hashes.json')
+  const pluginOptions = {
+    root: [path.join(__dirname, '/static'), path.join(__dirname, '/static-pre-compressed')],
+    prefix: '/static/',
+    maxAge: 365 * 24 * 60 * 60 * 1000,
+    serveDotFiles: true,
+    hash: true,
+    hashLocation,
+    immutable: true,
+    wildcard: false
+  }
+
+  generateHashes(pluginOptions.root, true, [], true, hashLocation).then(() => {
+    const fastify = Fastify()
+    fastify.register(fastifyStatic, pluginOptions)
+    t.teardown(() => {
+      fastify.close.bind(fastify)
+      fs.unlinkSync(hashLocation)
     })
 
     fastify.listen({ port: 0 }, (err) => {
@@ -570,6 +625,12 @@ t.test('register /static with hash (incorrect)', async (t) => {
   const fastify = Fastify()
   try {
     await fastify.register(fastifyStatic, pluginOptions)
+  } catch (error) {
+    t.ok(error instanceof Error)
+  }
+
+  try {
+    await generateHashes(pluginOptions.root, true, [], true)
   } catch (error) {
     t.ok(error instanceof Error)
   }

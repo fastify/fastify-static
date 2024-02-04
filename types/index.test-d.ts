@@ -93,6 +93,12 @@ expectAssignable<FastifyStaticOptions>({
 
 expectAssignable<FastifyStaticOptions>({
   root: '',
+  hash: true,
+  hashLocation: '.tmp/hashes.json'
+})
+
+expectAssignable<FastifyStaticOptions>({
+  root: '',
   list: {
     format: 'json'
   }

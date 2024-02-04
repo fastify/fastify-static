@@ -198,7 +198,7 @@ with `ignoreTrailingSlash` set to `true`.
 
 Default: `undefined`
 
-To enable `hash`, the `wildcard` option must be turned off. When enabled, `hash` lets the user access assets dynamically using the decorated `getHashedAsset` function. This in turn makes possible the usage of a very high `maxAge` so that the content can be cached as long as possible. If any modifications are made to a file, its hash will simply be recalculated during the next startup and the cache will bust for that asset.
+Enabling `hash` will turn off the `wildcard` option if it wasn't explicitly set to `true`, and both cannot be set to `true`. When enabled, `hash` lets the user access assets dynamically using the decorated `getHashedAsset` function. This in turn makes possible the usage of a very high `maxAge` so that the content can be cached as long as possible. If any modifications are made to a file, its hash will simply be recalculated during the next startup and the cache will bust for that asset.
 
 **Note:** A custom script can be used to generate the hashes in advance to speed up cold start times, ideally during the build phase.
 
@@ -210,8 +210,7 @@ fastify.register(require('fastify-static'), {
   root: path.join(__dirname, 'public'),
   hash: true,
   immutable: true,
-  maxAge: 31536000, // You can set a very long maxAge
-  wildcard: false
+  maxAge: 31536000 // You can set a very long maxAge
 })
 
 fastify.listen(3000, (err) => {
@@ -227,7 +226,7 @@ Then in your templates:
 <link href="{{ fastify.getHashedAsset('css/main.css') }}" rel="stylesheet">
 ```
 
-##### Example of a custom script that can pregenerate the hashes:
+##### Example of a custom script to pregenerate the hashes:
 
 ```js
 #!/usr/bin/env node
@@ -238,10 +237,10 @@ const { generateHashes } = require('@fastify/static')
 const path = require('path')
 
 async function run () {
-  let [rootPaths, includeDotFiles, ignorePatterns] = process.argv.slice(2)
+  let [rootPaths, includeDotFiles, ignorePatterns, writeLocation] = process.argv.slice(2)
 
   if (!rootPaths) {
-    console.error('Usage: hash <root-path> <include-dot-files> <ignore-patterns>')
+    console.error('Usage: hash <root-path> <include-dot-files> <ignore-patterns> <writeLocation>')
     process.exit(1)
   }
 
@@ -250,7 +249,7 @@ async function run () {
   ignorePatterns = ignorePatterns ? ignorePatterns.split(',') : []
 
   try {
-    await generateHashes(rootPaths, includeDotFiles, ignorePatterns, true)
+    await generateHashes(rootPaths, includeDotFiles, ignorePatterns, true, writeLocation)
     console.log('Hashes generated successfully.')
   } catch (error) {
     console.error('Error generating hashes:', error)
@@ -260,7 +259,23 @@ async function run () {
 run()
 ```
 
-The hashes are created in the following path: `.tmp/hashes.json`.
+And then, during plugin initialization:
+
+```js
+const fastify = require('fastify')()
+fastify.register(require('fastify-static'), {
+  root: path.join(__dirname, 'public'),
+  hash: true,
+  hashLocation: path.join(__dirname, 'path/to/generated/hashes.json'),
+  immutable: true,
+  maxAge: 31536000
+})
+
+fastify.listen(3000, (err) => {
+  if (err) throw err
+  console.log('Server listening at http://localhost:3000')
+})
+```
 
 #### `allowedPath`
 
