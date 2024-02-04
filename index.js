@@ -192,6 +192,7 @@ async function fastifyStatic (fastify, opts) {
     }
   }
 
+  const allowedPath = opts.allowedPath
   function pumpSendToReply (
     request,
     reply,
@@ -211,7 +212,7 @@ async function fastifyStatic (fastify, opts) {
       }
     }
 
-    if (opts.allowedPath && !opts.allowedPath(pathname, options.root, request)) {
+    if (allowedPath && !allowedPath(pathname, options.root, request)) {
       return reply.callNotFound()
     }
 
