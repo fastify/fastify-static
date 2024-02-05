@@ -157,11 +157,11 @@ async function fastifyStatic (fastify, opts) {
           rootPath += '/'
         }
 
-        const globIterable = new Glob('**/**', {
+        const filesIterable = new Glob('**/**', {
           cwd: rootPath, absolute: false, follow: true, nodir: true, dot: opts.serveDotFiles
         })
 
-        for (let file of globIterable) {
+        for (let file of filesIterable) {
           file = file.split(path.win32.sep).join(path.posix.sep)
           const route = opts.hash ? getHashedAsset(file) : prefix + file
 
