@@ -87,14 +87,12 @@ expectAssignable<FastifyStaticOptions>({
 
 expectAssignable<FastifyStaticOptions>({
   root: '',
-  hash: true,
-  hashSkip: ['index.html']
+  hash: { skip: ['index.html'] }
 })
 
 expectAssignable<FastifyStaticOptions>({
   root: '',
-  hash: true,
-  hashPath: '.tmp/hashes.json'
+  hash: { path: '.tmp/hashes.json' }
 })
 
 expectAssignable<FastifyStaticOptions>({

@@ -70,11 +70,11 @@ async function fastifyStatic (fastify, opts) {
     opts.wildcard = false
 
     fastify.decorate('getHashedStaticPath', getHashedStaticPath)
-    if (opts.hashPath) {
-      const hashesContent = await readFile(opts.hashPath, 'utf8')
+    if (opts.hash.path) {
+      const hashesContent = await readFile(opts.hash.path, 'utf8')
       fastify.decorate(kFileHashes, new Map(Object.entries(JSON.parse(hashesContent))))
     } else {
-      fastify.decorate(kFileHashes, await generateHashes(opts.root, opts.serveDotFiles, opts.hashSkip))
+      fastify.decorate(kFileHashes, await generateHashes(opts.root, opts.serveDotFiles, opts.hash.skip))
     }
   }
 

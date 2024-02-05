@@ -242,8 +242,7 @@ And then, during plugin initialization:
 const fastify = require('fastify')()
 fastify.register(require('fastify-static'), {
   root: path.join(__dirname, 'public'),
-  hash: true,
-  hashPath: path.join(__dirname, 'example/hashes.json'),
+  hash: { path: path.join(__dirname, 'example/hashes.json') },
   serveDotFiles: true,
   immutable: true,
   maxAge: 31536000

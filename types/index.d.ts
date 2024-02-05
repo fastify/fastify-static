@@ -94,9 +94,7 @@ declare namespace fastifyStatic {
     root: string | string[] | URL | URL[];
     prefix?: string;
     prefixAvoidTrailingSlash?: boolean;
-    hash?: boolean;
-    hashSkip?: string | string[];
-    hashPath?: string;
+    hash?: boolean | { skip?: string | string[]; path?: string };
     serve?: boolean;
     decorateReply?: boolean;
     schemaHide?: boolean;

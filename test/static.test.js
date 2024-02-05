@@ -416,8 +416,7 @@ t.test('register /static with hash', (t) => {
   const pluginOptions = {
     root: [path.join(__dirname, '/static')],
     prefix: '/static/',
-    hash: true,
-    hashSkip: ['foo.html'],
+    hash: { skip: ['foo.html'] },
     wildcard: false
   }
   const fastify = Fastify()
@@ -453,8 +452,7 @@ t.test('register /static with hash pregenerated hashes', (t) => {
     root: [path.join(__dirname, '/static')],
     prefix: '/static/',
     serveDotFiles: true,
-    hash: true,
-    hashPath
+    hash: { path: hashPath }
   }
 
   generateHashes(pluginOptions.root, true, ['foo.html'], true, hashPath).then(() => {
@@ -493,8 +491,7 @@ t.test('register /static with hash pregenerated hashes', (t) => {
   const pluginOptions = {
     root: [path.join(__dirname, '/static')],
     prefix: '/static/',
-    hash: true,
-    hashPath,
+    hash: { path: hashPath },
     serveDotFiles: true,
     wildcard: false
   }
@@ -536,8 +533,7 @@ t.test('register /static with hash prebuilt hashes, two roots', (t) => {
     prefix: '/static/',
     maxAge: 365 * 24 * 60 * 60 * 1000,
     serveDotFiles: true,
-    hash: true,
-    hashPath,
+    hash: { path: hashPath },
     immutable: true,
     wildcard: false
   }
@@ -580,8 +576,7 @@ t.test('register /static with hash prebuilt hashes with custom location', (t) =>
     prefix: '/static/',
     maxAge: 365 * 24 * 60 * 60 * 1000,
     serveDotFiles: true,
-    hash: true,
-    hashPath,
+    hash: { path: hashPath },
     immutable: true,
     wildcard: false
   }
