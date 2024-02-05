@@ -244,6 +244,7 @@ fastify.register(require('fastify-static'), {
   root: path.join(__dirname, 'public'),
   hash: true,
   hashPath: path.join(__dirname, 'example/hashes.json'),
+  serveDotFiles: true,
   immutable: true,
   maxAge: 31536000
 })
