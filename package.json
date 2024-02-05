@@ -6,7 +6,7 @@
   "type": "commonjs",
   "types": "types/index.d.ts",
   "bin": {
-    "hash-gen": "./lib/hash-gen.js"
+    "hash-gen": "./bin/hash-gen.js"
   },
   "scripts": {
     "coverage": "npm run test:unit -- --coverage-report=html",

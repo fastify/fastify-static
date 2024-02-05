@@ -2,7 +2,7 @@
 
 'use strict'
 
-const { generateHashes } = require('./hash')
+const { generateHashes } = require('../lib/hash')
 const path = require('path')
 
 async function run () {
