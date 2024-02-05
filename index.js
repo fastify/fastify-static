@@ -590,4 +590,3 @@ module.exports = fp(fastifyStatic, {
 })
 module.exports.default = fastifyStatic
 module.exports.fastifyStatic = fastifyStatic
-module.exports.generateHashes = generateHashes

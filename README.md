@@ -200,8 +200,6 @@ Default: `undefined`
 
 Enabling `hash` will turn off the `wildcard` option if it wasn't explicitly set to `true`, and both cannot be set to `true`. When enabled, `hash` lets the user access assets dynamically using the decorated `getHashedAsset` function. This in turn makes possible the usage of a very high `maxAge` so that the content can be cached as long as possible. If any modifications are made to a file, its hash will simply be recalculated during the next startup and the cache will bust for that asset.
 
-**Note:** A custom script can be used to generate the hashes in advance to speed up cold start times, ideally during the build phase.
-
 ##### Example:
 
 ```js
@@ -226,37 +224,16 @@ Then in your templates:
 <link href="{{ fastify.getHashedAsset('css/main.css') }}" rel="stylesheet">
 ```
 
-##### Example of a custom script to pregenerate the hashes:
+**Note:** Hashes can be generated in advance to speed up cold start times, ideally during the build phase:
 
-```js
-#!/usr/bin/env node
+```sh
+npx hash-gen <root-paths> <write-location> <include-dot-files> <ignore-patterns>
+```
 
-'use strict'
+##### Example:
 
-const { generateHashes } = require('@fastify/static')
-const path = require('path')
-
-async function run () {
-  let [rootPaths, includeDotFiles, ignorePatterns, writeLocation] = process.argv.slice(2)
-
-  if (!rootPaths) {
-    console.error('Usage: hash <root-path> <include-dot-files> <ignore-patterns> <writeLocation>')
-    process.exit(1)
-  }
-
-  rootPaths = rootPaths.split(',').map(p => path.resolve(p.trim()))
-  includeDotFiles = includeDotFiles === 'true'
-  ignorePatterns = ignorePatterns ? ignorePatterns.split(',') : []
-
-  try {
-    await generateHashes(rootPaths, includeDotFiles, ignorePatterns, true, writeLocation)
-    console.log('Hashes generated successfully.')
-  } catch (error) {
-    console.error('Error generating hashes:', error)
-  }
-}
-
-run()
+```sh
+npx hash-gen example/public/,example/public2/ example/hashes.json true '**/*.json'
 ```
 
 And then, during plugin initialization:
@@ -266,7 +243,7 @@ const fastify = require('fastify')()
 fastify.register(require('fastify-static'), {
   root: path.join(__dirname, 'public'),
   hash: true,
-  hashPath: path.join(__dirname, 'path/to/generated/hashes.json'),
+  hashPath: path.join(__dirname, 'example/hashes.json'),
   immutable: true,
   maxAge: 31536000
 })
