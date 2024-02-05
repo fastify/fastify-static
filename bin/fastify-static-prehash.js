@@ -21,7 +21,7 @@ async function run () {
     await generateHashes({
       rootPaths,
       includeDotFiles,
-      skip: ignorePatterns,
+      skipPatterns: ignorePatterns,
       writeToFile: true,
       outputPath: writeLocation
     }

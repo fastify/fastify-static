@@ -416,7 +416,7 @@ t.test('register /static with hash', (t) => {
   const pluginOptions = {
     root: [path.join(__dirname, '/static')],
     prefix: '/static/',
-    hash: { skip: ['foo.html'] },
+    hash: { skipPatterns: ['foo.html'] },
     wildcard: false
   }
   const fastify = Fastify()
@@ -458,7 +458,7 @@ t.test('register /static with hash pregenerated hashes', (t) => {
   generateHashes({
     rootPaths: pluginOptions.root,
     includeDotFiles: true,
-    skip: ['foo.html'],
+    skipPatterns: ['foo.html'],
     writeToFile: true,
     outputPath: hashPath
   }

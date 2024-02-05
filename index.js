@@ -77,7 +77,7 @@ async function fastifyStatic (fastify, opts) {
       fastify.decorate(kFileHashes, await generateHashes({
         rootPaths: opts.root,
         includeDotFiles: opts.serveDotFiles,
-        skip: opts.hash.skip
+        skipPatterns: opts.hash.skipPatterns
       }
       ))
     }

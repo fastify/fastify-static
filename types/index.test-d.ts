@@ -87,7 +87,7 @@ expectAssignable<FastifyStaticOptions>({
 
 expectAssignable<FastifyStaticOptions>({
   root: '',
-  hash: { skip: ['index.html'] }
+  hash: { skipPatterns: ['index.html'] }
 })
 
 expectAssignable<FastifyStaticOptions>({
