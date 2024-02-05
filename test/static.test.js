@@ -398,7 +398,7 @@ t.test('register /static with hash', (t) => {
       t.plan(4 + GENERIC_RESPONSE_CHECK_COUNT)
       simple.concat({
         method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + fastify.getHashedAsset('index.html')
+        url: 'http://localhost:' + fastify.server.address().port + fastify.getHashedStaticPath('index.html')
       }, (err, response, body) => {
         t.error(err)
         t.equal(response.statusCode, 200)
@@ -515,7 +515,7 @@ t.test('register /static with hash pregenerated hashes', (t) => {
         t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
         simple.concat({
           method: 'GET',
-          url: 'http://localhost:' + fastify.server.address().port + fastify.getHashedAsset('foo.html')
+          url: 'http://localhost:' + fastify.server.address().port + fastify.getHashedStaticPath('foo.html')
         }, (err, response, body) => {
           t.error(err)
           t.equal(response.statusCode, 200)
@@ -559,7 +559,7 @@ t.test('register /static with hash prebuilt hashes, two roots', (t) => {
         t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
         simple.concat({
           method: 'GET',
-          url: 'http://localhost:' + fastify.server.address().port + fastify.getHashedAsset('uncompressed.html')
+          url: 'http://localhost:' + fastify.server.address().port + fastify.getHashedStaticPath('uncompressed.html')
         }, (err, response, body) => {
           t.error(err)
           t.equal(response.statusCode, 200)
@@ -603,7 +603,7 @@ t.test('register /static with hash prebuilt hashes with custom location', (t) =>
         t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
         simple.concat({
           method: 'GET',
-          url: 'http://localhost:' + fastify.server.address().port + fastify.getHashedAsset('uncompressed.html')
+          url: 'http://localhost:' + fastify.server.address().port + fastify.getHashedStaticPath('uncompressed.html')
         }, (err, response, body) => {
           t.error(err)
           t.equal(response.statusCode, 200)

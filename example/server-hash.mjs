@@ -18,11 +18,11 @@ server.get('/', async (request, reply) => {
   return reply.html`
   <html>
     <head>
-      <link rel="stylesheet" href="${server.getHashedAsset('index.css')}">
+      <link rel="stylesheet" href="${server.getHashedStaticPath('index.css')}">
     </head>
     <body>
       <h1>Hello, world!</h1>
-      <img src="${server.getHashedAsset('images/sample.jpg')}" alt="An image">
+      <img src="${server.getHashedStaticPath('images/sample.jpg')}" alt="An image">
     </body>
   </html>
   `

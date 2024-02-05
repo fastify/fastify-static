@@ -19,7 +19,7 @@ declare module 'fastify' {
     /**
     * If the `hash` option is enabled, this method must be used to get the hashed asset path.
     */
-    getHashedAsset(relativePath: string): string;
+    getHashedStaticPath(relativePath: string): string;
   }
 }
 

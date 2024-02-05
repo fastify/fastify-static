@@ -175,7 +175,7 @@ appWithHash
   .register(fastifyStatic, { ...options, hash: true })
   .after(() => {
     appWithHttp2.get('/', (request, reply) => {
-      reply.sendFile(appWithHash.getHashedAsset('hello.css'))
+      reply.sendFile(appWithHash.getHashedStaticPath('hello.css'))
     })
   })
 

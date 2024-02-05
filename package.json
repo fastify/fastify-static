@@ -6,7 +6,7 @@
   "type": "commonjs",
   "types": "types/index.d.ts",
   "bin": {
-    "hash-gen": "./bin/hash-gen.js"
+    "fastify-static-prehash": "./bin/fastify-static-prehash.js"
   },
   "scripts": {
     "coverage": "npm run test:unit -- --coverage-report=html",

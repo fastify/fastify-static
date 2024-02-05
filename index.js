@@ -69,7 +69,7 @@ async function fastifyStatic (fastify, opts) {
 
     opts.wildcard = false
 
-    fastify.decorate('getHashedAsset', getHashedAsset)
+    fastify.decorate('getHashedStaticPath', getHashedStaticPath)
     if (opts.hashPath) {
       const hashesContent = await readFile(opts.hashPath, 'utf8')
       fastify.decorate(kFileHashes, new Map(Object.entries(JSON.parse(hashesContent))))
@@ -163,7 +163,7 @@ async function fastifyStatic (fastify, opts) {
 
         for (let file of filesIterable) {
           file = file.split(path.win32.sep).join(path.posix.sep)
-          const route = opts.hash ? getHashedAsset(file) : prefix + file
+          const route = opts.hash ? getHashedStaticPath(file) : prefix + file
 
           if (routes.has(route)) {
             continue
@@ -173,9 +173,9 @@ async function fastifyStatic (fastify, opts) {
 
           setUpHeadAndGet(routeOpts, route, `/${file}`, rootPath)
 
-          const key = path.basename(route)
+          const key = path.posix.basename(route)
           if (indexes.includes(key) && !indexDirs.has(key)) {
-            indexDirs.set(path.dirname(route), rootPath)
+            indexDirs.set(path.posix.dirname(route), rootPath)
           }
         }
       }
@@ -424,7 +424,7 @@ async function fastifyStatic (fastify, opts) {
     pumpSendToReply(req, reply, routeConfig.file, routeConfig.rootPath)
   }
 
-  function getHashedAsset (unhashedRelativePath) {
+  function getHashedStaticPath (unhashedRelativePath) {
     const relativeDirectory = path.posix.dirname(unhashedRelativePath)
     const fileName = path.basename(unhashedRelativePath)
     const hash = fastify[kFileHashes].get(unhashedRelativePath)

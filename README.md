@@ -198,7 +198,7 @@ with `ignoreTrailingSlash` set to `true`.
 
 Default: `undefined`
 
-Enabling `hash` will turn off the `wildcard` option if it wasn't explicitly set to `true`, and both cannot be set to `true`. When enabled, `hash` lets the user access assets dynamically using the decorated `getHashedAsset` function. This in turn makes possible the usage of a very high `maxAge` so that the content can be cached as long as possible. If any modifications are made to a file, its hash will simply be recalculated during the next startup and the cache will bust for that asset.
+Enabling `hash` will turn off the `wildcard` option if it wasn't explicitly set to `true`, and both cannot be set to `true`. When enabled, `hash` lets the user access assets dynamically using the decorated `getHashedStaticPath` function. This in turn makes possible the usage of a very high `maxAge` so that the content can be cached as long as possible. If any modifications are made to a file, its hash will simply be recalculated during the next startup and the cache will bust for that asset.
 
 ##### Example:
 
@@ -220,20 +220,20 @@ fastify.listen(3000, (err) => {
 Then in your templates:
 
 ```handlebars
-<script src="{{ fastify.getHashedAsset('js/main.js') }}"></script>
-<link href="{{ fastify.getHashedAsset('css/main.css') }}" rel="stylesheet">
+<script src="{{ fastify.getHashedStaticPath('js/main.js') }}"></script>
+<link href="{{ fastify.getHashedStaticPath('css/main.css') }}" rel="stylesheet">
 ```
 
 **Note:** Hashes can be generated in advance to speed up cold start times, ideally during the build phase:
 
 ```sh
-npx hash-gen <root-paths> <write-location> <include-dot-files> <ignore-patterns>
+npx fastify-static-prehash <root-paths> <write-location> <include-dot-files> <ignore-patterns>
 ```
 
 ##### Example:
 
 ```sh
-npx hash-gen example/public/,example/public2/ example/hashes.json true '**/*.json'
+npx fastify-static-prehash example/public/,example/public2/ example/hashes.json true '**/*.json'
 ```
 
 And then, during plugin initialization:
