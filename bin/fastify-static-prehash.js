@@ -18,7 +18,14 @@ async function run () {
   ignorePatterns = ignorePatterns ? ignorePatterns.split(',') : []
 
   try {
-    await generateHashes(rootPaths, includeDotFiles, ignorePatterns, true, writeLocation)
+    await generateHashes({
+      rootPaths,
+      includeDotFiles,
+      skip: ignorePatterns,
+      writeToFile: true,
+      outputPath: writeLocation
+    }
+    )
     console.log('Hashes generated successfully.')
   } catch (error) {
     console.error('Error generating hashes:', error)

@@ -455,7 +455,14 @@ t.test('register /static with hash pregenerated hashes', (t) => {
     hash: { path: hashPath }
   }
 
-  generateHashes(pluginOptions.root, true, ['foo.html'], true, hashPath).then(() => {
+  generateHashes({
+    rootPaths: pluginOptions.root,
+    includeDotFiles: true,
+    skip: ['foo.html'],
+    writeToFile: true,
+    outputPath: hashPath
+  }
+  ).then(() => {
     const fastify = Fastify()
     fastify.register(fastifyStatic, pluginOptions)
     t.teardown(() => {
@@ -496,7 +503,13 @@ t.test('register /static with hash pregenerated hashes', (t) => {
     wildcard: false
   }
 
-  generateHashes(pluginOptions.root, true, undefined, true, hashPath).then(() => {
+  generateHashes({
+    rootPaths: pluginOptions.root,
+    includeDotFiles: true,
+    writeToFile: true,
+    outputPath: hashPath
+  }
+  ).then(() => {
     const fastify = Fastify()
     fastify.register(fastifyStatic, pluginOptions)
     t.teardown(() => {
@@ -538,7 +551,13 @@ t.test('register /static with hash prebuilt hashes, two roots', (t) => {
     wildcard: false
   }
 
-  generateHashes(pluginOptions.root, true, [], true, hashPath).then(() => {
+  generateHashes({
+    rootPaths: pluginOptions.root,
+    includeDotFiles: true,
+    writeToFile: true,
+    outputPath: hashPath
+  }
+  ).then(() => {
     const fastify = Fastify()
     fastify.register(fastifyStatic, pluginOptions)
     t.teardown(() => {
@@ -581,7 +600,13 @@ t.test('register /static with hash prebuilt hashes with custom location', (t) =>
     wildcard: false
   }
 
-  generateHashes(pluginOptions.root, true, [], true, hashPath).then(() => {
+  generateHashes({
+    rootPaths: pluginOptions.root,
+    includeDotFiles: true,
+    writeToFile: true,
+    outputPath: hashPath
+  }
+  ).then(() => {
     const fastify = Fastify()
     fastify.register(fastifyStatic, pluginOptions)
     t.teardown(() => {
@@ -625,7 +650,11 @@ t.test('register /static with hash (incorrect)', async (t) => {
   }
 
   try {
-    await generateHashes(pluginOptions.root, true, [], true)
+    await generateHashes({
+      rootPaths: pluginOptions.root,
+      includeDotFiles: true,
+      writeToFile: true
+    })
   } catch (error) {
     t.ok(error instanceof Error)
   }
