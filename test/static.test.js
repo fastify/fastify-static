@@ -414,6 +414,38 @@ t.test('register /static with hash', (t) => {
   t.plan(2)
 
   const pluginOptions = {
+    root: path.join(__dirname, '/static/'),
+    prefix: '/static/',
+    hash: true,
+    maxAge: 365 * 24 * 60 * 60 * 1000,
+    wildcard: false
+  }
+  const fastify = Fastify()
+
+  fastify.register(fastifyStatic, pluginOptions)
+  t.teardown(fastify.close.bind(fastify))
+
+  fastify.listen({ port: 0 }, (err) => {
+    t.error(err)
+    fastify.server.unref()
+
+    t.test('/static/index.html', (t) => {
+      t.plan(2)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + fastify.getHashedStaticPath('shallow/no-link')
+      }, (err, response, body) => {
+        t.error(err)
+        t.equal(response.statusCode, 404)
+      })
+    })
+  })
+})
+
+t.test('register /static with hash', (t) => {
+  t.plan(2)
+
+  const pluginOptions = {
     root: [path.join(__dirname, '/static')],
     prefix: '/static/',
     hash: { skipPatterns: ['foo.html'] },

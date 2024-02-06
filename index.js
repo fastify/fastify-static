@@ -168,7 +168,7 @@ async function fastifyStatic (fastify, opts) {
 
         for (let file of filesIterable) {
           file = file.split(path.win32.sep).join(path.posix.sep)
-          const route = opts.hash ? getHashedStaticPath(file) : prefix + file
+          const route = prefix + file
 
           if (routes.has(route)) {
             continue
@@ -431,7 +431,7 @@ async function fastifyStatic (fastify, opts) {
 
   function getHashedStaticPath (unhashedRelativePath) {
     const hash = fastify[kFileHashes].get(unhashedRelativePath)
-    return `${prefix}${unhashedRelativePath}${hash ? `.${hash}` : ''}`
+    return `${prefix}${unhashedRelativePath}${hash ? `?hash=${hash}` : ''}`
   }
 }
 
