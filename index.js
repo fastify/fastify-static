@@ -4,7 +4,7 @@ const { PassThrough } = require('node:stream')
 const path = require('node:path')
 const { fileURLToPath } = require('node:url')
 const { statSync } = require('node:fs')
-const { glob } = require('glob')
+const { Glob } = require('glob')
 const fp = require('fastify-plugin')
 const send = require('@fastify/send')
 const encodingNegotiator = require('@fastify/accept-negotiator')
@@ -12,9 +12,8 @@ const contentDisposition = require('content-disposition')
 
 const dirList = require('./lib/dirList')
 
-const endForwardSlashRegex = /\/$/u
-const doubleForwardSlashRegex = /\/\//gu
 const asteriskRegex = /\*/gu
+const endForwardSlashRegex = /\/$/u
 
 const supportedEncodings = ['br', 'gzip', 'deflate']
 send.mime.default_type = 'application/octet-stream'
@@ -112,11 +111,14 @@ async function fastifyStatic (fastify, opts) {
       throw new Error('"wildcard" option must be a boolean')
     }
     if (opts.wildcard === undefined || opts.wildcard === true) {
-      fastify.head(prefix + '*', routeOpts, function (req, reply) {
-        pumpSendToReply(req, reply, '/' + req.params['*'], sendOptions.root)
-      })
-      fastify.get(prefix + '*', routeOpts, function (req, reply) {
-        pumpSendToReply(req, reply, '/' + req.params['*'], sendOptions.root)
+      fastify.route({
+        ...routeOpts,
+        exposeHeadRoute: true,
+        method: 'GET',
+        url: `${prefix}*`,
+        handler (req, reply) {
+          pumpSendToReply(req, reply, `/${req.params['*']}`, sendOptions.root)
+        }
       })
       if (opts.redirect === true && prefix !== opts.prefix) {
         fastify.get(opts.prefix, routeOpts, function (req, reply) {
@@ -127,18 +129,19 @@ async function fastifyStatic (fastify, opts) {
       const indexes = opts.index === undefined ? ['index.html'] : [].concat(opts.index)
       const indexDirs = new Map()
       const routes = new Set()
-      const globPattern = '**/**'
 
       const roots = Array.isArray(sendOptions.root) ? sendOptions.root : [sendOptions.root]
-      for (let i = 0; i < roots.length; ++i) {
-        const rootPath = roots[i]
-        const posixRootPath = rootPath.split(path.win32.sep).join(path.posix.sep)
-        const files = await glob(`${posixRootPath}/${globPattern}`, { follow: true, nodir: true, dot: opts.serveDotFiles })
+      for (let rootPath of roots) {
+        rootPath = rootPath.split(path.win32.sep).join(path.posix.sep)
+        !rootPath.endsWith('/') && (rootPath += '/')
 
-        for (let i = 0; i < files.length; ++i) {
-          const file = files[i].split(path.win32.sep).join(path.posix.sep)
-            .replace(`${posixRootPath}/`, '')
-          const route = (prefix + file).replace(doubleForwardSlashRegex, '/')
+        const filesIterable = new Glob('**/**', {
+          cwd: rootPath, absolute: false, follow: true, nodir: true, dot: opts.serveDotFiles
+        })
+
+        for (let file of filesIterable) {
+          file = file.split(path.win32.sep).join(path.posix.sep)
+          const route = prefix + file
 
           if (routes.has(route)) {
             continue
@@ -175,7 +178,7 @@ async function fastifyStatic (fastify, opts) {
     pathname,
     rootPath,
     rootPathOffset = 0,
-    pumpOptions = {},
+    pumpOptions,
     checkedEncodings
   ) {
     const options = Object.assign({}, sendOptions, pumpOptions)
@@ -381,7 +384,8 @@ async function fastifyStatic (fastify, opts) {
 
   function setUpHeadAndGet (routeOpts, route, file, rootPath) {
     const toSetUp = Object.assign({}, routeOpts, {
-      method: ['HEAD', 'GET'],
+      exposeHeadRoute: true,
+      method: 'GET',
       url: route,
       handler: serveFileHandler
     })
