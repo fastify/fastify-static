@@ -384,7 +384,7 @@ async function fastifyStatic (fastify, opts) {
   function setUpHeadAndGet (routeOpts, route, file, rootPath) {
     const toSetUp = Object.assign({}, routeOpts, {
       exposeHeadRoute: true,
-      method: 'GET',
+      method: ['HEAD', 'GET'],
       url: route,
       handler: serveFileHandler
     })
