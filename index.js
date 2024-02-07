@@ -4,7 +4,7 @@ const { PassThrough } = require('node:stream')
 const path = require('node:path')
 const { fileURLToPath } = require('node:url')
 const { statSync } = require('node:fs')
-const { Glob } = require('glob')
+const { glob } = require('glob')
 const fp = require('fastify-plugin')
 const send = require('@fastify/send')
 const encodingNegotiator = require('@fastify/accept-negotiator')
@@ -135,11 +135,11 @@ async function fastifyStatic (fastify, opts) {
         rootPath = rootPath.split(path.win32.sep).join(path.posix.sep)
         !rootPath.endsWith('/') && (rootPath += '/')
 
-        const filesIterable = new Glob('**/**', {
+        const files = await glob('**/**', {
           cwd: rootPath, absolute: false, follow: true, nodir: true, dot: opts.serveDotFiles
         })
 
-        for (let file of filesIterable) {
+        for (let file of files) {
           file = file.split(path.win32.sep).join(path.posix.sep)
           const route = prefix + file
 
