@@ -2012,6 +2012,96 @@ t.test('register with wildcard false', t => {
   })
 })
 
+t.test('register with wildcard false (trailing slash in the root)', t => {
+  t.plan(6)
+
+  const pluginOptions = {
+    root: path.join(__dirname, '/static/'),
+    prefix: '/assets/',
+    index: false,
+    wildcard: false
+  }
+  const fastify = Fastify({
+    ignoreTrailingSlash: true
+  })
+  fastify.register(fastifyStatic, pluginOptions)
+
+  fastify.get('/*', (request, reply) => {
+    reply.send({ hello: 'world' })
+  })
+
+  t.teardown(fastify.close.bind(fastify))
+
+  fastify.listen({ port: 0 }, (err) => {
+    t.error(err)
+
+    fastify.server.unref()
+
+    t.test('/index.css', (t) => {
+      t.plan(2 + GENERIC_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/assets/index.css'
+      }, (err, response, body) => {
+        t.error(err)
+        t.equal(response.statusCode, 200)
+        genericResponseChecks(t, response)
+      })
+    })
+
+    t.test('/not-defined', (t) => {
+      t.plan(3)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/assets/not-defined'
+      }, (err, response, body) => {
+        t.error(err)
+        t.equal(response.statusCode, 200)
+        t.same(JSON.parse(body), { hello: 'world' })
+      })
+    })
+
+    t.test('/deep/path/for/test/purpose/foo.html', (t) => {
+      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/assets/deep/path/for/test/purpose/foo.html'
+      }, (err, response, body) => {
+        t.error(err)
+        t.equal(response.statusCode, 200)
+        t.equal(body.toString(), deepContent)
+        genericResponseChecks(t, response)
+      })
+    })
+
+    t.test('/../index.js', (t) => {
+      t.plan(3)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/assets/../index.js',
+        followRedirect: false
+      }, (err, response, body) => {
+        t.error(err)
+        t.equal(response.statusCode, 200)
+        t.same(JSON.parse(body), { hello: 'world' })
+      })
+    })
+
+    t.test('/index.css', t => {
+      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'HEAD',
+        url: 'http://localhost:' + fastify.server.address().port + '/assets/index.css'
+      }, (err, response, body) => {
+        t.error(err)
+        t.equal(response.statusCode, 200)
+        t.equal(body.toString(), '')
+        genericResponseChecks(t, response)
+      })
+    })
+  })
+})
+
 t.test('register with wildcard string', (t) => {
   t.plan(1)
 
