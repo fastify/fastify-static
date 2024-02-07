@@ -12,8 +12,8 @@ const contentDisposition = require('content-disposition')
 
 const dirList = require('./lib/dirList')
 
-const asteriskRegex = /\*/gu
 const endForwardSlashRegex = /\/$/u
+const asteriskRegex = /\*/gu
 
 const supportedEncodings = ['br', 'gzip', 'deflate']
 send.mime.default_type = 'application/octet-stream'
