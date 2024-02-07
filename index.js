@@ -111,14 +111,11 @@ async function fastifyStatic (fastify, opts) {
       throw new Error('"wildcard" option must be a boolean')
     }
     if (opts.wildcard === undefined || opts.wildcard === true) {
-      fastify.route({
-        ...routeOpts,
-        exposeHeadRoute: true,
-        method: 'GET',
-        url: `${prefix}*`,
-        handler (req, reply) {
-          pumpSendToReply(req, reply, `/${req.params['*']}`, sendOptions.root)
-        }
+      fastify.head(prefix + '*', routeOpts, function (req, reply) {
+        pumpSendToReply(req, reply, '/' + req.params['*'], sendOptions.root)
+      })
+      fastify.get(prefix + '*', routeOpts, function (req, reply) {
+        pumpSendToReply(req, reply, '/' + req.params['*'], sendOptions.root)
       })
       if (opts.redirect === true && prefix !== opts.prefix) {
         fastify.get(opts.prefix, routeOpts, function (req, reply) {
@@ -383,7 +380,6 @@ async function fastifyStatic (fastify, opts) {
 
   function setUpHeadAndGet (routeOpts, route, file, rootPath) {
     const toSetUp = Object.assign({}, routeOpts, {
-      exposeHeadRoute: true,
       method: ['HEAD', 'GET'],
       url: route,
       handler: serveFileHandler
