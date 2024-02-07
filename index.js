@@ -111,14 +111,11 @@ async function fastifyStatic (fastify, opts) {
       throw new Error('"wildcard" option must be a boolean')
     }
     if (opts.wildcard === undefined || opts.wildcard === true) {
-      fastify.head(prefix + '*', routeOpts, function (req, reply) {
-        pumpSendToReply(req, reply, '/' + req.params['*'], sendOptions.root)
-      })
-      fastify.get(prefix + '*', routeOpts, function (req, reply) {
+      fastify.get(prefix + '*', { ...routeOpts, exposeHeadRoute: true }, (req, reply) => {
         pumpSendToReply(req, reply, '/' + req.params['*'], sendOptions.root)
       })
       if (opts.redirect === true && prefix !== opts.prefix) {
-        fastify.get(opts.prefix, routeOpts, function (req, reply) {
+        fastify.get(opts.prefix, routeOpts, (req, reply) => {
           reply.redirect(301, getRedirectUrl(req.raw.url))
         })
       }
