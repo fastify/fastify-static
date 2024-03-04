@@ -42,7 +42,7 @@
     "@fastify/compress": "^7.0.0",
     "@fastify/pre-commit": "^2.0.2",
     "@types/node": "^20.1.0",
-    "@typescript-eslint/eslint-plugin": "^6.3.0",
+    "@typescript-eslint/eslint-plugin": "^7.1.0",
     "@typescript-eslint/parser": "^7.1.0",
     "concat-stream": "^2.0.0",
     "coveralls": "^3.0.4",
