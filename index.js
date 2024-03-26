@@ -282,11 +282,10 @@ async function fastifyStatic (fastify, opts) {
       if (opts.redirect === true) {
         try {
           reply.redirect(301, getRedirectUrl(request.raw.url))
-        } catch (error) {
+        } /* c8 ignore start */ catch (error) {
           // the try-catch here is actually unreachable, but we keep it for safety and prevent DoS attack
-          /* c8 ignore next */
           reply.send(error)
-        }
+        } /* c8 ignore stop */
       } else {
         // if is a directory path without a trailing slash, and has an index file, reply as if it has a trailing slash
         if (!pathname.endsWith('/') && findIndexFile(pathname, options.root, options.index)) {
@@ -532,13 +531,12 @@ function getRedirectUrl (url) {
     const parsed = new URL(url, 'http://localhost.com/')
     const parsedPathname = parsed.pathname
     return parsedPathname + (parsedPathname[parsedPathname.length - 1] !== '/' ? '/' : '') + (parsed.search || '')
-  } catch {
+  } /* c8 ignore start */ catch {
     // the try-catch here is actually unreachable, but we keep it for safety and prevent DoS attack
-    /* c8 ignore next 3 */
     const err = new Error(`Invalid redirect URL: ${url}`)
     err.statusCode = 400
     throw err
-  }
+  } /* c8 ignore stop */
 }
 
 module.exports = fp(fastifyStatic, {
