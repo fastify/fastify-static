@@ -284,7 +284,7 @@ async function fastifyStatic (fastify, opts) {
           reply.redirect(301, getRedirectUrl(request.raw.url))
         } catch (error) {
           // the try-catch here is actually unreachable, but we keep it for safety and prevent DoS attack
-          /* istanbul ignore next */
+          /* c8 ignore next */
           reply.send(error)
         }
       } else {
@@ -389,7 +389,7 @@ async function fastifyStatic (fastify, opts) {
 
   function serveFileHandler (req, reply) {
     // TODO: remove the fallback branch when bump major
-    /* istanbul ignore next */
+    /* c8 ignore next */
     const routeConfig = req.routeOptions?.config || req.routeConfig
     pumpSendToReply(req, reply, routeConfig.file, routeConfig.rootPath)
   }
@@ -482,8 +482,6 @@ function getContentType (path) {
 }
 
 function findIndexFile (pathname, root, indexFiles = ['index.html']) {
-  // TODO remove istanbul ignore
-  /* istanbul ignore else */
   if (Array.isArray(indexFiles)) {
     return indexFiles.find(filename => {
       const p = path.join(root, pathname, filename)
@@ -495,7 +493,7 @@ function findIndexFile (pathname, root, indexFiles = ['index.html']) {
       }
     })
   }
-  /* istanbul ignore next */
+  /* c8 ignore next */
   return false
 }
 
@@ -536,11 +534,9 @@ function getRedirectUrl (url) {
     return parsedPathname + (parsedPathname[parsedPathname.length - 1] !== '/' ? '/' : '') + (parsed.search || '')
   } catch {
     // the try-catch here is actually unreachable, but we keep it for safety and prevent DoS attack
-    /* istanbul ignore next */
+    /* c8 ignore next 3 */
     const err = new Error(`Invalid redirect URL: ${url}`)
-    /* istanbul ignore next */
     err.statusCode = 400
-    /* istanbul ignore next */
     throw err
   }
 }
