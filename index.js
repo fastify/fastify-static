@@ -289,11 +289,10 @@ async function fastifyStatic (fastify, opts) {
       if (opts.redirect === true) {
         try {
           reply.redirect(301, getRedirectUrl(request.raw.url))
-        } catch (error) {
+        } /* c8 ignore start */ catch (error) {
           // the try-catch here is actually unreachable, but we keep it for safety and prevent DoS attack
-          /* istanbul ignore next */
           reply.send(error)
-        }
+        } /* c8 ignore stop */
       } else {
         // if is a directory path without a trailing slash, and has an index file, reply as if it has a trailing slash
         if (!pathname.endsWith('/') && findIndexFile(pathname, options.root, options.index)) {
@@ -396,7 +395,7 @@ async function fastifyStatic (fastify, opts) {
 
   function serveFileHandler (req, reply) {
     // TODO: remove the fallback branch when bump major
-    /* istanbul ignore next */
+    /* c8 ignore next */
     const routeConfig = req.routeOptions?.config || req.routeConfig
     pumpSendToReply(req, reply, routeConfig.file, routeConfig.rootPath)
   }
@@ -489,8 +488,6 @@ function getContentType (path) {
 }
 
 function findIndexFile (pathname, root, indexFiles = ['index.html']) {
-  // TODO remove istanbul ignore
-  /* istanbul ignore else */
   if (Array.isArray(indexFiles)) {
     return indexFiles.find(filename => {
       const p = path.join(root, pathname, filename)
@@ -502,7 +499,7 @@ function findIndexFile (pathname, root, indexFiles = ['index.html']) {
       }
     })
   }
-  /* istanbul ignore next */
+  /* c8 ignore next */
   return false
 }
 
@@ -541,15 +538,12 @@ function getRedirectUrl (url) {
     const parsed = new URL(url, 'http://localhost.com/')
     const parsedPathname = parsed.pathname
     return parsedPathname + (parsedPathname[parsedPathname.length - 1] !== '/' ? '/' : '') + (parsed.search || '')
-  } catch {
+  } /* c8 ignore start */ catch {
     // the try-catch here is actually unreachable, but we keep it for safety and prevent DoS attack
-    /* istanbul ignore next */
     const err = new Error(`Invalid redirect URL: ${url}`)
-    /* istanbul ignore next */
     err.statusCode = 400
-    /* istanbul ignore next */
     throw err
-  }
+  } /* c8 ignore stop */
 }
 
 module.exports = fp(fastifyStatic, {
