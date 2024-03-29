@@ -46,6 +46,9 @@ const indexBr = fs.readFileSync(
 const dirIndexBr = fs.readFileSync(
   './test/static-pre-compressed/dir/index.html.br'
 )
+const dirIndexGz = fs.readFileSync(
+  './test/static-pre-compressed/dir-gz/index.html.gz'
+)
 const uncompressedStatic = fs
   .readFileSync('./test/static-pre-compressed/uncompressed.html')
   .toString('utf8')
@@ -3492,6 +3495,35 @@ t.test(
     t.equal(response.headers['content-encoding'], 'br')
     t.equal(response.statusCode, 200)
     t.same(response.rawPayload, dirIndexBr)
+    t.end()
+  }
+)
+
+t.test(
+  'will serve precompressed gzip index in subdir',
+  async (t) => {
+    const pluginOptions = {
+      root: path.join(__dirname, '/static-pre-compressed'),
+      preCompressed: true
+    }
+
+    const fastify = Fastify()
+
+    fastify.register(fastifyStatic, pluginOptions)
+    t.teardown(fastify.close.bind(fastify))
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '/dir-gz',
+      headers: {
+        'accept-encoding': 'gzip, deflate, br'
+      }
+    })
+
+    genericResponseChecks(t, response)
+    t.equal(response.headers['content-encoding'], 'gzip')
+    t.equal(response.statusCode, 200)
+    t.same(response.rawPayload, dirIndexGz)
     t.end()
   }
 )

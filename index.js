@@ -174,6 +174,7 @@ async function fastifyStatic (fastify, opts) {
     pumpOptions,
     checkedEncodings
   ) {
+    const pathnameOrig = pathname
     const options = Object.assign({}, sendOptions, pumpOptions)
 
     if (rootPath) {
@@ -346,7 +347,7 @@ async function fastifyStatic (fastify, opts) {
           return pumpSendToReply(
             request,
             reply,
-            pathname,
+            pathnameOrig,
             rootPath,
             rootPathOffset,
             undefined,
