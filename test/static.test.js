@@ -1740,7 +1740,7 @@ t.test('with fastify-compress', t => {
   })
 })
 t.test('register /static/ with schemaHide true', t => {
-  t.plan(4)
+  t.plan(3)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -1780,7 +1780,7 @@ t.test('register /static/ with schemaHide true', t => {
 })
 
 t.test('register /static/ with schemaHide false', t => {
-  t.plan(4)
+  t.plan(3)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -1820,7 +1820,7 @@ t.test('register /static/ with schemaHide false', t => {
 })
 
 t.test('register /static/ without schemaHide', t => {
-  t.plan(4)
+  t.plan(3)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -2957,7 +2957,7 @@ t.test('inject support', async (t) => {
 })
 
 t.test('routes should use custom errorHandler premature stream close', t => {
-  t.plan(4)
+  t.plan(3)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -2992,7 +2992,7 @@ t.test('routes should use custom errorHandler premature stream close', t => {
 })
 
 t.test('routes should fallback to default errorHandler', t => {
-  t.plan(4)
+  t.plan(3)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -3962,3 +3962,37 @@ t.test(
     t.same(response2.body, aContent)
   }
 )
+
+t.test('content-length in head route should not return zero when using wildcard', t => {
+  t.plan(6)
+
+  const pluginOptions = {
+    root: path.join(__dirname, '/static')
+  }
+  const fastify = Fastify()
+
+  fastify.register(fastifyStatic, pluginOptions)
+
+  t.teardown(fastify.close.bind(fastify))
+
+  fastify.listen({ port: 0 }, err => {
+    t.error(err)
+
+    fastify.server.unref()
+
+    const file = fs.readFileSync(path.join(__dirname, '/static/index.html'))
+    const contentLength = Buffer.byteLength(file).toString()
+
+    simple.concat({
+      method: 'HEAD',
+      url: 'http://localhost:' + fastify.server.address().port + '/index.html',
+      followRedirect: false
+    }, (err, response, body) => {
+      t.error(err)
+      t.equal(response.statusCode, 200)
+      t.equal(response.headers['content-type'], 'text/html; charset=UTF-8')
+      t.equal(response.headers['content-length'], contentLength)
+      t.equal(body.toString(), '')
+    })
+  })
+})
