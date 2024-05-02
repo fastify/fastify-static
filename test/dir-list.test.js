@@ -205,8 +205,8 @@ t.test('dir list html format', t => {
 </ul>
 <ul>
   <li><a href="/public/.example" target="_blank">.example</a></li>
-  <li><a href="/public/100%.txt" target="_blank">100%.txt</a></li>
-  <li><a href="/public/a .md" target="_blank">a .md</a></li>
+  <li><a href="/public/100%25.txt" target="_blank">100%.txt</a></li>
+  <li><a href="/public/a%20.md" target="_blank">a .md</a></li>
   <li><a href="/public/foo.html" target="_blank">foo.html</a></li>
   <li><a href="/public/foobar.html" target="_blank">foobar.html</a></li>
   <li><a href="/public/index.css" target="_blank">index.css</a></li>
@@ -237,8 +237,8 @@ t.test('dir list html format', t => {
 </ul>
 <ul>
   <li><a href="/public/.example" target="_blank">.example</a></li>
-  <li><a href="/public/100%.txt" target="_blank">100%.txt</a></li>
-  <li><a href="/public/a .md" target="_blank">a .md</a></li>
+  <li><a href="/public/100%25.txt" target="_blank">100%.txt</a></li>
+  <li><a href="/public/a%20.md" target="_blank">a .md</a></li>
   <li><a href="/public/foo.html" target="_blank">foo.html</a></li>
   <li><a href="/public/foobar.html" target="_blank">foobar.html</a></li>
   <li><a href="/public/index.css" target="_blank">index.css</a></li>
