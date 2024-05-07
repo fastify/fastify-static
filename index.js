@@ -221,7 +221,8 @@ async function fastifyStatic (fastify, opts) {
       }
     }
 
-    const stream = send(request.raw, pathnameForSend, options)
+    // `send(..., path, ...)` will URI-decode path so we pass an encoded path here
+    const stream = send(request.raw, encodeURI(pathnameForSend), options)
     let resolvedFilename
     stream.on('file', function (file) {
       resolvedFilename = file

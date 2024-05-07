@@ -3963,6 +3963,33 @@ t.test(
   }
 )
 
+t.test(
+  'serves files with % in the filename',
+  async (t) => {
+    t.plan(2)
+
+    const txtContent = fs.readFileSync(path.join(__dirname, 'static', '100%.txt'), 'utf-8')
+
+    const pluginOptions = {
+      root: url.pathToFileURL(path.join(__dirname, '/static')),
+      wildcard: false
+    }
+
+    const fastify = Fastify()
+
+    fastify.register(fastifyStatic, pluginOptions)
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '100%25.txt',
+      headers: {
+        'accept-encoding': '*, *'
+      }
+    })
+    t.equal(response.statusCode, 200)
+    t.same(response.body, txtContent)
+  }
+)
+
 t.test('content-length in head route should not return zero when using wildcard', t => {
   t.plan(6)
 

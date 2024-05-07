@@ -154,7 +154,7 @@ t.test('dir list, custom options', t => {
   }
 
   const route = '/public/'
-  const content = { dirs: ['deep', 'shallow'], files: ['.example', 'a .md', 'foo.html', 'foobar.html', 'index.css', 'index.html'] }
+  const content = { dirs: ['deep', 'shallow'], files: ['.example', '100%.txt', 'a .md', 'foo.html', 'foobar.html', 'index.css', 'index.html'] }
 
   helper.arrange(t, options, (url) => {
     t.test(route, t => {
@@ -205,7 +205,8 @@ t.test('dir list html format', t => {
 </ul>
 <ul>
   <li><a href="/public/.example" target="_blank">.example</a></li>
-  <li><a href="/public/a .md" target="_blank">a .md</a></li>
+  <li><a href="/public/100%25.txt" target="_blank">100%.txt</a></li>
+  <li><a href="/public/a%20.md" target="_blank">a .md</a></li>
   <li><a href="/public/foo.html" target="_blank">foo.html</a></li>
   <li><a href="/public/foobar.html" target="_blank">foobar.html</a></li>
   <li><a href="/public/index.css" target="_blank">index.css</a></li>
@@ -236,7 +237,8 @@ t.test('dir list html format', t => {
 </ul>
 <ul>
   <li><a href="/public/.example" target="_blank">.example</a></li>
-  <li><a href="/public/a .md" target="_blank">a .md</a></li>
+  <li><a href="/public/100%25.txt" target="_blank">100%.txt</a></li>
+  <li><a href="/public/a%20.md" target="_blank">a .md</a></li>
   <li><a href="/public/foo.html" target="_blank">foo.html</a></li>
   <li><a href="/public/foobar.html" target="_blank">foobar.html</a></li>
   <li><a href="/public/index.css" target="_blank">index.css</a></li>
@@ -492,7 +494,7 @@ t.test('json format with url parameter format', t => {
     }
   }
   const route = '/public/'
-  const jsonContent = { dirs: ['deep', 'shallow'], files: ['.example', 'a .md', 'foo.html', 'foobar.html', 'index.css', 'index.html'] }
+  const jsonContent = { dirs: ['deep', 'shallow'], files: ['.example', '100%.txt', 'a .md', 'foo.html', 'foobar.html', 'index.css', 'index.html'] }
 
   helper.arrange(t, options, (url) => {
     simple.concat({
@@ -539,7 +541,7 @@ t.test('json format with url parameter format and without render option', t => {
     }
   }
   const route = '/public/'
-  const jsonContent = { dirs: ['deep', 'shallow'], files: ['.example', 'a .md', 'foo.html', 'foobar.html', 'index.css', 'index.html'] }
+  const jsonContent = { dirs: ['deep', 'shallow'], files: ['.example', '100%.txt', 'a .md', 'foo.html', 'foobar.html', 'index.css', 'index.html'] }
 
   helper.arrange(t, options, (url) => {
     simple.concat({
@@ -588,7 +590,7 @@ t.test('html format with url parameter format', t => {
     }
   }
   const route = '/public/'
-  const jsonContent = { dirs: ['deep', 'shallow'], files: ['.example', 'a .md', 'foo.html', 'foobar.html', 'index.css', 'index.html'] }
+  const jsonContent = { dirs: ['deep', 'shallow'], files: ['.example', '100%.txt', 'a .md', 'foo.html', 'foobar.html', 'index.css', 'index.html'] }
 
   helper.arrange(t, options, (url) => {
     simple.concat({
