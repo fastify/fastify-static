@@ -230,6 +230,7 @@ async function fastifyStatic (fastify, opts) {
     } = await send(request.raw, encodeURI(pathnameForSend), options)
     switch (type) {
       case 'directory': {
+        const path = metadata.path
         if (opts.list) {
           await dirList.send({
             reply,
