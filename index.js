@@ -1,6 +1,5 @@
 'use strict'
 
-const { PassThrough } = require('node:stream')
 const path = require('node:path')
 const { fileURLToPath } = require('node:url')
 const { statSync } = require('node:fs')
@@ -170,7 +169,7 @@ async function fastifyStatic (fastify, opts) {
 
   const allowedPath = opts.allowedPath
 
-  function pumpSendToReply (
+  async function pumpSendToReply (
     request,
     reply,
     pathname,
@@ -222,101 +221,37 @@ async function fastifyStatic (fastify, opts) {
     }
 
     // `send(..., path, ...)` will URI-decode path so we pass an encoded path here
-    const stream = send(request.raw, encodeURI(pathnameForSend), options)
-    let resolvedFilename
-    stream.on('file', function (file) {
-      resolvedFilename = file
-    })
-
-    const wrap = new PassThrough({
-      flush (cb) {
-        this.finished = true
-        if (reply.raw.statusCode === 304) {
-          reply.send('')
-        }
-        cb()
-      }
-    })
-
-    wrap.getHeader = reply.getHeader.bind(reply)
-    wrap.setHeader = reply.header.bind(reply)
-    wrap.removeHeader = () => {}
-    wrap.finished = false
-
-    Object.defineProperty(wrap, 'filename', {
-      get () {
-        return resolvedFilename
-      }
-    })
-    Object.defineProperty(wrap, 'statusCode', {
-      get () {
-        return reply.raw.statusCode
-      },
-      set (code) {
-        reply.code(code)
-      }
-    })
-
-    if (request.method === 'HEAD') {
-      wrap.on('finish', reply.send.bind(reply))
-    } else {
-      wrap.on('pipe', function () {
-        if (encoding) {
-          reply.header('content-type', getContentType(pathname))
-          reply.header('content-encoding', encoding)
-        }
-        reply.send(wrap)
-      })
-    }
-
-    if (setHeaders !== undefined) {
-      stream.on('headers', setHeaders)
-    }
-
-    stream.on('directory', function (_, path) {
-      if (opts.list) {
-        dirList.send({
-          reply,
-          dir: path,
-          options: opts.list,
-          route: pathname,
-          prefix,
-          dotfiles: opts.dotfiles
-        }).catch((err) => reply.send(err))
-        return
-      }
-
-      if (opts.redirect === true) {
-        try {
-          reply.redirect(301, getRedirectUrl(request.raw.url))
-        } /* c8 ignore start */ catch (error) {
-          // the try-catch here is actually unreachable, but we keep it for safety and prevent DoS attack
-          reply.send(error)
-        } /* c8 ignore stop */
-      } else {
-        // if is a directory path without a trailing slash, and has an index file, reply as if it has a trailing slash
-        if (!pathname.endsWith('/') && findIndexFile(pathname, options.root, options.index)) {
-          return pumpSendToReply(
-            request,
+    const {
+      statusCode,
+      headers,
+      stream,
+      type,
+      metadata
+    } = await send(request.raw, encodeURI(pathnameForSend), options)
+    switch (type) {
+      case 'directory': {
+        const path = metadata.path
+        if (opts.list) {
+          await dirList.send({
             reply,
-            pathname + '/',
-            rootPath,
-            undefined,
-            undefined,
-            checkedEncodings
-          )
+            dir: path,
+            options: opts.list,
+            route: pathname,
+            prefix,
+            dotfiles: opts.dotfiles
+          }).catch((err) => reply.send(err))
         }
 
-        reply.callNotFound()
-      }
-    })
-
-    stream.on('error', function (err) {
-      if (err.code === 'ENOENT') {
-        // when preCompress is enabled and the path is a directory without a trailing slash
-        if (opts.preCompressed && encoding) {
-          const indexPathname = findIndexFile(pathname, options.root, options.index)
-          if (indexPathname) {
+        if (opts.redirect === true) {
+          try {
+            reply.redirect(301, getRedirectUrl(request.raw.url))
+          } /* c8 ignore start */ catch (error) {
+            // the try-catch here is actually unreachable, but we keep it for safety and prevent DoS attack
+            await reply.send(error)
+          } /* c8 ignore stop */
+        } else {
+          // if is a directory path without a trailing slash, and has an index file, reply as if it has a trailing slash
+          if (!pathname.endsWith('/') && findIndexFile(pathname, options.root, options.index)) {
             return pumpSendToReply(
               request,
               reply,
@@ -327,58 +262,107 @@ async function fastifyStatic (fastify, opts) {
               checkedEncodings
             )
           }
-        }
 
-        // if file exists, send real file, otherwise send dir list if name match
-        if (opts.list && dirList.handle(pathname, opts.list)) {
-          dirList.send({
-            reply,
-            dir: dirList.path(opts.root, pathname),
-            options: opts.list,
-            route: pathname,
-            prefix,
-            dotfiles: opts.dotfiles
-          }).catch((err) => reply.send(err))
-          return
+          reply.callNotFound()
         }
-
-        // root paths left to try?
-        if (Array.isArray(rootPath) && rootPathOffset < (rootPath.length - 1)) {
-          return pumpSendToReply(request, reply, pathname, rootPath, rootPathOffset + 1)
-        }
-
-        if (opts.preCompressed && !checkedEncodings.has(encoding)) {
-          checkedEncodings.add(encoding)
-          return pumpSendToReply(
-            request,
-            reply,
-            pathnameOrig,
-            rootPath,
-            rootPathOffset,
-            undefined,
-            checkedEncodings
-          )
-        }
-
-        return reply.callNotFound()
+        break
       }
+      case 'error': {
+        if (
+          statusCode === 403 &&
+          (!options.index || !options.index.length) &&
+          pathnameForSend[pathnameForSend.length - 1] === '/'
+        ) {
+          if (opts.list) {
+            await dirList.send({
+              reply,
+              dir: dirList.path(opts.root, pathname),
+              options: opts.list,
+              route: pathname,
+              prefix,
+              dotfiles: opts.dotfiles
+            }).catch((err) => reply.send(err))
+          }
+        }
 
-      // The `send` library terminates the request with a 404 if the requested
-      // path contains a dotfile and `send` is initialized with `{dotfiles:
-      // 'ignore'}`. `send` aborts the request before getting far enough to
-      // check if the file exists (hence, a 404 `NotFoundError` instead of
-      // `ENOENT`).
-      // https://github.com/pillarjs/send/blob/de073ed3237ade9ff71c61673a34474b30e5d45b/index.js#L582
-      if (err.status === 404) {
-        return reply.callNotFound()
+        if (metadata.error.code === 'ENOENT') {
+        // when preCompress is enabled and the path is a directory without a trailing slash
+          if (opts.preCompressed && encoding) {
+            const indexPathname = findIndexFile(pathname, options.root, options.index)
+            if (indexPathname) {
+              return pumpSendToReply(
+                request,
+                reply,
+                pathname + '/',
+                rootPath,
+                undefined,
+                undefined,
+                checkedEncodings
+              )
+            }
+          }
+
+          // if file exists, send real file, otherwise send dir list if name match
+          if (opts.list && dirList.handle(pathname, opts.list)) {
+            await dirList.send({
+              reply,
+              dir: dirList.path(opts.root, pathname),
+              options: opts.list,
+              route: pathname,
+              prefix,
+              dotfiles: opts.dotfiles
+            }).catch((err) => reply.send(err))
+            return
+          }
+
+          // root paths left to try?
+          if (Array.isArray(rootPath) && rootPathOffset < (rootPath.length - 1)) {
+            return pumpSendToReply(request, reply, pathname, rootPath, rootPathOffset + 1)
+          }
+
+          if (opts.preCompressed && !checkedEncodings.has(encoding)) {
+            checkedEncodings.add(encoding)
+            return pumpSendToReply(
+              request,
+              reply,
+              pathnameOrig,
+              rootPath,
+              rootPathOffset,
+              undefined,
+              checkedEncodings
+            )
+          }
+
+          return reply.callNotFound()
+        }
+
+        // The `send` library terminates the request with a 404 if the requested
+        // path contains a dotfile and `send` is initialized with `{dotfiles:
+        // 'ignore'}`. `send` aborts the request before getting far enough to
+        // check if the file exists (hence, a 404 `NotFoundError` instead of
+        // `ENOENT`).
+        // https://github.com/pillarjs/send/blob/de073ed3237ade9ff71c61673a34474b30e5d45b/index.js#L582
+        if (metadata.error.status === 404) {
+          return reply.callNotFound()
+        }
+
+        await reply.send(metadata.error)
+        break
       }
-
-      reply.send(err)
-    })
-
-    // we cannot use pump, because send error
-    // handling is not compatible
-    stream.pipe(wrap)
+      case 'file': {
+        reply.code(statusCode)
+        if (setHeaders !== undefined) {
+          setHeaders(reply.raw, metadata.path, metadata.stat)
+        }
+        reply.headers(headers)
+        if (encoding) {
+          reply.header('content-type', getContentType(pathname))
+          reply.header('content-encoding', encoding)
+        }
+        await reply.send(stream)
+        break
+      }
+    }
   }
 
   function setUpHeadAndGet (routeOpts, route, file, rootPath) {
@@ -393,11 +377,11 @@ async function fastifyStatic (fastify, opts) {
     fastify.route(toSetUp)
   }
 
-  function serveFileHandler (req, reply) {
+  async function serveFileHandler (req, reply) {
     // TODO: remove the fallback branch when bump major
     /* c8 ignore next */
     const routeConfig = req.routeOptions?.config || req.routeConfig
-    pumpSendToReply(req, reply, routeConfig.file, routeConfig.rootPath)
+    return pumpSendToReply(req, reply, routeConfig.file, routeConfig.rootPath)
   }
 }
 
@@ -547,7 +531,7 @@ function getRedirectUrl (url) {
 }
 
 module.exports = fp(fastifyStatic, {
-  fastify: '4.x',
+  // fastify: '4.x',
   name: '@fastify/static'
 })
 module.exports.default = fastifyStatic

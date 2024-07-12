@@ -477,13 +477,13 @@ If an error occurs while trying to send a file, the error will be passed
 to Fastify's error handler. You can set a custom error handler with
 [`fastify.setErrorHandler()`](https://fastify.dev/docs/latest/Reference/Server/#seterrorhandler).
 
-### Payload `stream.filename`
+### Payload `stream.path`
 
-If you need to access the filename inside the `onSend` hook, you can use `payload.filename`.
+If you need to access the file path inside the `onSend` hook, you can use `payload.path`.
 
 ```js
 fastify.addHook('onSend', function (req, reply, payload, next) {
-  console.log(payload.filename)
+  console.log(payload.path)
   next()
 })
 ```
