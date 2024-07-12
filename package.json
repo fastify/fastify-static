@@ -32,7 +32,7 @@
   "homepage": "https://github.com/fastify/fastify-static",
   "dependencies": {
     "@fastify/accept-negotiator": "^2.0.0-pre.fv5.1",
-    "@fastify/send": "github:fastify/send#extends-result",
+    "@fastify/send": "^3.1.0",
     "content-disposition": "^0.5.4",
     "fastify-plugin": "^5.0.0-pre.fv5.1",
     "fastq": "^1.17.1",
