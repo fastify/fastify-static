@@ -239,7 +239,7 @@ async function fastifyStatic (fastify, opts) {
             route: pathname,
             prefix,
             dotfiles: opts.dotfiles
-          })
+          }).catch((err) => reply.send(err))
         }
 
         if (opts.redirect === true) {
@@ -268,6 +268,23 @@ async function fastifyStatic (fastify, opts) {
         break
       }
       case 'error': {
+        if (
+          statusCode === 403 &&
+          (!options.index || !options.index.length) &&
+          pathnameForSend[pathnameForSend.length - 1] === '/'
+        ) {
+          if (opts.list) {
+            await dirList.send({
+              reply,
+              dir: dirList.path(opts.root, pathname),
+              options: opts.list,
+              route: pathname,
+              prefix,
+              dotfiles: opts.dotfiles
+            }).catch((err) => reply.send(err))
+          }
+        }
+
         if (metadata.error.code === 'ENOENT') {
         // when preCompress is enabled and the path is a directory without a trailing slash
           if (opts.preCompressed && encoding) {
@@ -294,7 +311,7 @@ async function fastifyStatic (fastify, opts) {
               route: pathname,
               prefix,
               dotfiles: opts.dotfiles
-            })
+            }).catch((err) => reply.send(err))
             return
           }
 

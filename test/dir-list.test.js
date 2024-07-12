@@ -471,7 +471,7 @@ t.test('dir list json format - extended info', t => {
           t.equal(response.statusCode, 200)
           const bodyObject = JSON.parse(body.toString())
           t.equal(bodyObject.dirs[0].name, 'empty')
-          t.equal(typeof bodyObject.dirs[0].stats.atime, 'string')
+          t.equal(typeof bodyObject.dirs[0].stats.atimeMs, 'number')
           t.equal(typeof bodyObject.dirs[0].extendedInfo.totalSize, 'number')
         })
       })
@@ -845,7 +845,7 @@ t.test('dir list error', t => {
   const errorMessage = 'mocking send'
   dirList.send = async () => { throw new Error(errorMessage) }
 
-  const mock = t.mock('..', {
+  const mock = t.mockRequire('..', {
     '../lib/dirList.js': dirList
   })
 
