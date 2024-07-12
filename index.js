@@ -120,7 +120,7 @@ async function fastifyStatic (fastify, opts) {
       })
       if (opts.redirect === true && prefix !== opts.prefix) {
         fastify.get(opts.prefix, routeOpts, (req, reply) => {
-          reply.redirect(301, getRedirectUrl(req.raw.url))
+          reply.redirect(getRedirectUrl(req.raw.url), 301)
         })
       }
     } else {
@@ -244,7 +244,7 @@ async function fastifyStatic (fastify, opts) {
 
         if (opts.redirect === true) {
           try {
-            reply.redirect(301, getRedirectUrl(request.raw.url))
+            reply.redirect(getRedirectUrl(request.raw.url), 301)
           } /* c8 ignore start */ catch (error) {
             // the try-catch here is actually unreachable, but we keep it for safety and prevent DoS attack
             await reply.send(error)
