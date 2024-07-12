@@ -681,7 +681,7 @@ t.test('register /static with constraints', (t) => {
   })
 })
 
-t.test('payload.filename is set', (t) => {
+t.test('payload.path is set', (t) => {
   t.plan(3)
 
   const pluginOptions = {
@@ -692,7 +692,7 @@ t.test('payload.filename is set', (t) => {
   let gotFilename
   fastify.register(fastifyStatic, pluginOptions)
   fastify.addHook('onSend', function (req, reply, payload, next) {
-    gotFilename = payload.filename
+    gotFilename = payload.path
     next()
   })
 
@@ -1361,13 +1361,13 @@ t.test('root not found warning', (t) => {
   const destination = concat((data) => {
     t.equal(JSON.parse(data).msg, `"root" path "${rootPath}" must exist`)
   })
-  const logger = pino(
+  const loggerInstance = pino(
     {
       level: 'warn'
     },
     destination
   )
-  const fastify = Fastify({ logger })
+  const fastify = Fastify({ loggerInstance })
   fastify.register(fastifyStatic, pluginOptions)
   fastify.listen({ port: 0 }, (err) => {
     t.error(err)
