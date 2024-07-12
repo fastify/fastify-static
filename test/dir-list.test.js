@@ -171,6 +171,34 @@ t.test('dir list, custom options', t => {
   })
 })
 
+t.test('dir list, custom options with empty array index', t => {
+  t.plan(2)
+
+  const options = {
+    root: path.join(__dirname, '/static'),
+    prefix: '/public',
+    index: [],
+    list: true
+  }
+
+  const route = '/public/'
+  const content = { dirs: ['deep', 'shallow'], files: ['.example', '100%.txt', 'a .md', 'foo.html', 'foobar.html', 'index.css', 'index.html'] }
+
+  helper.arrange(t, options, (url) => {
+    t.test(route, t => {
+      t.plan(3)
+      simple.concat({
+        method: 'GET',
+        url: url + route
+      }, (err, response, body) => {
+        t.error(err)
+        t.equal(response.statusCode, 200)
+        t.equal(body.toString(), JSON.stringify(content))
+      })
+    })
+  })
+})
+
 t.test('dir list html format', t => {
   t.plan(6)
 
