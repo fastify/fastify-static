@@ -41,7 +41,7 @@
   "devDependencies": {
     "@fastify/compress": "^8.0.0-pre.fv5.1",
     "@fastify/pre-commit": "^2.1.0",
-    "@types/node": "^20.11.30",
+    "@types/node": "^22.0.0",
     "@typescript-eslint/eslint-plugin": "^7.3.1",
     "@typescript-eslint/parser": "^7.3.1",
     "concat-stream": "^2.0.0",
