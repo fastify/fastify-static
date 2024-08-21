@@ -200,51 +200,15 @@ t.test('dir list, custom options with empty array index', t => {
 })
 
 t.test('dir list html format', t => {
-  t.plan(6)
+  t.plan(3)
 
-  // render html in 2 ways: one with handlebars and one with template string
-
-  const Handlebars = require('handlebars')
-  const source = `
-<html><body>
-<ul>
-{{#dirs}}
-  <li><a href="{{href}}">{{name}}</a></li>
-{{/dirs}}
-</ul>
-<ul>
-{{#files}}
-  <li><a href="{{href}}" target="_blank">{{name}}</a></li>
-{{/files}}
-</ul>
-</body></html>
-`
-  const handlebarTemplate = Handlebars.compile(source)
-  const templates = [
-    {
-      render: (dirs, files) => {
-        return handlebarTemplate({ dirs, files })
-      },
-      output: `
-<html><body>
-<ul>
-  <li><a href="/public/deep">deep</a></li>
-  <li><a href="/public/shallow">shallow</a></li>
-</ul>
-<ul>
-  <li><a href="/public/.example" target="_blank">.example</a></li>
-  <li><a href="/public/100%25.txt" target="_blank">100%.txt</a></li>
-  <li><a href="/public/a%20.md" target="_blank">a .md</a></li>
-  <li><a href="/public/foo.html" target="_blank">foo.html</a></li>
-  <li><a href="/public/foobar.html" target="_blank">foobar.html</a></li>
-  <li><a href="/public/index.css" target="_blank">index.css</a></li>
-  <li><a href="/public/index.html" target="_blank">index.html</a></li>
-</ul>
-</body></html>
-`
-    },
-
-    {
+  const options = {
+    root: path.join(__dirname, '/static'),
+    prefix: '/public',
+    index: false,
+    list: {
+      format: 'html',
+      names: ['index', 'index.htm'],
       render: (dirs, files) => {
         return `
 <html><body>
@@ -256,8 +220,24 @@ t.test('dir list html format', t => {
 </ul>
 </body></html>
 `
-      },
-      output: `
+      }
+    }
+  }
+  const routes = ['/public/index.htm', '/public/index']
+
+  // check all routes by names
+
+  helper.arrange(t, options, (url) => {
+    for (const route of routes) {
+      t.test(route, t => {
+        t.plan(3)
+        simple.concat({
+          method: 'GET',
+          url: url + route
+        }, (err, response, body) => {
+          t.error(err)
+          t.equal(response.statusCode, 200)
+          t.equal(body.toString(), `
 <html><body>
 <ul>
   <li><a href="/public/deep">deep</a></li>
@@ -273,42 +253,11 @@ t.test('dir list html format', t => {
   <li><a href="/public/index.html" target="_blank">index.html</a></li>
 </ul>
 </body></html>
-`
-    }
-
-  ]
-
-  for (const template of templates) {
-    const options = {
-      root: path.join(__dirname, '/static'),
-      prefix: '/public',
-      index: false,
-      list: {
-        format: 'html',
-        names: ['index', 'index.htm'],
-        render: template.render
-      }
-    }
-    const routes = ['/public/index.htm', '/public/index']
-
-    // check all routes by names
-
-    helper.arrange(t, options, (url) => {
-      for (const route of routes) {
-        t.test(route, t => {
-          t.plan(3)
-          simple.concat({
-            method: 'GET',
-            url: url + route
-          }, (err, response, body) => {
-            t.error(err)
-            t.equal(response.statusCode, 200)
-            t.equal(body.toString(), template.output)
-          })
+`)
         })
-      }
-    })
-  }
+      })
+    }
+  })
 })
 
 t.test('dir list href nested structure', t => {
