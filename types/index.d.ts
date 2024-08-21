@@ -16,7 +16,7 @@ declare module 'fastify' {
   }
 }
 
-type FastifyStaticPlugin = FastifyPluginAsync<NonNullable<fastifyStatic.FastifyStaticOptions>>;
+type FastifyStaticPlugin = FastifyPluginAsync<NonNullable<fastifyStatic.FastifyStaticOptions>>
 
 declare namespace fastifyStatic {
   export interface SetHeadersResponse {
@@ -119,6 +119,6 @@ declare namespace fastifyStatic {
   export { fastifyStatic as default }
 }
 
-declare function fastifyStatic(...params: Parameters<FastifyStaticPlugin>): ReturnType<FastifyStaticPlugin>;
+declare function fastifyStatic (...params: Parameters<FastifyStaticPlugin>): ReturnType<FastifyStaticPlugin>
 
-export = fastifyStatic;
+export = fastifyStatic

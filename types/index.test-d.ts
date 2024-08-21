@@ -8,7 +8,7 @@ import fastifyStatic, {
   fastifyStatic as fastifyStaticNamed
 } from '..'
 
-import fastifyStaticCjsImport = require('..');
+import fastifyStaticCjsImport = require('..')
 const fastifyStaticCjs = require('..')
 
 const app: FastifyInstance = fastify()
