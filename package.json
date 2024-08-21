@@ -7,10 +7,8 @@
   "types": "types/index.d.ts",
   "scripts": {
     "coverage": "npm run test:unit -- --coverage-report=html",
-    "lint": "npm run lint:javascript && npm run lint:typescript",
-    "lint:javascript": "standard | snazzy",
-    "lint:fix": "standard --fix && npm run lint:typescript -- --fix",
-    "lint:typescript": "eslint -c .eslintrc.json types/**/*.d.ts types/**/*.test-d.ts",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
     "test": "npm run test:unit && npm run test:typescript",
     "test:typescript": "tsd",
     "test:unit": "tap",
@@ -42,28 +40,18 @@
     "@fastify/compress": "^8.0.0-pre.fv5.1",
     "@fastify/pre-commit": "^2.1.0",
     "@types/node": "^22.0.0",
-    "@typescript-eslint/eslint-plugin": "^7.3.1",
-    "@typescript-eslint/parser": "^7.3.1",
     "concat-stream": "^2.0.0",
-    "coveralls": "^3.1.1",
+    "eslint": "^9.9.0",
     "fastify": "^5.0.0-alpha.3",
+    "neostandard": "^0.11.3",
     "pino": "^9.1.0",
     "proxyquire": "^2.1.3",
     "simple-get": "^4.0.1",
-    "snazzy": "^9.0.0",
-    "standard": "^17.1.0",
     "tap": "^18.7.1",
-    "tsd": "^0.31.0",
-    "typescript": "^5.4.3"
+    "tsd": "^0.31.0"
   },
   "tsd": {
     "directory": "test/types"
-  },
-  "eslintConfig": {
-    "rules": {
-      "no-unused-vars": "off",
-      "@typescript-eslint/no-unused-vars": "error"
-    }
   },
   "publishConfig": {
     "access": "public"
