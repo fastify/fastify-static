@@ -1,32 +1,21 @@
 'use strict'
 
 const path = require('node:path')
-const Handlebars = require('handlebars')
 
 const fastify = require('fastify')({ logger: { level: 'trace' } })
 
-// Handlebar template for listing files and directories.
-const template = `
-<html>
-  <body>
-    dirs
-  <ul>
-    {{#dirs}}
-      <li><a href="{{href}}">{{name}}</a></li>
-    {{/dirs}}
-  </ul>
-
-  list
-
-  <ul>
-    {{#files}}
-      <li><a href="{{href}}" target="_blank">{{name}}</a></li>
-    {{/files}}
-  </ul>
-  </body>
-</html>
+const renderer = (dirs, files) => {
+  return `
+<html><body>
+<ul>
+${dirs.map(dir => `<li><a href="${dir.href}">${dir.name}</a></li>`).join('\n  ')}
+</ul>
+<ul>
+${files.map(file => `<li><a href="${file.href}" target="_blank">${file.name}</a></li>`).join('\n  ')}
+</ul>
+</body></html>
 `
-const handlebarTemplate = Handlebars.compile(template)
+}
 
 fastify
   .register(require('..'), {
@@ -41,7 +30,7 @@ fastify
       // A list of filenames that trigger a directory list response.
       names: ['index', 'index.html', 'index.htm', '/'],
       // You can provide your own render method as needed.
-      render: (dirs, files) => handlebarTemplate({ dirs, files })
+      renderer
     }
   })
   .listen({ port: 3000 }, err => {

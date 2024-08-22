@@ -43,7 +43,6 @@
     "concat-stream": "^2.0.0",
     "eslint": "^9.9.0",
     "fastify": "^5.0.0-alpha.3",
-    "handlebars": "^4.7.8",
     "neostandard": "^0.11.3",
     "pino": "^9.1.0",
     "proxyquire": "^2.1.3",
