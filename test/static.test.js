@@ -4023,3 +4023,51 @@ t.test('content-length in head route should not return zero when using wildcard'
     })
   })
 })
+
+t.test('serve: false disables root path check', (t) => {
+  t.plan(3)
+
+  const pluginOptions = {
+    root: path.join(__dirname, '/static'),
+    prefix: '/static',
+    serve: false
+  }
+  const fastify = Fastify()
+  fastify.register(fastifyStatic, pluginOptions)
+
+  t.teardown(fastify.close.bind(fastify))
+
+  fastify.listen({ port: 0 }, (err) => {
+    t.error(err)
+
+    fastify.server.unref()
+
+    t.test('/static/index.html', (t) => {
+      t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/static/index.html'
+      }, (err, response, body) => {
+        t.error(err)
+        t.equal(response.statusCode, 404)
+        genericErrorResponseChecks(t, response)
+        t.end()
+      })
+    })
+
+    t.test('/static/deep/path/for/test/purpose/foo.html', (t) => {
+      t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
+      simple.concat({
+        method: 'GET',
+        url: 'http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test/purpose/foo.html'
+      }, (err, response, body) => {
+        t.error(err)
+        t.equal(response.statusCode, 404)
+        genericErrorResponseChecks(t, response)
+        t.end()
+      })
+    })
+
+    t.end()
+  })
+})

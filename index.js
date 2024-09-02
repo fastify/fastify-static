@@ -19,7 +19,7 @@ send.mime.default_type = 'application/octet-stream'
 
 async function fastifyStatic (fastify, opts) {
   opts.root = normalizeRoot(opts.root)
-  checkRootPathForErrors(fastify, opts.root)
+  checkRootPathForErrors(fastify, opts.root, opts.serve)
 
   const setHeaders = opts.setHeaders
   if (setHeaders !== undefined && typeof setHeaders !== 'function') {
@@ -408,7 +408,11 @@ function normalizeRoot (root) {
   return root
 }
 
-function checkRootPathForErrors (fastify, rootPath) {
+function checkRootPathForErrors (fastify, rootPath, serve = true) {
+  if (serve === false) {
+    return
+  }
+
   if (rootPath === undefined) {
     throw new Error('"root" option is required')
   }
