@@ -2,17 +2,19 @@
 //                 Leo <https://github.com/leomelzer>
 /// <reference types="node" />
 
-import { FastifyPluginAsync, FastifyReply, FastifyRequest, RouteOptions } from 'fastify'
+import { FastifyPluginAsync, FastifyReply, FastifyReplyMixin, FastifyRequest, RouteOptions } from 'fastify'
 import { Stats } from 'fs'
 
 declare module 'fastify' {
-  interface FastifyReply {
-    sendFile(filename: string, rootPath?: string): FastifyReply;
-    sendFile(filename: string, options?: fastifyStatic.SendOptions): FastifyReply;
-    sendFile(filename: string, rootPath?: string, options?: fastifyStatic.SendOptions): FastifyReply;
-    download(filepath: string, options?: fastifyStatic.SendOptions): FastifyReply;
-    download(filepath: string, filename?: string): FastifyReply;
-    download(filepath: string, filename?: string, options?: fastifyStatic.SendOptions): FastifyReply;
+  interface FastifyReplyMixins {
+    fastifyStatic: FastifyReplyMixin<'fastifyStatic', {
+      sendFile<T extends FastifyReply>(this: T, filename: string, rootPath?: string): T,
+      sendFile<T extends FastifyReply>(this: T, filename: string, options?: fastifyStatic.SendOptions): T,
+      sendFile<T extends FastifyReply>(this: T, filename: string, rootPath?: string, options?: fastifyStatic.SendOptions): T,
+      download<T extends FastifyReply>(this: T, filepath: string, options?: fastifyStatic.SendOptions): T,
+      download<T extends FastifyReply>(this: T, filepath: string, filename?: string): T,
+      download<T extends FastifyReply>(this: T, filepath: string, filename?: string, options?: fastifyStatic.SendOptions): T,
+    }>
   }
 }
 

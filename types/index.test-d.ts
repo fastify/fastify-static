@@ -121,7 +121,9 @@ appWithImplicitHttp
   .register(fastifyStatic, options)
   .after(() => {
     appWithImplicitHttp.get('/', (request, reply) => {
-      reply.sendFile('some-file-name')
+      if (reply.hasMixin('fastifyStatic')) {
+        reply.sendFile('some-file-name').sendFile('some-file-name')
+      }
     })
   })
 
