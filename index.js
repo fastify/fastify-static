@@ -18,8 +18,13 @@ const supportedEncodings = ['br', 'gzip', 'deflate']
 send.mime.default_type = 'application/octet-stream'
 
 async function fastifyStatic (fastify, opts) {
+  if (opts.serve === false && opts.root === undefined) {
+    opts.root = process.cwd()
+    fastify.log.warn('No root path provided. Defaulting to current working directory. This may pose security risks if not intended.')
+  }
+
   opts.root = normalizeRoot(opts.root)
-  checkRootPathForErrors(fastify, opts.root, opts.serve)
+  checkRootPathForErrors(fastify, opts.root, opts.serve === false)
 
   const setHeaders = opts.setHeaders
   if (setHeaders !== undefined && typeof setHeaders !== 'function') {
@@ -408,11 +413,7 @@ function normalizeRoot (root) {
   return root
 }
 
-function checkRootPathForErrors (fastify, rootPath, serve = true) {
-  if (serve === false) {
-    return
-  }
-
+function checkRootPathForErrors (fastify, rootPath, skipExistenceCheck) {
   if (rootPath === undefined) {
     throw new Error('"root" option is required')
   }
@@ -429,18 +430,18 @@ function checkRootPathForErrors (fastify, rootPath, serve = true) {
     }
 
     // check each path and fail at first invalid
-    rootPath.map((path) => checkPath(fastify, path))
+    rootPath.map((path) => checkPath(fastify, path, skipExistenceCheck))
     return
   }
 
   if (typeof rootPath === 'string') {
-    return checkPath(fastify, rootPath)
+    return checkPath(fastify, rootPath, skipExistenceCheck)
   }
 
   throw new Error('"root" option must be a string or array of strings')
 }
 
-function checkPath (fastify, rootPath) {
+function checkPath (fastify, rootPath, skipExistenceCheck) {
   if (typeof rootPath !== 'string') {
     throw new Error('"root" option must be a string')
   }
@@ -448,21 +449,23 @@ function checkPath (fastify, rootPath) {
     throw new Error('"root" option must be an absolute path')
   }
 
-  let pathStat
+  if (!skipExistenceCheck) {
+    let pathStat
 
-  try {
-    pathStat = statSync(rootPath)
-  } catch (e) {
-    if (e.code === 'ENOENT') {
-      fastify.log.warn(`"root" path "${rootPath}" must exist`)
-      return
+    try {
+      pathStat = statSync(rootPath)
+    } catch (e) {
+      if (e.code === 'ENOENT') {
+        fastify.log.warn(`"root" path "${rootPath}" must exist`)
+        return
+      }
+
+      throw e
     }
 
-    throw e
-  }
-
-  if (pathStat.isDirectory() === false) {
-    throw new Error('"root" option must point to a directory')
+    if (pathStat.isDirectory() === false) {
+      throw new Error('"root" option must point to a directory')
+    }
   }
 }
 

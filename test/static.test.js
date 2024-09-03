@@ -4024,50 +4024,75 @@ t.test('content-length in head route should not return zero when using wildcard'
   })
 })
 
-t.test('serve: false disables root path check', (t) => {
-  t.plan(3)
+t.test('serve: false disables root path check', t => {
+  t.plan(4)
 
-  const pluginOptions = {
-    root: path.join(__dirname, '/static'),
-    prefix: '/static',
-    serve: false
-  }
-  const fastify = Fastify()
-  fastify.register(fastifyStatic, pluginOptions)
+  t.test('should default to CWD when no root is provided', async (t) => {
+    t.plan(3)
+    const fastify = Fastify()
 
-  t.teardown(fastify.close.bind(fastify))
+    let warningLogged = false
+    fastify.log.warn = (message) => {
+      if (message.includes('No root path provided')) {
+        warningLogged = true
+      }
+    }
 
-  fastify.listen({ port: 0 }, (err) => {
-    t.error(err)
+    await fastify.register(fastifyStatic, { serve: false })
 
-    fastify.server.unref()
+    t.ok(warningLogged, 'should log a warning about defaulting to CWD')
 
-    t.test('/static/index.html', (t) => {
-      t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/static/index.html'
-      }, (err, response, body) => {
-        t.error(err)
-        t.equal(response.statusCode, 404)
-        genericErrorResponseChecks(t, response)
-        t.end()
-      })
+    fastify.get('/test', (req, reply) => {
+      reply.sendFile('test/static/index.html')
     })
 
-    t.test('/static/deep/path/for/test/purpose/foo.html', (t) => {
-      t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test/purpose/foo.html'
-      }, (err, response, body) => {
-        t.error(err)
-        t.equal(response.statusCode, 404)
-        genericErrorResponseChecks(t, response)
-        t.end()
-      })
-    })
+    const response = await fastify.inject('/test')
+    t.equal(response.statusCode, 200, 'should serve file from CWD')
 
-    t.end()
+    const fs = require('fs')
+    const expectedContent = fs.readFileSync('test/static/index.html', 'utf8')
+    t.equal(response.payload, expectedContent, 'should serve correct file content')
+  })
+
+  t.test('should not throw when root is non-existent directory and serve is false', async (t) => {
+    t.plan(1)
+    const fastify = Fastify()
+    const nonExistentPath = path.join(__dirname, 'definitely-non-existent-directory')
+
+    await fastify.register(fastifyStatic, {
+      serve: false,
+      root: nonExistentPath
+    })
+    t.pass('should not throw for non-existent directory')
+  })
+
+  t.test('should still validate root is a string or array of strings', async (t) => {
+    t.plan(1)
+    const fastify = Fastify()
+
+    try {
+      await fastify.register(fastifyStatic, {
+        serve: false,
+        root: 123
+      })
+      t.fail('Should have thrown an error for non-string root')
+    } catch (error) {
+      t.match(error.message, /"root" option must be a string or array of strings/, 'Should throw for non-string root')
+    }
+  })
+
+  t.test('should still validate root is an absolute path', async (t) => {
+    t.plan(1)
+    const fastify = Fastify()
+
+    try {
+      await fastify.register(fastifyStatic, {
+        serve: false,
+        root: 'relative/path'
+      })
+      t.fail('Should have thrown an error for relative path')
+    } catch (error) {
+      t.match(error.message, /"root" option must be an absolute path/, 'Should throw for relative path')
+    }
   })
 })
