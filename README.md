@@ -435,9 +435,35 @@ Assume this structure with the compressed asset as a sibling of the un-compresse
 └── index.html
 ```
 
-#### Disable serving
+#### Disable serving and CWD behavior
 
 If you would just like to use the reply decorator and not serve whole directories automatically, you can simply pass the option `{ serve: false }`. This will prevent the plugin from serving everything under `root`.
+
+When `serve: false` is passed:
+
+1. The plugin will not perform the usual directory existence check for the `root` option.
+2. If no `root` is provided, the plugin will default to using the current working directory (CWD) as the root.
+3. A warning will be logged if no `root` is provided, informing that the CWD is being used as the default.
+
+Example usage:
+
+```js
+const fastify = require('fastify')()
+const path = require('node:path')
+
+fastify.register(require('@fastify/static'), {
+  serve: false,
+  // root is optional when serve is false, will default to CWD if not provided
+  root: path.join(__dirname, 'public')
+})
+
+fastify.get('/file', (req, reply) => {
+  // This will serve the file from the CWD if no root was provided
+  reply.sendFile('myFile.html')
+})
+```
+
+This configuration allows you to use the `sendFile` decorator without automatically serving an entire directory, giving you more control over which files are accessible.
 
 #### Disabling reply decorator
 
