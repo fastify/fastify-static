@@ -442,6 +442,10 @@ function checkRootPathForErrors (fastify, rootPath, skipExistenceCheck) {
 }
 
 function checkPath (fastify, rootPath, skipExistenceCheck) {
+  // skip all checks if rootPath is the CWD
+  if (rootPath === process.cwd()) {
+    return
+  }
   if (typeof rootPath !== 'string') {
     throw new Error('"root" option must be a string')
   }
