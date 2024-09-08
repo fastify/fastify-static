@@ -32,7 +32,7 @@
     "@fastify/accept-negotiator": "^2.0.0",
     "@fastify/send": "^3.1.0",
     "content-disposition": "^0.5.4",
-    "fastify-plugin": "^5.0.0",
+    "fastify-plugin": "git+https://github.com/livingspec/fastify-plugin.git#support-decorators",
     "fastq": "^1.17.1",
     "glob": "^11.0.0"
   },
@@ -42,7 +42,7 @@
     "@types/node": "^22.0.0",
     "concat-stream": "^2.0.0",
     "eslint": "^9.9.0",
-    "fastify": "^5.0.0-alpha.4",
+    "fastify": "git+https://github.com/livingspec/fastify.git#type-improvements",
     "neostandard": "^0.11.3",
     "pino": "^9.1.0",
     "proxyquire": "^2.1.3",
