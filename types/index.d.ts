@@ -2,23 +2,35 @@
 //                 Leo <https://github.com/leomelzer>
 /// <reference types="node" />
 
-import { FastifyPluginAsync, FastifyReply, FastifyRequest, RouteOptions } from 'fastify'
+import {
+  FastifyInstance,
+  FastifyPluginAsync,
+  FastifyReply,
+  FastifyRequest,
+  RouteOptions,
+  AnyFastifyInstance,
+  UnEncapsulatedPlugin
+} from 'fastify'
 import { Stats } from 'fs'
 
-declare module 'fastify' {
-  interface FastifyReply {
-    sendFile(filename: string, rootPath?: string): FastifyReply;
-    sendFile(filename: string, options?: fastifyStatic.SendOptions): FastifyReply;
-    sendFile(filename: string, rootPath?: string, options?: fastifyStatic.SendOptions): FastifyReply;
-    download(filepath: string, options?: fastifyStatic.SendOptions): FastifyReply;
-    download(filepath: string, filename?: string): FastifyReply;
-    download(filepath: string, filename?: string, options?: fastifyStatic.SendOptions): FastifyReply;
-  }
-}
-
-type FastifyStaticPlugin = FastifyPluginAsync<NonNullable<fastifyStatic.FastifyStaticOptions>>
-
 declare namespace fastifyStatic {
+  export type FastifyStaticPlugin = UnEncapsulatedPlugin<
+    FastifyPluginAsync<
+      NonNullable<fastifyStatic.FastifyStaticOptions>,
+      AnyFastifyInstance,
+      FastifyInstance<any, any, any, any, any, {
+        reply: {
+          sendFile(filename: string, rootPath?: string): FastifyReply;
+          sendFile(filename: string, options?: fastifyStatic.SendOptions): FastifyReply;
+          sendFile(filename: string, rootPath?: string, options?: fastifyStatic.SendOptions): FastifyReply;
+          download(filepath: string, options?: fastifyStatic.SendOptions): FastifyReply;
+          download(filepath: string, filename?: string): FastifyReply;
+          download(filepath: string, filename?: string, options?: fastifyStatic.SendOptions): FastifyReply;
+        }
+      }>
+    >
+  >
+
   export interface SetHeadersResponse {
     getHeader: FastifyReply['getHeader'];
     setHeader: FastifyReply['header'];
@@ -119,6 +131,6 @@ declare namespace fastifyStatic {
   export { fastifyStatic as default }
 }
 
-declare function fastifyStatic (...params: Parameters<FastifyStaticPlugin>): ReturnType<FastifyStaticPlugin>
+declare function fastifyStatic (...params: Parameters<fastifyStatic.FastifyStaticPlugin>): ReturnType<fastifyStatic.FastifyStaticPlugin>
 
 export = fastifyStatic

@@ -1,9 +1,9 @@
-import fastify, { FastifyInstance, FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify'
-import { Server } from 'http'
+import fastify, { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify'
 import { Stats } from 'fs'
 import { expectAssignable, expectError, expectType } from 'tsd'
 import * as fastifyStaticStar from '..'
 import fastifyStatic, {
+  FastifyStaticPlugin,
   FastifyStaticOptions,
   fastifyStatic as fastifyStaticNamed
 } from '..'
@@ -13,22 +13,20 @@ const fastifyStaticCjs = require('..')
 
 const app: FastifyInstance = fastify()
 
-app.register(fastifyStatic)
-app.register(fastifyStaticNamed)
-app.register(fastifyStaticCjs)
-app.register(fastifyStaticCjsImport.default)
-app.register(fastifyStaticCjsImport.fastifyStatic)
-app.register(fastifyStaticStar.default)
-app.register(fastifyStaticStar.fastifyStatic)
+app.register(fastifyStatic, { root: '/' })
+app.register(fastifyStaticNamed, { root: '/' })
+app.register(fastifyStaticCjs, { root: '/' })
+app.register(fastifyStaticCjsImport.default, { root: '/' })
+app.register(fastifyStaticCjsImport.fastifyStatic, { root: '/' })
+app.register(fastifyStaticStar.default, { root: '/' })
+app.register(fastifyStaticStar.fastifyStatic, { root: '/' })
 
-expectType<FastifyPluginAsync<FastifyStaticOptions, Server>>(fastifyStatic)
-expectType<FastifyPluginAsync<FastifyStaticOptions, Server>>(fastifyStaticNamed)
-expectType<FastifyPluginAsync<FastifyStaticOptions, Server>>(fastifyStaticCjsImport.default)
-expectType<FastifyPluginAsync<FastifyStaticOptions, Server>>(fastifyStaticCjsImport.fastifyStatic)
-expectType<FastifyPluginAsync<FastifyStaticOptions, Server>>(fastifyStaticStar.default)
-expectType<FastifyPluginAsync<FastifyStaticOptions, Server>>(
-  fastifyStaticStar.fastifyStatic
-)
+expectType<FastifyStaticPlugin>(fastifyStatic)
+expectType<FastifyStaticPlugin>(fastifyStaticNamed)
+expectType<FastifyStaticPlugin>(fastifyStaticCjsImport.default)
+expectType<FastifyStaticPlugin>(fastifyStaticCjsImport.fastifyStatic)
+expectType<FastifyStaticPlugin>(fastifyStaticStar.default)
+expectType<FastifyStaticPlugin>(fastifyStaticStar.fastifyStatic)
 expectType<any>(fastifyStaticCjs)
 
 const appWithImplicitHttp = fastify()
@@ -119,8 +117,12 @@ expectAssignable<FastifyStaticOptions>({
 
 appWithImplicitHttp
   .register(fastifyStatic, options)
-  .after(() => {
-    appWithImplicitHttp.get('/', (request, reply) => {
+  .after((err, instance) => {
+    if (err) {
+      // handle error
+    }
+
+    instance.get('/', (request, reply) => {
       reply.sendFile('some-file-name')
     })
   })
@@ -129,20 +131,24 @@ const appWithHttp2 = fastify({ http2: true })
 
 appWithHttp2
   .register(fastifyStatic, options)
-  .after(() => {
-    appWithHttp2.get('/', (request, reply) => {
+  .after((err, instance) => {
+    if (err) {
+      // handle error
+    }
+
+    instance.get('/', (request, reply) => {
       reply.sendFile('some-file-name')
     })
 
-    appWithHttp2.get('/download', (request, reply) => {
+    instance.get('/download', (request, reply) => {
       reply.download('some-file-name')
     })
 
-    appWithHttp2.get('/download/1', (request, reply) => {
+    instance.get('/download/1', (request, reply) => {
       reply.download('some-file-name', { maxAge: '2 days' })
     })
 
-    appWithHttp2.get('/download/2', (request, reply) => {
+    instance.get('/download/2', (request, reply) => {
       reply.download('some-file-name', 'some-filename', { cacheControl: false, acceptRanges: true })
     })
   })
@@ -152,28 +158,32 @@ options.root = ['']
 
 multiRootAppWithImplicitHttp
   .register(fastifyStatic, options)
-  .after(() => {
-    multiRootAppWithImplicitHttp.get('/', (request, reply) => {
+  .after((err, instance) => {
+    if (err) {
+      // handle error
+    }
+
+    instance.get('/', (request, reply) => {
       reply.sendFile('some-file-name')
     })
 
-    multiRootAppWithImplicitHttp.get('/', (request, reply) => {
+    instance.get('/', (request, reply) => {
       reply.sendFile('some-file-name', { cacheControl: false, acceptRanges: true })
     })
 
-    multiRootAppWithImplicitHttp.get('/', (request, reply) => {
+    instance.get('/', (request, reply) => {
       reply.sendFile('some-file-name', 'some-root-name', { cacheControl: false, acceptRanges: true })
     })
 
-    multiRootAppWithImplicitHttp.get('/download', (request, reply) => {
+    instance.get('/download', (request, reply) => {
       reply.download('some-file-name')
     })
 
-    multiRootAppWithImplicitHttp.get('/download/1', (request, reply) => {
+    instance.get('/download/1', (request, reply) => {
       reply.download('some-file-name', { maxAge: '2 days' })
     })
 
-    multiRootAppWithImplicitHttp.get('/download/2', (request, reply) => {
+    instance.get('/download/2', (request, reply) => {
       reply.download('some-file-name', 'some-filename', { cacheControl: false, acceptRanges: true })
     })
   })
