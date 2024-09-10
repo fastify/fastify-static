@@ -437,13 +437,12 @@ Assume this structure with the compressed asset as a sibling of the un-compresse
 
 #### Disable serving and CWD behavior
 
-If you would just like to use the reply decorator and not serve whole directories automatically, you can simply pass the option `{ serve: false }`. This will prevent the plugin from serving everything under `root`.
+If you want to use only the reply decorator without automatically serving whole directories, pass the option `{ serve: false }`. This prevents the plugin from serving everything under `root`.
 
-When `serve: false` is passed:
+When `serve: false` is used:
 
-1. The plugin will not perform the usual directory existence check for the `root` option.
-2. If no `root` is provided, the plugin will default to using the current working directory (CWD) as the root.
-3. A warning will be logged if no `root` is provided, informing that the CWD is being used as the default.
+- If no `root` is provided, the plugin will use the current working directory (CWD) as the default root.
+- The `sendFile` method will send files relative to the CWD or the specified `root`.
 
 Example usage:
 
@@ -463,7 +462,7 @@ fastify.get('/file', (req, reply) => {
 })
 ```
 
-This configuration allows you to use the `sendFile` decorator without automatically serving an entire directory, giving you more control over which files are accessible.
+This configuration allows you to use the `sendFile` decorator without automatically serving an entire directory.
 
 #### Disabling reply decorator
 
