@@ -19,7 +19,10 @@ send.mime.default_type = 'application/octet-stream'
 
 async function fastifyStatic (fastify, opts) {
   opts.root = normalizeRoot(opts.root)
-  checkRootPathForErrors(fastify, opts.root)
+
+  if (opts.serve !== false) {
+    checkRootPathForErrors(fastify, opts.root)
+  }
 
   const setHeaders = opts.setHeaders
   if (setHeaders !== undefined && typeof setHeaders !== 'function') {
