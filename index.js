@@ -350,7 +350,11 @@ async function fastifyStatic (fastify, opts) {
         break
       }
       case 'file': {
-        reply.code(statusCode)
+        // reply.raw.statusCode by default 200
+        // when ever the user changed it, we respect the status code
+        // otherwise use send provided status code
+        const newStatusCode = reply.statusCode !== 200 ? reply.statusCode : statusCode
+        reply.code(newStatusCode)
         if (setHeaders !== undefined) {
           setHeaders(reply.raw, metadata.path, metadata.stat)
         }

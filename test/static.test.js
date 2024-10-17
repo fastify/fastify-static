@@ -4023,3 +4023,41 @@ t.test('content-length in head route should not return zero when using wildcard'
     })
   })
 })
+
+t.test('respect the .code when using with sendFile', t => {
+  t.plan(6)
+
+  const pluginOptions = {
+    root: path.join(__dirname, '/static')
+  }
+  const fastify = Fastify()
+
+  fastify.register(fastifyStatic, pluginOptions)
+
+  fastify.get('/custom', (_, reply) => {
+    return reply.code(404).type('text/html').sendFile('foo.html')
+  })
+
+  t.teardown(fastify.close.bind(fastify))
+
+  fastify.listen({ port: 0 }, err => {
+    t.error(err)
+
+    fastify.server.unref()
+
+    const file = fs.readFileSync(path.join(__dirname, '/static/foo.html'))
+    const contentLength = Buffer.byteLength(file).toString()
+
+    simple.concat({
+      method: 'HEAD',
+      url: 'http://localhost:' + fastify.server.address().port + '/custom',
+      followRedirect: false
+    }, (err, response, body) => {
+      t.error(err)
+      t.equal(response.statusCode, 404)
+      t.equal(response.headers['content-type'], 'text/html; charset=UTF-8')
+      t.equal(response.headers['content-length'], contentLength)
+      t.equal(body.toString(), '')
+    })
+  })
+})
