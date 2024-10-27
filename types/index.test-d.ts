@@ -5,8 +5,11 @@ import * as fastifyStaticStar from '..'
 import fastifyStatic, {
   FastifyStaticPlugin,
   FastifyStaticOptions,
-  fastifyStatic as fastifyStaticNamed
+  fastifyStatic as fastifyStaticNamed,
+  FastifyStaticPluginDecorators
 } from '..'
+// TODO: remove after we land in fastify-plugin
+import { createPlugin } from './createPlugin'
 
 import fastifyStaticCjsImport = require('..')
 const fastifyStaticCjs = require('..')
@@ -220,3 +223,13 @@ defaultIndexApp
       reply.send('<h1>fastify-static</h1>')
     })
   })
+
+const pluginWithFastifyStaticDependency = createPlugin((instance) =>
+  instance.get('/', (req, res) => {
+    expectType<FastifyStaticPluginDecorators['reply']['sendFile']>(res.sendFile)
+    expectType<FastifyStaticPluginDecorators['reply']['download']>(res.download)
+  }), { dependencies: [fastifyStatic] })
+
+expectError(fastify().register(pluginWithFastifyStaticDependency))
+
+fastify().register(fastifyStatic).register(pluginWithFastifyStaticDependency)

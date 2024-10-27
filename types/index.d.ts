@@ -9,25 +9,30 @@ import {
   FastifyRequest,
   RouteOptions,
   AnyFastifyInstance,
-  UnEncapsulatedPlugin
+  UnEncapsulatedPlugin,
+  FastifyPluginOptions
 } from 'fastify'
 import { Stats } from 'fs'
 
 declare namespace fastifyStatic {
+  export type FastifyStaticPluginDecorators = {
+    reply: {
+      sendFile(filename: string, rootPath?: string): FastifyReply;
+      sendFile(filename: string, options?: fastifyStatic.SendOptions): FastifyReply;
+      sendFile(filename: string, rootPath?: string, options?: fastifyStatic.SendOptions): FastifyReply;
+      download(filepath: string, options?: fastifyStatic.SendOptions): FastifyReply;
+      download(filepath: string, filename?: string): FastifyReply;
+      download(filepath: string, filename?: string, options?: fastifyStatic.SendOptions): FastifyReply;
+    }
+  }
+
   export type FastifyStaticPlugin = UnEncapsulatedPlugin<
     FastifyPluginAsync<
-      NonNullable<fastifyStatic.FastifyStaticOptions>,
+      // FIXME: fix before landing, POC for now
+      // NonNullable<fastifyStatic.FastifyStaticOptions>,
+      FastifyPluginOptions,
       AnyFastifyInstance,
-      FastifyInstance<any, any, any, any, any, {
-        reply: {
-          sendFile(filename: string, rootPath?: string): FastifyReply;
-          sendFile(filename: string, options?: fastifyStatic.SendOptions): FastifyReply;
-          sendFile(filename: string, rootPath?: string, options?: fastifyStatic.SendOptions): FastifyReply;
-          download(filepath: string, options?: fastifyStatic.SendOptions): FastifyReply;
-          download(filepath: string, filename?: string): FastifyReply;
-          download(filepath: string, filename?: string, options?: fastifyStatic.SendOptions): FastifyReply;
-        }
-      }>
+      FastifyInstance<any, any, any, any, any, FastifyStaticPluginDecorators>
     >
   >
 
@@ -82,7 +87,7 @@ declare namespace fastifyStatic {
   }
 
   // Passed on to `send`
-  export interface SendOptions {
+  export interface SendOptions extends FastifyPluginOptions {
     acceptRanges?: boolean;
     cacheControl?: boolean;
     dotfiles?: 'allow' | 'deny' | 'ignore';
