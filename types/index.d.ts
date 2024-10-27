@@ -28,9 +28,7 @@ declare namespace fastifyStatic {
 
   export type FastifyStaticPlugin = UnEncapsulatedPlugin<
     FastifyPluginAsync<
-      // FIXME: fix before landing, POC for now
-      // NonNullable<fastifyStatic.FastifyStaticOptions>,
-      FastifyPluginOptions,
+      NonNullable<fastifyStatic.FastifyStaticOptions>,
       AnyFastifyInstance,
       FastifyInstance<any, any, any, any, any, FastifyStaticPluginDecorators>
     >

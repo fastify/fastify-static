@@ -232,4 +232,4 @@ const pluginWithFastifyStaticDependency = createPlugin((instance) =>
 
 expectError(fastify().register(pluginWithFastifyStaticDependency))
 
-fastify().register(fastifyStatic).register(pluginWithFastifyStaticDependency)
+fastify().register(fastifyStatic, { root: '' }).register(pluginWithFastifyStaticDependency)
