@@ -198,7 +198,7 @@ with `ignoreTrailingSlash` set to `true`.
 
 Default: `(pathName, root, request) => true`
 
-This function allows filtering the served files. Also, with the help of the request object a more complex path authentication is possible. 
+This function allows filtering the served files. Also, with the help of the request object a more complex path authentication is possible.
 If the function returns `true`, the file will be served.
 If the function returns `false`, Fastify's 404 handler will be called.
 
@@ -206,7 +206,7 @@ If the function returns `false`, Fastify's 404 handler will be called.
 
 Default: `undefined`
 
-Under the hood we use [send](https://github.com/pillarjs/send#index) lib that by default supports "index.html" files. 
+Under the hood we use [send](https://github.com/pillarjs/send#index) lib that by default supports "index.html" files.
 To disable this set false or to supply a new index pass a string or an array in preferred order.
 
 #### `serveDotFiles`
@@ -469,7 +469,7 @@ app.register((childContext, _, done) => {
 }, { prefix: 'docs' });
 ```
 
-This code will send the `index.html` for the paths `docs`, `docs/`, and `docs/index.html`. For all other `docs/<undefined-routes>` it will reply with `404.html`. 
+This code will send the `index.html` for the paths `docs`, `docs/`, and `docs/index.html`. For all other `docs/<undefined-routes>` it will reply with `404.html`.
 
 ### Handling Errors
 
