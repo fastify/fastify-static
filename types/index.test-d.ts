@@ -32,6 +32,10 @@ expectType<FastifyStaticPlugin>(fastifyStaticStar.default)
 expectType<FastifyStaticPlugin>(fastifyStaticStar.fastifyStatic)
 expectType<any>(fastifyStaticCjs)
 
+// make sure instance properties are preserved
+const serverWithHttp2 = fastify({ http2: true })
+expectAssignable<typeof serverWithHttp2>(serverWithHttp2.register(fastifyStatic, { root: '/' }))
+
 const appWithImplicitHttp = fastify()
 const options: FastifyStaticOptions = {
   acceptRanges: true,

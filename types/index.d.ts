@@ -3,7 +3,7 @@
 /// <reference types="node" />
 
 import {
-  FastifyInstance,
+  ApplyDecorators,
   FastifyPluginAsync,
   FastifyReply,
   FastifyRequest,
@@ -26,11 +26,11 @@ declare namespace fastifyStatic {
     }
   }
 
-  export type FastifyStaticPlugin = UnEncapsulatedPlugin<
+  export type FastifyStaticPlugin<TInstance extends AnyFastifyInstance = AnyFastifyInstance> = UnEncapsulatedPlugin<
     FastifyPluginAsync<
       NonNullable<fastifyStatic.FastifyStaticOptions>,
-      AnyFastifyInstance,
-      FastifyInstance<any, any, any, any, any, FastifyStaticPluginDecorators>
+      TInstance,
+      ApplyDecorators<TInstance, FastifyStaticPluginDecorators>
     >
   >
 
