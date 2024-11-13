@@ -9,7 +9,7 @@ import fastifyStatic, {
   FastifyStaticPluginDecorators
 } from '..'
 // TODO: remove after we land in fastify-plugin
-import { createPlugin } from './createPlugin'
+import { createPlugin } from 'fastify-plugin'
 
 import fastifyStaticCjsImport = require('..')
 const fastifyStaticCjs = require('..')
