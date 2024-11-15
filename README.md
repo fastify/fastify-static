@@ -156,7 +156,7 @@ The following options are also supported and will be passed directly to the
 [`send`](https://www.npmjs.com/package/send) module:
 
 - [`acceptRanges`](https://www.npmjs.com/package/send#acceptranges)
-- [`cacheControl`](https://www.npmjs.com/package/send#cachecontrol)
+- [`cacheControl`](https://www.npmjs.com/package/send#cachecontrol) (Enable or disable setting Cache-Control response header, defaults to true. **Important:** If you want to provide a custom Cache-Control response header, this option must be false.)
 - [`dotfiles`](https://www.npmjs.com/package/send#dotfiles)
 - [`etag`](https://www.npmjs.com/package/send#etag)
 - [`extensions`](https://www.npmjs.com/package/send#extensions)
