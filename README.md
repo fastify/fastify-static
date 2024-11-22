@@ -156,6 +156,7 @@ The following options are also supported and will be passed directly to the
 [`@fastify/send`](https://www.npmjs.com/package/@fastify/send) module:
 
 - [`acceptRanges`](https://www.npmjs.com/package/@fastify/send#acceptranges)
+- [`contentType`](https://www.npmjs.com/package/@fastify/send#contenttype)
 - [`cacheControl`](https://www.npmjs.com/package/@fastify/send#cachecontrol) (Enable or disable setting Cache-Control response header, defaults to true. **Important:** If you want to provide a custom Cache-Control response header, this option must be false.)
 - [`dotfiles`](https://www.npmjs.com/package/@fastify/send#dotfiles)
 - [`etag`](https://www.npmjs.com/package/@fastify/send#etag)

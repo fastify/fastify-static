@@ -34,6 +34,7 @@ expectType<any>(fastifyStaticCjs)
 const appWithImplicitHttp = fastify()
 const options: FastifyStaticOptions = {
   acceptRanges: true,
+  contentType: true,
   cacheControl: true,
   decorateReply: true,
   dotfiles: 'allow',
@@ -145,6 +146,10 @@ appWithHttp2
     appWithHttp2.get('/download/2', (request, reply) => {
       reply.download('some-file-name', 'some-filename', { cacheControl: false, acceptRanges: true })
     })
+
+    appWithHttp2.get('/download/3', (request, reply) => {
+      reply.download('some-file-name', 'some-filename', { contentType: false })
+    })
   })
 
 const multiRootAppWithImplicitHttp = fastify()
@@ -165,6 +170,10 @@ multiRootAppWithImplicitHttp
       reply.sendFile('some-file-name', 'some-root-name', { cacheControl: false, acceptRanges: true })
     })
 
+    multiRootAppWithImplicitHttp.get('/', (request, reply) => {
+      reply.sendFile('some-file-name', 'some-root-name-2', { contentType: false })
+    })
+
     multiRootAppWithImplicitHttp.get('/download', (request, reply) => {
       reply.download('some-file-name')
     })
@@ -175,6 +184,10 @@ multiRootAppWithImplicitHttp
 
     multiRootAppWithImplicitHttp.get('/download/2', (request, reply) => {
       reply.download('some-file-name', 'some-filename', { cacheControl: false, acceptRanges: true })
+    })
+
+    multiRootAppWithImplicitHttp.get('/download/3', (request, reply) => {
+      reply.download('some-file-name', 'some-filename', { contentType: false })
     })
   })
 
