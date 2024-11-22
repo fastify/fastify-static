@@ -153,17 +153,17 @@ where the arguments are:
 #### `send` Options
 
 The following options are also supported and will be passed directly to the
-[`send`](https://www.npmjs.com/package/send) module:
+[`@fastify/send`](https://www.npmjs.com/package/@fastify/send) module:
 
-- [`acceptRanges`](https://www.npmjs.com/package/send#acceptranges)
-- [`cacheControl`](https://www.npmjs.com/package/send#cachecontrol) (Enable or disable setting Cache-Control response header, defaults to true. **Important:** If you want to provide a custom Cache-Control response header, this option must be false.)
-- [`dotfiles`](https://www.npmjs.com/package/send#dotfiles)
-- [`etag`](https://www.npmjs.com/package/send#etag)
-- [`extensions`](https://www.npmjs.com/package/send#extensions)
-- [`immutable`](https://www.npmjs.com/package/send#immutable)
-- [`index`](https://www.npmjs.com/package/send#index)
-- [`lastModified`](https://www.npmjs.com/package/send#lastmodified)
-- [`maxAge`](https://www.npmjs.com/package/send#maxage)
+- [`acceptRanges`](https://www.npmjs.com/package/@fastify/send#acceptranges)
+- [`cacheControl`](https://www.npmjs.com/package/@fastify/send#cachecontrol) (Enable or disable setting Cache-Control response header, defaults to true. **Important:** If you want to provide a custom Cache-Control response header, this option must be false.)
+- [`dotfiles`](https://www.npmjs.com/package/@fastify/send#dotfiles)
+- [`etag`](https://www.npmjs.com/package/@fastify/send#etag)
+- [`extensions`](https://www.npmjs.com/package/@fastify/send#extensions)
+- [`immutable`](https://www.npmjs.com/package/@fastify/send#immutable)
+- [`index`](https://www.npmjs.com/package/@fastify/send#index)
+- [`lastModified`](https://www.npmjs.com/package/@fastify/send#lastmodified)
+- [`maxAge`](https://www.npmjs.com/package/@fastify/send#maxage)
 
 You're able to alter this options when calling `reply.download('filename.html', options)` or `reply.download('filename.html', 'otherfilename.html', options)` on each response to a request.
 
