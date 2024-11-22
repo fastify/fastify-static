@@ -472,7 +472,7 @@ function getContentType (path) {
   if (!send.isUtf8MimeType(type)) {
     return type
   }
-  return `${type}; charset=UTF-8`
+  return `${type}; charset=utf-8`
 }
 
 function findIndexFile (pathname, root, indexFiles = ['index.html']) {
