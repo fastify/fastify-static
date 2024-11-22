@@ -4017,7 +4017,7 @@ t.test('content-length in head route should not return zero when using wildcard'
     }, (err, response, body) => {
       t.error(err)
       t.equal(response.statusCode, 200)
-      t.equal(response.headers['content-type'], 'text/html; charset=UTF-8')
+      t.equal(response.headers['content-type'], 'text/html; charset=utf-8')
       t.equal(response.headers['content-length'], contentLength)
       t.equal(body.toString(), '')
     })
@@ -4055,7 +4055,7 @@ t.test('respect the .code when using with sendFile', t => {
     }, (err, response, body) => {
       t.error(err)
       t.equal(response.statusCode, 404)
-      t.equal(response.headers['content-type'], 'text/html; charset=UTF-8')
+      t.equal(response.headers['content-type'], 'text/html; charset=utf-8')
       t.equal(response.headers['content-length'], contentLength)
       t.equal(body.toString(), '')
     })
