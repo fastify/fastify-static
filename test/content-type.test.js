@@ -111,7 +111,7 @@ test('register /content-type preCompressed', t => {
         }
       }, (err, response) => {
         t.error(err)
-        t.equal(response.headers['content-type'], 'text/html; charset=UTF-8')
+        t.equal(response.headers['content-type'], 'text/html; charset=utf-8')
       })
     })
 
@@ -125,7 +125,7 @@ test('register /content-type preCompressed', t => {
         }
       }, (err, response) => {
         t.error(err)
-        t.equal(response.headers['content-type'], 'text/css; charset=UTF-8')
+        t.equal(response.headers['content-type'], 'text/css; charset=utf-8')
       })
     })
 
@@ -153,7 +153,7 @@ test('register /content-type preCompressed', t => {
         }
       }, (err, response) => {
         t.error(err)
-        t.equal(response.headers['content-type'], 'text/plain; charset=UTF-8')
+        t.equal(response.headers['content-type'], 'text/plain; charset=utf-8')
       })
     })
 
