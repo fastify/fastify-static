@@ -38,6 +38,7 @@ async function fastifyStatic (fastify, opts) {
   const sendOptions = {
     root: opts.root,
     acceptRanges: opts.acceptRanges,
+    contentType: opts.contentType,
     cacheControl: opts.cacheControl,
     dotfiles: opts.dotfiles,
     etag: opts.etag,

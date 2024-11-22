@@ -30,7 +30,7 @@
   "homepage": "https://github.com/fastify/fastify-static",
   "dependencies": {
     "@fastify/accept-negotiator": "^2.0.0",
-    "@fastify/send": "^3.1.0",
+    "@fastify/send": "^3.2.0",
     "content-disposition": "^0.5.4",
     "fastify-plugin": "^5.0.0",
     "fastq": "^1.17.1",

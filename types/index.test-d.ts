@@ -34,6 +34,7 @@ expectType<any>(fastifyStaticCjs)
 const appWithImplicitHttp = fastify()
 const options: FastifyStaticOptions = {
   acceptRanges: true,
+  contentType: true,
   cacheControl: true,
   decorateReply: true,
   dotfiles: 'allow',

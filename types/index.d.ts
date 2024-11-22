@@ -72,6 +72,7 @@ declare namespace fastifyStatic {
   // Passed on to `send`
   export interface SendOptions {
     acceptRanges?: boolean;
+    contentType?: boolean;
     cacheControl?: boolean;
     dotfiles?: 'allow' | 'deny' | 'ignore';
     etag?: boolean;
@@ -103,6 +104,7 @@ declare namespace fastifyStatic {
 
     // Passed on to `send`
     acceptRanges?: boolean;
+    contentType?: boolean;
     cacheControl?: boolean;
     dotfiles?: 'allow' | 'deny' | 'ignore';
     etag?: boolean;

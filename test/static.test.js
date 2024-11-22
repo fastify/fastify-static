@@ -1377,10 +1377,11 @@ t.test('root not found warning', (t) => {
 })
 
 t.test('send options', (t) => {
-  t.plan(11)
+  t.plan(12)
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
     acceptRanges: 'acceptRanges',
+    contentType: 'contentType',
     cacheControl: 'cacheControl',
     dotfiles: 'dotfiles',
     etag: 'etag',
@@ -1396,6 +1397,7 @@ t.test('send options', (t) => {
       t.equal(pathName, '/index.html')
       t.equal(options.root, path.join(__dirname, '/static'))
       t.equal(options.acceptRanges, 'acceptRanges')
+      t.equal(options.contentType, 'contentType')
       t.equal(options.cacheControl, 'cacheControl')
       t.equal(options.dotfiles, 'dotfiles')
       t.equal(options.etag, 'etag')
