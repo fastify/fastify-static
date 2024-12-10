@@ -8,7 +8,8 @@ Plugin for serving static files as fast as possible. Supports Fastify version `4
 
 | Fastify version | branch                                                               |
 | --------------- | -------------------------------------------------------------------- |
-| `^4.x`          | This branch                                                          |
+| `^5.x`          | This branch
+| `^4.x`          | [`v7.x`](https://github.com/fastify/fastify-static/tree/v7.x)                                           |
 | `^3.x`          | [`v5.x`](https://github.com/fastify/fastify-static/tree/v5.x)         |
 | `^2.x`          | [`2.x`](https://github.com/fastify/fastify-static/tree/2.x)          |
 | `^1.11.x`       | [`1.x`](https://github.com/fastify/fastify-static/tree/1.x)          |
