@@ -15,7 +15,7 @@ npm i @fastify/static
 
 | Plugin version | Fastify version |
 | ---------------|-----------------|
-| `^10.x`        | `^5.x`          |
+| `^8.x`         | `^5.x`          |
 | `^7.x`         | `^4.x`          |
 | `^5.x`         | `^3.x`          |
 | `^2.x`         | `^2.x`          |
