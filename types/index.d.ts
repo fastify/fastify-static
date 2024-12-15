@@ -3,7 +3,7 @@
 /// <reference types="node" />
 
 import { FastifyPluginAsync, FastifyReply, FastifyRequest, RouteOptions } from 'fastify'
-import { Stats } from 'fs'
+import { Stats } from 'node:fs'
 
 declare module 'fastify' {
   interface FastifyReply {
