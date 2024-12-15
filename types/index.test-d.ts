@@ -1,6 +1,6 @@
 import fastify, { FastifyInstance, FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify'
-import { Server } from 'http'
-import { Stats } from 'fs'
+import { Server } from 'node:http'
+import { Stats } from 'node:fs'
 import { expectAssignable, expectError, expectType } from 'tsd'
 import * as fastifyStaticStar from '..'
 import fastifyStatic, {
