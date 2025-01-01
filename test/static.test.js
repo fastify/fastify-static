@@ -85,7 +85,7 @@ test('register /static prefixAvoidTrailingSlash', t => {
   t.after(() => fastify.close())
 
   fastify.listen({ port: 0 }, (err) => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     fastify.server.unref()
 
@@ -95,7 +95,7 @@ test('register /static prefixAvoidTrailingSlash', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static/index.html'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), indexContent)
         genericResponseChecks(t, response)
@@ -108,7 +108,7 @@ test('register /static prefixAvoidTrailingSlash', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static/index.css'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         genericResponseChecks(t, response)
       })
@@ -120,7 +120,7 @@ test('register /static prefixAvoidTrailingSlash', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static/'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), indexContent)
         genericResponseChecks(t, response)
@@ -133,7 +133,7 @@ test('register /static prefixAvoidTrailingSlash', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), indexContent)
         genericResponseChecks(t, response)
@@ -146,7 +146,7 @@ test('register /static prefixAvoidTrailingSlash', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test/purpose/foo.html'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), deepContent)
         genericResponseChecks(t, response)
@@ -159,7 +159,7 @@ test('register /static prefixAvoidTrailingSlash', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test/'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), innerIndex)
         genericResponseChecks(t, response)
@@ -173,7 +173,7 @@ test('register /static prefixAvoidTrailingSlash', t => {
         url: 'http://localhost:' + fastify.server.address().port + '/static/this/path/for/test',
         followRedirect: false
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 404)
         genericErrorResponseChecks(t, response)
       })
@@ -186,7 +186,7 @@ test('register /static prefixAvoidTrailingSlash', t => {
         url: 'http://localhost:' + fastify.server.address().port + '/static/this/path/doesnt/exist.html',
         followRedirect: false
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 404)
         genericErrorResponseChecks(t, response)
       })
@@ -199,7 +199,7 @@ test('register /static prefixAvoidTrailingSlash', t => {
         url: 'http://localhost:' + fastify.server.address().port + '/static/../index.js',
         followRedirect: false
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 403)
         genericErrorResponseChecks(t, response)
       })
@@ -212,7 +212,7 @@ test('register /static prefixAvoidTrailingSlash', t => {
         // foobar is in static
         url: 'http://localhost:' + fastify.server.address().port + '/foobar.html'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 404)
       })
     })
@@ -223,7 +223,7 @@ test('register /static prefixAvoidTrailingSlash', t => {
         method: 'HEAD',
         url: 'http://localhost:' + fastify.server.address().port + '/static/index.html'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), '')
         genericResponseChecks(t, response)
@@ -245,7 +245,7 @@ test('register /static', (t) => {
   t.after(() => fastify.close())
 
   fastify.listen({ port: 0 }, (err) => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     fastify.server.unref()
 
@@ -255,7 +255,7 @@ test('register /static', (t) => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static/index.html'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), indexContent)
         genericResponseChecks(t, response)
@@ -268,7 +268,7 @@ test('register /static', (t) => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static/index.css'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         genericResponseChecks(t, response)
       })
@@ -280,7 +280,7 @@ test('register /static', (t) => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static/'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), indexContent)
         genericResponseChecks(t, response)
@@ -293,7 +293,7 @@ test('register /static', (t) => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 404)
       })
     })
@@ -304,7 +304,7 @@ test('register /static', (t) => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test/purpose/foo.html'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), deepContent)
         genericResponseChecks(t, response)
@@ -317,7 +317,7 @@ test('register /static', (t) => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test/'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), innerIndex)
         genericResponseChecks(t, response)
@@ -331,7 +331,7 @@ test('register /static', (t) => {
         url: 'http://localhost:' + fastify.server.address().port + '/static/this/path/for/test',
         followRedirect: false
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 404)
         genericErrorResponseChecks(t, response)
       })
@@ -344,7 +344,7 @@ test('register /static', (t) => {
         url: 'http://localhost:' + fastify.server.address().port + '/static/this/path/doesnt/exist.html',
         followRedirect: false
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 404)
         genericErrorResponseChecks(t, response)
       })
@@ -357,7 +357,7 @@ test('register /static', (t) => {
         url: 'http://localhost:' + fastify.server.address().port + '/static/../index.js',
         followRedirect: false
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 403)
         genericErrorResponseChecks(t, response)
       })
@@ -370,7 +370,7 @@ test('register /static', (t) => {
         // foobar is in static
         url: 'http://localhost:' + fastify.server.address().port + '/foobar.html'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 404)
       })
     })
@@ -390,7 +390,7 @@ test('register /static/', t => {
   t.after(() => fastify.close())
 
   fastify.listen({ port: 0 }, (err) => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     fastify.server.unref()
 
@@ -400,7 +400,7 @@ test('register /static/', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static/index.html'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), indexContent)
         genericResponseChecks(t, response)
@@ -413,7 +413,7 @@ test('register /static/', t => {
         method: 'HEAD',
         url: 'http://localhost:' + fastify.server.address().port + '/static/index.html'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), '')
         genericResponseChecks(t, response)
@@ -426,7 +426,7 @@ test('register /static/', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static/index.css'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         genericResponseChecks(t, response)
       })
@@ -438,7 +438,7 @@ test('register /static/', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static/'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), indexContent)
         genericResponseChecks(t, response)
@@ -451,7 +451,7 @@ test('register /static/', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 404)
       })
     })
@@ -462,7 +462,7 @@ test('register /static/', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test/purpose/foo.html'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), deepContent)
         genericResponseChecks(t, response)
@@ -475,7 +475,7 @@ test('register /static/', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test/'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), innerIndex)
         genericResponseChecks(t, response)
@@ -489,7 +489,7 @@ test('register /static/', t => {
         url: 'http://localhost:' + fastify.server.address().port + '/static/this/path/for/test',
         followRedirect: false
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 404)
         genericErrorResponseChecks(t, response)
       })
@@ -502,7 +502,7 @@ test('register /static/', t => {
         url: 'http://localhost:' + fastify.server.address().port + '/static/this/path/doesnt/exist.html',
         followRedirect: false
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 404)
         genericErrorResponseChecks(t, response)
       })
@@ -515,7 +515,7 @@ test('register /static/', t => {
         url: 'http://localhost:' + fastify.server.address().port + '/static/../index.js',
         followRedirect: false
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 403)
         genericErrorResponseChecks(t, response)
       })
@@ -527,7 +527,7 @@ test('register /static/', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static/index.html'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         const etag = response.headers.etag
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), indexContent)
@@ -540,7 +540,7 @@ test('register /static/', t => {
             'if-none-match': etag
           }
         }, (err, response, body) => {
-          t.assert.ok(err instanceof Error)
+          t.assert.ifError(err)
           t.assert.equal(response.statusCode, 304)
         })
       })
@@ -569,7 +569,7 @@ test('register /static and /static2', (t) => {
   t.after(() => fastify.close())
 
   fastify.listen({ port: 0 }, (err) => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     fastify.server.unref()
 
@@ -579,7 +579,7 @@ test('register /static and /static2', (t) => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static/index.html'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.not(body.toString(), index2Content)
         t.assert.equal(body.toString(), indexContent)
@@ -593,7 +593,7 @@ test('register /static and /static2', (t) => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static/bar.html'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), barContent)
         genericResponseChecks(t, response)
@@ -606,7 +606,7 @@ test('register /static and /static2', (t) => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/foo'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), fooContent)
         genericResponseChecks(t, response)
@@ -619,7 +619,7 @@ test('register /static and /static2', (t) => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/bar'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), barContent)
         genericResponseChecks(t, response)
@@ -644,7 +644,7 @@ test('register /static with constraints', (t) => {
   t.after(() => fastify.close())
 
   fastify.listen({ port: 0 }, (err) => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     fastify.server.unref()
 
@@ -657,7 +657,7 @@ test('register /static with constraints', (t) => {
           host: 'example.com'
         }
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), indexContent)
         genericResponseChecks(t, response)
@@ -673,7 +673,7 @@ test('register /static with constraints', (t) => {
           host: 'not-example.com'
         }
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 404)
         genericErrorResponseChecks(t, response)
       })
@@ -699,7 +699,7 @@ test('payload.path is set', (t) => {
   t.after(() => fastify.close())
 
   fastify.listen({ port: 0 }, (err) => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     fastify.server.unref()
 
@@ -709,7 +709,7 @@ test('payload.path is set', (t) => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static/index.html'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), indexContent)
         t.assert.equal(typeof gotFilename, 'string')
@@ -725,7 +725,7 @@ test('payload.path is set', (t) => {
         url: 'http://localhost:' + fastify.server.address().port + '/static/this/path/doesnt/exist.html',
         followRedirect: false
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 404)
         t.assert.equal(typeof gotFilename, 'undefined')
         genericErrorResponseChecks(t, response)
@@ -751,7 +751,7 @@ test('error responses can be customized with fastify.setErrorHandler()', t => {
   t.after(() => fastify.close())
 
   fastify.listen({ port: 0 }, err => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     fastify.server.unref()
 
@@ -763,7 +763,7 @@ test('error responses can be customized with fastify.setErrorHandler()', t => {
         url: 'http://localhost:' + fastify.server.address().port + '/../index.js',
         followRedirect: false
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 403)
         t.assert.equal(response.headers['content-type'], 'text/plain')
         t.assert.equal(body.toString(), '403 Custom error message')
@@ -789,7 +789,7 @@ test('not found responses can be customized with fastify.setNotFoundHandler()', 
   t.after(() => fastify.close())
 
   fastify.listen({ port: 0 }, err => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     fastify.server.unref()
 
@@ -801,7 +801,7 @@ test('not found responses can be customized with fastify.setNotFoundHandler()', 
         url: 'http://localhost:' + fastify.server.address().port + '/path/does/not/exist.html',
         followRedirect: false
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 404)
         t.assert.equal(response.headers['content-type'], 'text/plain')
         t.assert.equal(body.toString(), '/path/does/not/exist.html Not Found')
@@ -830,7 +830,7 @@ test('fastify.setNotFoundHandler() is called for dotfiles when when send is conf
   t.after(() => fastify.close())
 
   fastify.listen({ port: 0 }, err => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     fastify.server.unref()
 
@@ -844,7 +844,7 @@ test('fastify.setNotFoundHandler() is called for dotfiles when when send is conf
         url: 'http://localhost:' + fastify.server.address().port + '/path/does/not/.exist.html',
         followRedirect: false
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 404)
         t.assert.equal(response.headers['content-type'], 'text/plain')
         t.assert.equal(body.toString(), '/path/does/not/.exist.html Not Found')
@@ -871,7 +871,7 @@ test('serving disabled', (t) => {
   t.after(() => fastify.close())
 
   fastify.listen({ port: 0 }, (err) => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     fastify.server.unref()
 
@@ -881,7 +881,7 @@ test('serving disabled', (t) => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static/index.html'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 404)
       })
     })
@@ -892,7 +892,7 @@ test('serving disabled', (t) => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/foo/bar'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), indexContent)
         genericResponseChecks(t, response)
@@ -928,7 +928,7 @@ test('sendFile', (t) => {
   })
 
   fastify.listen({ port: 0 }, (err) => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     fastify.server.unref()
 
@@ -939,7 +939,7 @@ test('sendFile', (t) => {
         url: 'http://localhost:' + fastify.server.address().port + '/foo/bar',
         followRedirect: false
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), indexContent)
         genericResponseChecks(t, response)
@@ -953,7 +953,7 @@ test('sendFile', (t) => {
         url: 'http://localhost:' + fastify.server.address().port + '/root/path/override/test',
         followRedirect: false
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), deepContent)
         genericResponseChecks(t, response)
@@ -967,7 +967,7 @@ test('sendFile', (t) => {
         url: 'http://localhost:' + fastify.server.address().port + '/foo/bar',
         followRedirect: false
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), indexContent)
         genericResponseChecks(t, response)
@@ -981,7 +981,7 @@ test('sendFile', (t) => {
         url: 'http://localhost:' + fastify.server.address().port + '/foo/bar/options/override/test',
         followRedirect: false
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(response.headers['cache-control'], `public, max-age=${maxAge / 1000}`)
         t.assert.equal(body.toString(), indexContent)
@@ -1011,7 +1011,7 @@ test('sendFile disabled', (t) => {
   })
 
   fastify.listen({ port: 0 }, (err) => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     fastify.server.unref()
 
@@ -1022,7 +1022,7 @@ test('sendFile disabled', (t) => {
         url: 'http://localhost:' + fastify.server.address().port + '/foo/bar',
         followRedirect: false
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), 'pass')
       })
@@ -1040,7 +1040,7 @@ test('allowedPath option - pathname', (t) => {
   const fastify = Fastify()
   fastify.register(fastifyStatic, pluginOptions)
   fastify.listen({ port: 0 }, (err) => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     fastify.server.unref()
 
@@ -1051,7 +1051,7 @@ test('allowedPath option - pathname', (t) => {
         url: 'http://localhost:' + fastify.server.address().port + '/foobar.html',
         followRedirect: false
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 404)
         genericErrorResponseChecks(t, response)
       })
@@ -1064,7 +1064,7 @@ test('allowedPath option - pathname', (t) => {
         url: 'http://localhost:' + fastify.server.address().port + '/index.css',
         followRedirect: false
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
       })
     })
@@ -1081,7 +1081,7 @@ test('allowedPath option - request', (t) => {
   const fastify = Fastify()
   fastify.register(fastifyStatic, pluginOptions)
   fastify.listen({ port: 0 }, (err) => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     fastify.server.unref()
 
@@ -1092,7 +1092,7 @@ test('allowedPath option - request', (t) => {
         url: 'http://localhost:' + fastify.server.address().port + '/foobar.html',
         followRedirect: false
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 404)
         genericErrorResponseChecks(t, response)
       })
@@ -1105,7 +1105,7 @@ test('allowedPath option - request', (t) => {
         url: 'http://localhost:' + fastify.server.address().port + '/index.css?key=temporaryKey',
         followRedirect: false
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
       })
     })
@@ -1170,7 +1170,7 @@ test('download', (t) => {
   })
 
   fastify.listen({ port: 0 }, (err) => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     fastify.server.unref()
 
@@ -1181,7 +1181,7 @@ test('download', (t) => {
         url: 'http://localhost:' + fastify.server.address().port + '/foo/bar',
         followRedirect: false
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(response.headers['content-disposition'], 'attachment; filename="index.html"')
         t.assert.equal(body.toString(), indexContent)
@@ -1196,7 +1196,7 @@ test('download', (t) => {
         url: 'http://localhost:' + fastify.server.address().port + '/foo/bar/change',
         followRedirect: false
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(response.headers['content-disposition'], 'attachment; filename="hello-world.html"')
         t.assert.equal(body.toString(), indexContent)
@@ -1211,7 +1211,7 @@ test('download', (t) => {
         url: 'http://localhost:' + fastify.server.address().port + '/root/path/override/test',
         followRedirect: false
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(response.headers['content-disposition'], 'attachment; filename="foo.html"')
         t.assert.equal(body.toString(), deepContent)
@@ -1226,7 +1226,7 @@ test('download', (t) => {
         url: 'http://localhost:' + fastify.server.address().port + '/foo/bar/override',
         followRedirect: false
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(response.headers['content-disposition'], 'attachment; filename="hello-world.html"')
         t.assert.equal(response.headers['cache-control'], 'public, max-age=7200, immutable')
@@ -1242,7 +1242,7 @@ test('download', (t) => {
         url: 'http://localhost:' + fastify.server.address().port + '/foo/bar/override/2',
         followRedirect: false
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(response.headers['content-disposition'], 'attachment; filename="index.html"')
         t.assert.equal(response.headers['accept-ranges'], undefined)
@@ -1258,7 +1258,7 @@ test('download', (t) => {
         url: 'http://localhost:' + fastify.server.address().port + '/root/path/override/test/change',
         followRedirect: false
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(response.headers['content-disposition'], 'attachment; filename="hello-world.html"')
         t.assert.equal(body.toString(), deepContent)
@@ -1288,7 +1288,7 @@ test('sendFile disabled', (t) => {
   })
 
   fastify.listen({ port: 0 }, (err) => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     fastify.server.unref()
 
@@ -1299,7 +1299,7 @@ test('sendFile disabled', (t) => {
         url: 'http://localhost:' + fastify.server.address().port + '/foo/bar',
         followRedirect: false
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), 'pass')
       })
@@ -1328,7 +1328,7 @@ test('download disabled', (t) => {
   })
 
   fastify.listen({ port: 0 }, (err) => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     fastify.server.unref()
 
@@ -1339,7 +1339,7 @@ test('download disabled', (t) => {
         url: 'http://localhost:' + fastify.server.address().port + '/foo/bar',
         followRedirect: false
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), 'pass')
       })
@@ -1370,7 +1370,7 @@ test('root not found warning', (t) => {
   const fastify = Fastify({ loggerInstance })
   fastify.register(fastifyStatic, pluginOptions)
   fastify.listen({ port: 0 }, (err) => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
     fastify.server.unref()
     destination.end()
   })
@@ -1429,7 +1429,7 @@ test('setHeaders option', (t) => {
   t.after(() => fastify.close())
 
   fastify.listen({ port: 0 }, (err) => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     fastify.server.unref()
 
@@ -1438,7 +1438,7 @@ test('setHeaders option', (t) => {
       url: 'http://localhost:' + fastify.server.address().port + '/index.html',
       followRedirect: false
     }, (err, response, body) => {
-      t.assert.ok(err instanceof Error)
+      t.assert.ifError(err)
       t.assert.equal(response.statusCode, 200)
       t.assert.equal(response.headers['x-test-header'], 'test')
       t.assert.equal(body.toString(), indexContent)
@@ -1460,7 +1460,7 @@ test('maxAge option', (t) => {
   t.after(() => fastify.close())
 
   fastify.listen({ port: 0 }, (err) => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     fastify.server.unref()
 
@@ -1469,7 +1469,7 @@ test('maxAge option', (t) => {
       url: 'http://localhost:' + fastify.server.address().port + '/index.html',
       followRedirect: false
     }, (err, response, body) => {
-      t.assert.ok(err instanceof Error)
+      t.assert.ifError(err)
       t.assert.equal(response.statusCode, 200)
       t.assert.equal(response.headers['cache-control'], 'public, max-age=3600')
       t.assert.equal(body.toString(), indexContent)
@@ -1599,7 +1599,7 @@ test('register no prefix', (t) => {
   t.after(() => fastify.close())
 
   fastify.listen({ port: 0 }, (err) => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     fastify.server.unref()
 
@@ -1609,7 +1609,7 @@ test('register no prefix', (t) => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/index.html'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), indexContent)
         genericResponseChecks(t, response)
@@ -1622,7 +1622,7 @@ test('register no prefix', (t) => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/index.css'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         genericResponseChecks(t, response)
       })
@@ -1634,7 +1634,7 @@ test('register no prefix', (t) => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.deepStrictEqual(JSON.parse(body), { hello: 'world' })
       })
@@ -1646,7 +1646,7 @@ test('register no prefix', (t) => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/deep/path/for/test/purpose/foo.html'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), deepContent)
         genericResponseChecks(t, response)
@@ -1659,7 +1659,7 @@ test('register no prefix', (t) => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/deep/path/for/test/'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), innerIndex)
         genericResponseChecks(t, response)
@@ -1673,7 +1673,7 @@ test('register no prefix', (t) => {
         url: 'http://localhost:' + fastify.server.address().port + '/this/path/doesnt/exist.html',
         followRedirect: false
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 404)
         genericErrorResponseChecks(t, response)
       })
@@ -1686,7 +1686,7 @@ test('register no prefix', (t) => {
         url: 'http://localhost:' + fastify.server.address().port + '/../index.js',
         followRedirect: false
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 403)
         genericErrorResponseChecks(t, response)
       })
@@ -1707,7 +1707,7 @@ test('with fastify-compress', t => {
   t.after(() => fastify.close())
 
   fastify.listen({ port: 0 }, err => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     test('deflate', function (t) {
       t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
@@ -1719,7 +1719,7 @@ test('with fastify-compress', t => {
           'accept-encoding': ['deflate']
         }
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(response.headers['content-encoding'], 'deflate')
         genericResponseChecks(t, response)
@@ -1733,7 +1733,7 @@ test('with fastify-compress', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/index.html'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(response.headers['content-encoding'], 'gzip')
         genericResponseChecks(t, response)
@@ -1761,7 +1761,7 @@ test('register /static/ with schemaHide true', t => {
   t.after(() => fastify.close())
 
   fastify.listen({ port: 0 }, (err) => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     fastify.server.unref()
 
@@ -1772,7 +1772,7 @@ test('register /static/ with schemaHide true', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static/index.html'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), indexContent)
         genericResponseChecks(t, response)
@@ -1801,7 +1801,7 @@ test('register /static/ with schemaHide false', t => {
   t.after(() => fastify.close())
 
   fastify.listen({ port: 0 }, (err) => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     fastify.server.unref()
 
@@ -1812,7 +1812,7 @@ test('register /static/ with schemaHide false', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static/index.html'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), indexContent)
         genericResponseChecks(t, response)
@@ -1840,7 +1840,7 @@ test('register /static/ without schemaHide', t => {
   t.after(() => fastify.close())
 
   fastify.listen({ port: 0 }, (err) => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     fastify.server.unref()
 
@@ -1851,7 +1851,7 @@ test('register /static/ without schemaHide', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static/index.html'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), indexContent)
         genericResponseChecks(t, response)
@@ -1873,7 +1873,7 @@ test('fastify with exposeHeadRoutes', t => {
   t.after(() => fastify.close())
 
   fastify.listen({ port: 0 }, err => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     fastify.server.unref()
 
@@ -1883,7 +1883,7 @@ test('fastify with exposeHeadRoutes', t => {
         method: 'HEAD',
         url: 'http://localhost:' + fastify.server.address().port + '/index.html'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), '')
         genericResponseChecks(t, response)
@@ -1909,7 +1909,7 @@ test('register with wildcard false', t => {
   t.after(() => fastify.close())
 
   fastify.listen({ port: 0 }, (err) => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     fastify.server.unref()
 
@@ -1919,7 +1919,7 @@ test('register with wildcard false', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/index.html'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), indexContent)
         genericResponseChecks(t, response)
@@ -1932,7 +1932,7 @@ test('register with wildcard false', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/index.css'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         genericResponseChecks(t, response)
       })
@@ -1944,7 +1944,7 @@ test('register with wildcard false', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), indexContent)
         genericResponseChecks(t, response)
@@ -1957,7 +1957,7 @@ test('register with wildcard false', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/not-defined'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.deepStrictEqual(JSON.parse(body), { hello: 'world' })
       })
@@ -1969,7 +1969,7 @@ test('register with wildcard false', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/deep/path/for/test/purpose/foo.html'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), deepContent)
         genericResponseChecks(t, response)
@@ -1982,7 +1982,7 @@ test('register with wildcard false', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/deep/path/for/test/'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), innerIndex)
         genericResponseChecks(t, response)
@@ -1996,7 +1996,7 @@ test('register with wildcard false', t => {
         url: 'http://localhost:' + fastify.server.address().port + '/../index.js',
         followRedirect: false
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.deepStrictEqual(JSON.parse(body), { hello: 'world' })
       })
@@ -2008,7 +2008,7 @@ test('register with wildcard false', t => {
         method: 'HEAD',
         url: 'http://localhost:' + fastify.server.address().port + '/index.css'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), '')
         genericResponseChecks(t, response)
@@ -2038,7 +2038,7 @@ test('register with wildcard false (trailing slash in the root)', t => {
   t.after(() => fastify.close())
 
   fastify.listen({ port: 0 }, (err) => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     fastify.server.unref()
 
@@ -2048,7 +2048,7 @@ test('register with wildcard false (trailing slash in the root)', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/assets/index.css'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         genericResponseChecks(t, response)
       })
@@ -2060,7 +2060,7 @@ test('register with wildcard false (trailing slash in the root)', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/assets/not-defined'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.deepStrictEqual(JSON.parse(body), { hello: 'world' })
       })
@@ -2072,7 +2072,7 @@ test('register with wildcard false (trailing slash in the root)', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/assets/deep/path/for/test/purpose/foo.html'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), deepContent)
         genericResponseChecks(t, response)
@@ -2086,7 +2086,7 @@ test('register with wildcard false (trailing slash in the root)', t => {
         url: 'http://localhost:' + fastify.server.address().port + '/assets/../index.js',
         followRedirect: false
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.deepStrictEqual(JSON.parse(body), { hello: 'world' })
       })
@@ -2098,7 +2098,7 @@ test('register with wildcard false (trailing slash in the root)', t => {
         method: 'HEAD',
         url: 'http://localhost:' + fastify.server.address().port + '/assets/index.css'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), '')
         genericResponseChecks(t, response)
@@ -2167,7 +2167,7 @@ test('register with wildcard false and alternative index', t => {
   t.after(() => fastify.close())
 
   fastify.listen({ port: 0 }, (err) => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     fastify.server.unref()
 
@@ -2177,7 +2177,7 @@ test('register with wildcard false and alternative index', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/index.html'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), indexContent)
         genericResponseChecks(t, response)
@@ -2190,7 +2190,7 @@ test('register with wildcard false and alternative index', t => {
         method: 'HEAD',
         url: 'http://localhost:' + fastify.server.address().port + '/index.html'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), '')
         genericResponseChecks(t, response)
@@ -2203,7 +2203,7 @@ test('register with wildcard false and alternative index', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/index.css'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         genericResponseChecks(t, response)
       })
@@ -2215,7 +2215,7 @@ test('register with wildcard false and alternative index', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), foobarContent)
         genericResponseChecks(t, response)
@@ -2228,7 +2228,7 @@ test('register with wildcard false and alternative index', t => {
         method: 'HEAD',
         url: 'http://localhost:' + fastify.server.address().port
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), '')
         genericResponseChecks(t, response)
@@ -2241,7 +2241,7 @@ test('register with wildcard false and alternative index', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/not-defined'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.deepStrictEqual(JSON.parse(body), { hello: 'world' })
       })
@@ -2253,7 +2253,7 @@ test('register with wildcard false and alternative index', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/deep/path/for/test/purpose/'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), deepContent)
         genericResponseChecks(t, response)
@@ -2266,7 +2266,7 @@ test('register with wildcard false and alternative index', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/deep/path/for/test/'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), innerIndex)
         genericResponseChecks(t, response)
@@ -2279,7 +2279,7 @@ test('register with wildcard false and alternative index', t => {
         method: 'HEAD',
         url: 'http://localhost:' + fastify.server.address().port + '/deep/path/for/test/'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), '')
         genericResponseChecks(t, response)
@@ -2293,7 +2293,7 @@ test('register with wildcard false and alternative index', t => {
         url: 'http://localhost:' + fastify.server.address().port + '/../index.js',
         followRedirect: false
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.deepStrictEqual(JSON.parse(body), { hello: 'world' })
       })
@@ -2320,7 +2320,7 @@ test('register /static with wildcard false and alternative index', t => {
   t.after(() => fastify.close())
 
   fastify.listen({ port: 0 }, (err) => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     fastify.server.unref()
 
@@ -2330,7 +2330,7 @@ test('register /static with wildcard false and alternative index', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static/index.html'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), indexContent)
         genericResponseChecks(t, response)
@@ -2343,7 +2343,7 @@ test('register /static with wildcard false and alternative index', t => {
         method: 'HEAD',
         url: 'http://localhost:' + fastify.server.address().port + '/static/index.html'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), '')
         genericResponseChecks(t, response)
@@ -2356,7 +2356,7 @@ test('register /static with wildcard false and alternative index', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static/index.css'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         genericResponseChecks(t, response)
       })
@@ -2388,7 +2388,7 @@ test('register /static with wildcard false and alternative index', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static/'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), foobarContent)
         genericResponseChecks(t, response)
@@ -2401,7 +2401,7 @@ test('register /static with wildcard false and alternative index', t => {
         method: 'HEAD',
         url: 'http://localhost:' + fastify.server.address().port + '/static/'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), '')
         genericResponseChecks(t, response)
@@ -2414,7 +2414,7 @@ test('register /static with wildcard false and alternative index', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static/not-defined'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.deepStrictEqual(JSON.parse(body), { hello: 'world' })
       })
@@ -2426,7 +2426,7 @@ test('register /static with wildcard false and alternative index', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test/purpose/'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), deepContent)
         genericResponseChecks(t, response)
@@ -2439,7 +2439,7 @@ test('register /static with wildcard false and alternative index', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test/'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), innerIndex)
         genericResponseChecks(t, response)
@@ -2453,7 +2453,7 @@ test('register /static with wildcard false and alternative index', t => {
         url: 'http://localhost:' + fastify.server.address().port + '/static/../index.js',
         followRedirect: false
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.deepStrictEqual(JSON.parse(body), { hello: 'world' })
       })
@@ -2478,7 +2478,7 @@ test('register /static with redirect true', t => {
   t.after(() => fastify.close())
 
   fastify.listen({ port: 0 }, (err) => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     fastify.server.unref()
 
@@ -2498,7 +2498,7 @@ test('register /static with redirect true', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static?a=b'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), indexContent)
         genericResponseChecks(t, response)
@@ -2525,7 +2525,7 @@ test('register /static with redirect true', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static/'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), indexContent)
         genericResponseChecks(t, response)
@@ -2539,7 +2539,7 @@ test('register /static with redirect true', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static/deep'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 404)
         genericErrorResponseChecks(t, response)
       })
@@ -2562,7 +2562,7 @@ test('register /static with redirect true', t => {
         method: 'GET',
         url: testurl
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), innerIndex)
         genericResponseChecks(t, response)
@@ -2576,7 +2576,7 @@ test('register /static with redirect true', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), innerIndex)
         genericResponseChecks(t, response)
@@ -2603,7 +2603,7 @@ test('register /static with redirect true and wildcard false', t => {
   t.after(() => fastify.close())
 
   fastify.listen({ port: 0 }, err => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     fastify.server.unref()
 
@@ -2623,7 +2623,7 @@ test('register /static with redirect true and wildcard false', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static?a=b'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), indexContent)
         genericResponseChecks(t, response)
@@ -2637,7 +2637,7 @@ test('register /static with redirect true and wildcard false', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static/?a=b'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), indexContent)
         genericResponseChecks(t, response)
@@ -2651,7 +2651,7 @@ test('register /static with redirect true and wildcard false', t => {
         method: 'HEAD',
         url: 'http://localhost:' + fastify.server.address().port + '/static/?a=b'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), '')
         genericResponseChecks(t, response)
@@ -2665,7 +2665,7 @@ test('register /static with redirect true and wildcard false', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static/deep'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 404)
         genericErrorResponseChecks(t, response)
       })
@@ -2688,7 +2688,7 @@ test('register /static with redirect true and wildcard false', t => {
         method: 'GET',
         url: testurl
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), innerIndex)
         genericResponseChecks(t, response)
@@ -2702,7 +2702,7 @@ test('register /static with redirect true and wildcard false', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), innerIndex)
         genericResponseChecks(t, response)
@@ -2716,7 +2716,7 @@ test('register /static with redirect true and wildcard false', t => {
         method: 'HEAD',
         url: 'http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), '')
         genericResponseChecks(t, response)
@@ -2739,7 +2739,7 @@ test('trailing slash behavior with redirect = false', (t) => {
   t.after(() => fastify.close())
 
   fastify.listen({ port: 0 }, (err) => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     const host = 'http://localhost:' + fastify.server.address().port
 
@@ -2749,7 +2749,7 @@ test('trailing slash behavior with redirect = false', (t) => {
         method: 'GET',
         url: host + '/static'
       }, (err, response) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 404)
       })
     })
@@ -2760,7 +2760,7 @@ test('trailing slash behavior with redirect = false', (t) => {
         method: 'GET',
         url: host + '/static/'
       }, (err, response) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
       })
     })
@@ -2771,7 +2771,7 @@ test('trailing slash behavior with redirect = false', (t) => {
         method: 'GET',
         url: host + '/static/deep/path'
       }, (err, response) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 404)
       })
     })
@@ -2782,7 +2782,7 @@ test('trailing slash behavior with redirect = false', (t) => {
         method: 'GET',
         url: host + '/static/deep/path/for/test'
       }, (err, response) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
       })
     })
@@ -2793,7 +2793,7 @@ test('trailing slash behavior with redirect = false', (t) => {
         method: 'GET',
         url: host + '/static/deep/path/for/test/'
       }, (err, response) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
       })
     })
@@ -2822,13 +2822,13 @@ test('if dotfiles are properly served according to plugin options', (t) => {
 
     t.after(() => fastify.close())
     fastify.listen({ port: 0 }, (err) => {
-      t.assert.ok(err instanceof Error)
+      t.assert.ifError(err)
 
       simple.concat({
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static/.example'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), exampleContents)
       })
@@ -2849,13 +2849,13 @@ test('if dotfiles are properly served according to plugin options', (t) => {
 
     t.after(() => fastify.close())
     fastify.listen({ port: 0 }, (err) => {
-      t.assert.ok(err instanceof Error)
+      t.assert.ifError(err)
 
       simple.concat({
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static/.example'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 404)
       })
     })
@@ -2875,13 +2875,13 @@ test('if dotfiles are properly served according to plugin options', (t) => {
 
     t.after(() => fastify.close())
     fastify.listen({ port: 0 }, (err) => {
-      t.assert.ok(err instanceof Error)
+      t.assert.ifError(err)
 
       simple.concat({
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static/.example'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 403)
       })
     })
@@ -2985,7 +2985,7 @@ test('routes should use custom errorHandler premature stream close', t => {
       url: '/static/index.html'
     },
     (err, response) => {
-      t.assert.ok(err instanceof Error)
+      t.assert.ifError(err)
       t.assert.equal(response, null)
     }
   )
@@ -3018,7 +3018,7 @@ test('routes should fallback to default errorHandler', t => {
     method: 'GET',
     url: '/static/index.html'
   }, (err, response) => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
     t.assert.deepStrictEqual(JSON.parse(response.payload), {
       statusCode: 500,
       code: 'SOMETHING_ELSE',
@@ -3042,7 +3042,7 @@ test('percent encoded URLs in glob mode', (t) => {
   t.after(() => fastify.close())
 
   fastify.listen({ port: 0 }, (err) => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
     fastify.server.unref()
 
     simple.concat({
@@ -3050,7 +3050,7 @@ test('percent encoded URLs in glob mode', (t) => {
       url: 'http://localhost:' + fastify.server.address().port + '/static/a .md',
       followRedirect: false
     }, (err, response, body) => {
-      t.assert.ok(err instanceof Error)
+      t.assert.ifError(err)
       t.assert.equal(response.statusCode, 200)
       t.assert.equal(
         fs.readFileSync(path.join(__dirname, 'static', 'a .md'), 'utf-8'),
@@ -3073,7 +3073,7 @@ test('register /static and /static2 without wildcard', t => {
   t.after(() => fastify.close())
 
   fastify.listen({ port: 0 }, err => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     fastify.server.unref()
 
@@ -3083,7 +3083,7 @@ test('register /static and /static2 without wildcard', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/index.html'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.not(body.toString(), index2Content)
         t.assert.equal(body.toString(), indexContent)
@@ -3097,7 +3097,7 @@ test('register /static and /static2 without wildcard', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/bar.html'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), barContent)
         genericResponseChecks(t, response)
@@ -3621,7 +3621,7 @@ test('should not redirect to protocol-relative locations', (t) => {
   })
   t.after(() => fastify.close())
   fastify.listen({ port: 0 }, (err, address) => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
     urls.forEach(([testUrl, expected, status]) => {
       const req = http.request(url.parse(address + testUrl), res => {
         t.assert.equal(res.statusCode, status, `status ${testUrl}`)
@@ -3652,7 +3652,7 @@ test('should not serve index if option is `false`', (t) => {
   t.after(() => fastify.close())
 
   fastify.listen({ port: 0 }, (err) => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     fastify.server.unref()
 
@@ -3662,7 +3662,7 @@ test('should not serve index if option is `false`', (t) => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static/index.html'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), indexContent)
         genericResponseChecks(t, response)
@@ -3675,7 +3675,7 @@ test('should not serve index if option is `false`', (t) => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/static'
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 404)
         genericErrorResponseChecks(t, response)
       })
@@ -3692,13 +3692,13 @@ test('should follow symbolic link without wildcard', (t) => {
   })
   t.after(() => fastify.close())
   fastify.listen({ port: 0 }, (err) => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     simple.concat({
       method: 'GET',
       url: 'http://localhost:' + fastify.server.address().port + '/origin/subdir/subdir/index.html'
     }, (err, response) => {
-      t.assert.ok(err instanceof Error)
+      t.assert.ifError(err)
       t.assert.equal(response.statusCode, 200)
     })
 
@@ -3706,7 +3706,7 @@ test('should follow symbolic link without wildcard', (t) => {
       method: 'GET',
       url: 'http://localhost:' + fastify.server.address().port + '/dir/symlink/subdir/subdir/index.html'
     }, (err, response) => {
-      t.assert.ok(err instanceof Error)
+      t.assert.ifError(err)
       t.assert.equal(response.statusCode, 200)
     })
   })
@@ -3726,7 +3726,7 @@ test('should serve files into hidden dir with wildcard `false`', (t) => {
   t.after(() => fastify.close())
 
   fastify.listen({ port: 0 }, (err) => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     fastify.server.unref()
 
@@ -3734,7 +3734,7 @@ test('should serve files into hidden dir with wildcard `false`', (t) => {
       method: 'GET',
       url: 'http://localhost:' + fastify.server.address().port + '/.hidden/sample.json'
     }, (err, response, body) => {
-      t.assert.ok(err instanceof Error)
+      t.assert.ifError(err)
       t.assert.equal(response.statusCode, 200)
       t.assert.equal(body.toString(), jsonHiddenContent)
       t.assert.ok(/application\/(json)/.test(response.headers['content-type']))
@@ -3759,7 +3759,7 @@ test('should not found hidden file with wildcard is `false`', (t) => {
   t.after(() => fastify.close())
 
   fastify.listen({ port: 0 }, (err) => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     fastify.server.unref()
 
@@ -3767,7 +3767,7 @@ test('should not found hidden file with wildcard is `false`', (t) => {
       method: 'GET',
       url: 'http://localhost:' + fastify.server.address().port + '/.hidden/sample.json'
     }, (err, response, body) => {
-      t.assert.ok(err instanceof Error)
+      t.assert.ifError(err)
       t.assert.equal(response.statusCode, 404)
     })
   })
@@ -3785,7 +3785,7 @@ test('should serve files into hidden dir without wildcard option', (t) => {
   t.after(() => fastify.close())
 
   fastify.listen({ port: 0 }, (err) => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     fastify.server.unref()
 
@@ -3793,7 +3793,7 @@ test('should serve files into hidden dir without wildcard option', (t) => {
       method: 'GET',
       url: 'http://localhost:' + fastify.server.address().port + '/.hidden/sample.json'
     }, (err, response, body) => {
-      t.assert.ok(err instanceof Error)
+      t.assert.ifError(err)
       t.assert.equal(response.statusCode, 200)
       t.assert.equal(body.toString(), jsonHiddenContent)
       t.assert.ok(/application\/(json)/.test(response.headers['content-type']))
@@ -3984,7 +3984,7 @@ test('content-length in head route should not return zero when using wildcard', 
   t.after(() => fastify.close())
 
   fastify.listen({ port: 0 }, err => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     fastify.server.unref()
 
@@ -3996,7 +3996,7 @@ test('content-length in head route should not return zero when using wildcard', 
       url: 'http://localhost:' + fastify.server.address().port + '/index.html',
       followRedirect: false
     }, (err, response, body) => {
-      t.assert.ok(err instanceof Error)
+      t.assert.ifError(err)
       t.assert.equal(response.statusCode, 200)
       t.assert.equal(response.headers['content-type'], 'text/html; charset=utf-8')
       t.assert.equal(response.headers['content-length'], contentLength)
@@ -4022,7 +4022,7 @@ test('respect the .code when using with sendFile', t => {
   t.after(() => fastify.close())
 
   fastify.listen({ port: 0 }, err => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     fastify.server.unref()
 
@@ -4034,7 +4034,7 @@ test('respect the .code when using with sendFile', t => {
       url: 'http://localhost:' + fastify.server.address().port + '/custom',
       followRedirect: false
     }, (err, response, body) => {
-      t.assert.ok(err instanceof Error)
+      t.assert.ifError(err)
       t.assert.equal(response.statusCode, 404)
       t.assert.equal(response.headers['content-type'], 'text/html; charset=utf-8')
       t.assert.equal(response.headers['content-length'], contentLength)
@@ -4061,7 +4061,7 @@ test('respect the .type when using with sendFile with contentType disabled', t =
   t.after(() => fastify.close())
 
   fastify.listen({ port: 0 }, err => {
-    t.assert.ok(err instanceof Error)
+    t.assert.ifError(err)
 
     fastify.server.unref()
 
@@ -4073,7 +4073,7 @@ test('respect the .type when using with sendFile with contentType disabled', t =
       url: 'http://localhost:' + fastify.server.address().port + '/custom',
       followRedirect: false
     }, (err, response, body) => {
-      t.assert.ok(err instanceof Error)
+      t.assert.ifError(err)
       t.assert.equal(response.statusCode, 200)
       t.assert.equal(response.headers['content-type'], 'text/html; charset=windows-1252')
       t.assert.equal(response.headers['content-length'], contentLength)

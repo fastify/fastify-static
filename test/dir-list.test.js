@@ -20,7 +20,7 @@ const helper = {
     fastify.register(mock, options)
     t.after(() => fastify.close())
     fastify.listen({ port: 0 }, err => {
-      t.assert.ok(err instanceof Error)
+      t.assert.ifError(err)
       fastify.server.unref()
       f('http://localhost:' + fastify.server.address().port)
     })
@@ -135,7 +135,7 @@ test('dir list default options', t => {
         method: 'GET',
         url: url + route
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), JSON.stringify(content))
       })
@@ -163,7 +163,7 @@ test('dir list, custom options', t => {
         method: 'GET',
         url: url + route
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), JSON.stringify(content))
       })
@@ -191,7 +191,7 @@ test('dir list, custom options with empty array index', t => {
         method: 'GET',
         url: url + route
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), JSON.stringify(content))
       })
@@ -235,7 +235,7 @@ test('dir list html format', t => {
           method: 'GET',
           url: url + route
         }, (err, response, body) => {
-          t.assert.ok(err instanceof Error)
+          t.assert.ifError(err)
           t.assert.equal(response.statusCode, 200)
           t.assert.equal(body.toString(), `
 <html><body>
@@ -291,14 +291,14 @@ test('dir list href nested structure', t => {
           method: 'GET',
           url: url + route.path
         }, (err, response, body) => {
-          t.assert.ok(err instanceof Error)
+          t.assert.ifError(err)
           t.assert.equal(response.statusCode, 200)
           t.assert.equal(body.toString(), route.response)
           simple.concat({
             method: 'GET',
             url: url + body.toString()
           }, (err, response, body) => {
-            t.assert.ok(err instanceof Error)
+            t.assert.ifError(err)
             t.assert.equal(response.statusCode, 200)
           })
         })
@@ -339,7 +339,7 @@ test('dir list html format - stats', t => {
       method: 'GET',
       url: url + route
     }, (err, response, body) => {
-      t.assert.ok(err instanceof Error)
+      t.assert.ifError(err)
       t.assert.equal(response.statusCode, 200)
     })
   })
@@ -381,7 +381,7 @@ test('dir list html format - extended info', t => {
       method: 'GET',
       url: url + route
     }, (err, response, body) => {
-      t.assert.ok(err instanceof Error)
+      t.assert.ifError(err)
       t.assert.equal(response.statusCode, 200)
     })
   })
@@ -410,7 +410,7 @@ test('dir list json format', t => {
           method: 'GET',
           url: url + route
         }, (err, response, body) => {
-          t.assert.ok(err instanceof Error)
+          t.assert.ifError(err)
           t.assert.equal(response.statusCode, 200)
           t.assert.equal(body.toString(), JSON.stringify(content))
         })
@@ -444,7 +444,7 @@ test('dir list json format - extended info', t => {
           method: 'GET',
           url: url + route
         }, (err, response, body) => {
-          t.assert.ok(err instanceof Error)
+          t.assert.ifError(err)
           t.assert.equal(response.statusCode, 200)
           const bodyObject = JSON.parse(body.toString())
           t.assert.equal(bodyObject.dirs[0].name, 'empty')
@@ -478,7 +478,7 @@ test('json format with url parameter format', t => {
       method: 'GET',
       url: url + route
     }, (err, response, body) => {
-      t.assert.ok(err instanceof Error)
+      t.assert.ifError(err)
       t.assert.equal(response.statusCode, 200)
       t.assert.equal(body.toString(), JSON.stringify(jsonContent))
       t.ok(response.headers['content-type'].includes('application/json'))
@@ -488,7 +488,7 @@ test('json format with url parameter format', t => {
       method: 'GET',
       url: url + route + '?format=html'
     }, (err, response, body) => {
-      t.assert.ok(err instanceof Error)
+      t.assert.ifError(err)
       t.assert.equal(response.statusCode, 200)
       t.assert.equal(body.toString(), 'html')
       t.ok(response.headers['content-type'].includes('text/html'))
@@ -498,7 +498,7 @@ test('json format with url parameter format', t => {
       method: 'GET',
       url: url + route + '?format=json'
     }, (err, response, body) => {
-      t.assert.ok(err instanceof Error)
+      t.assert.ifError(err)
       t.assert.equal(response.statusCode, 200)
       t.assert.equal(body.toString(), JSON.stringify(jsonContent))
       t.ok(response.headers['content-type'].includes('application/json'))
@@ -525,7 +525,7 @@ test('json format with url parameter format and without render option', t => {
       method: 'GET',
       url: url + route
     }, (err, response, body) => {
-      t.assert.ok(err instanceof Error)
+      t.assert.ifError(err)
       t.assert.equal(response.statusCode, 200)
       t.assert.equal(body.toString(), JSON.stringify(jsonContent))
       t.ok(response.headers['content-type'].includes('application/json'))
@@ -535,7 +535,7 @@ test('json format with url parameter format and without render option', t => {
       method: 'GET',
       url: url + route + '?format=html'
     }, (err, response, body) => {
-      t.assert.ok(err instanceof Error)
+      t.assert.ifError(err)
       t.assert.equal(response.statusCode, 500)
       t.assert.equal(JSON.parse(body.toString()).message, 'The `list.render` option must be a function and is required with the URL parameter `format=html`')
     })
@@ -544,7 +544,7 @@ test('json format with url parameter format and without render option', t => {
       method: 'GET',
       url: url + route + '?format=json'
     }, (err, response, body) => {
-      t.assert.ok(err instanceof Error)
+      t.assert.ifError(err)
       t.assert.equal(response.statusCode, 200)
       t.assert.equal(body.toString(), JSON.stringify(jsonContent))
       t.ok(response.headers['content-type'].includes('application/json'))
@@ -574,7 +574,7 @@ test('html format with url parameter format', t => {
       method: 'GET',
       url: url + route
     }, (err, response, body) => {
-      t.assert.ok(err instanceof Error)
+      t.assert.ifError(err)
       t.assert.equal(response.statusCode, 200)
       t.assert.equal(body.toString(), 'html')
       t.ok(response.headers['content-type'].includes('text/html'))
@@ -584,7 +584,7 @@ test('html format with url parameter format', t => {
       method: 'GET',
       url: url + route + '?format=html'
     }, (err, response, body) => {
-      t.assert.ok(err instanceof Error)
+      t.assert.ifError(err)
       t.assert.equal(response.statusCode, 200)
       t.assert.equal(body.toString(), 'html')
       t.ok(response.headers['content-type'].includes('text/html'))
@@ -594,7 +594,7 @@ test('html format with url parameter format', t => {
       method: 'GET',
       url: url + route + '?format=json'
     }, (err, response, body) => {
-      t.assert.ok(err instanceof Error)
+      t.assert.ifError(err)
       t.assert.equal(response.statusCode, 200)
       t.assert.equal(body.toString(), JSON.stringify(jsonContent))
       t.ok(response.headers['content-type'].includes('application/json'))
@@ -620,7 +620,7 @@ test('dir list on empty dir', t => {
         method: 'GET',
         url: url + route
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), JSON.stringify(content))
       })
@@ -652,7 +652,7 @@ test('dir list serve index.html on index option', t => {
         method: 'GET',
         url: url + route
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), '<html>\n  <body>\n    the body\n  </body>\n</html>\n')
       })
@@ -662,7 +662,7 @@ test('dir list serve index.html on index option', t => {
         method: 'GET',
         url: url + route
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), 'dir list index')
       })
@@ -687,7 +687,7 @@ test('serve a non existent dir and get error', t => {
         method: 'GET',
         url: url + route
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 404)
       })
     })
@@ -713,7 +713,7 @@ test('serve a non existent dir and get error', t => {
         method: 'GET',
         url: url + route
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 404)
       })
     })
@@ -740,7 +740,7 @@ test('dir list with dotfiles allow option', t => {
         method: 'GET',
         url: url + route
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), JSON.stringify(content))
       })
@@ -768,7 +768,7 @@ test('dir list with dotfiles deny option', t => {
         method: 'GET',
         url: url + route
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), JSON.stringify(content))
       })
@@ -796,7 +796,7 @@ test('dir list with dotfiles ignore option', t => {
         method: 'GET',
         url: url + route
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(response.statusCode, 200)
         t.assert.equal(body.toString(), JSON.stringify(content))
       })
@@ -834,7 +834,7 @@ test('dir list error', t => {
         method: 'GET',
         url: url + route
       }, (err, response, body) => {
-        t.assert.ok(err instanceof Error)
+        t.assert.ifError(err)
         t.assert.equal(JSON.parse(body.toString()).message, errorMessage)
         t.assert.equal(response.statusCode, 500)
       })
