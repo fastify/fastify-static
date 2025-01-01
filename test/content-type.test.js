@@ -3,7 +3,7 @@
 /* eslint n/no-deprecated-api: "off" */
 
 const path = require('node:path')
-const { test } = require('tap')
+const { test } = require('node:test')
 const simple = require('simple-get')
 const Fastify = require('fastify')
 
@@ -19,10 +19,10 @@ test('register /content-type', t => {
   const fastify = Fastify()
   fastify.register(fastifyStatic, pluginOptions)
 
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.listen({ port: 0 }, (err) => {
-    t.error(err)
+    t.assert.ok(err instanceof Error)
 
     fastify.server.unref()
 
@@ -32,8 +32,8 @@ test('register /content-type', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/content-type/index.html'
       }, (err, response) => {
-        t.error(err)
-        t.equal(response.headers['content-type'], 'text/html; charset=utf-8')
+        t.assert.ok(err instanceof Error)
+        t.assert.equal(response.headers['content-type'], 'text/html; charset=utf-8')
       })
     })
 
@@ -43,8 +43,8 @@ test('register /content-type', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/content-type/index.css'
       }, (err, response) => {
-        t.error(err)
-        t.equal(response.headers['content-type'], 'text/css; charset=utf-8')
+        t.assert.ok(err instanceof Error)
+        t.assert.equal(response.headers['content-type'], 'text/css; charset=utf-8')
       })
     })
 
@@ -54,8 +54,8 @@ test('register /content-type', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/content-type/sample.jpg'
       }, (err, response) => {
-        t.error(err)
-        t.equal(response.headers['content-type'], 'image/jpeg')
+        t.assert.ok(err instanceof Error)
+        t.assert.equal(response.headers['content-type'], 'image/jpeg')
       })
     })
 
@@ -65,8 +65,8 @@ test('register /content-type', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/content-type/test.txt'
       }, (err, response) => {
-        t.error(err)
-        t.equal(response.headers['content-type'], 'text/plain; charset=utf-8')
+        t.assert.ok(err instanceof Error)
+        t.assert.equal(response.headers['content-type'], 'text/plain; charset=utf-8')
       })
     })
 
@@ -76,8 +76,8 @@ test('register /content-type', t => {
         method: 'GET',
         url: 'http://localhost:' + fastify.server.address().port + '/content-type/binary'
       }, (err, response) => {
-        t.error(err)
-        t.equal(response.headers['content-type'], 'application/octet-stream')
+        t.assert.ok(err instanceof Error)
+        t.assert.equal(response.headers['content-type'], 'application/octet-stream')
       })
     })
   })
@@ -94,10 +94,10 @@ test('register /content-type preCompressed', t => {
   const fastify = Fastify()
   fastify.register(fastifyStatic, pluginOptions)
 
-  t.teardown(fastify.close.bind(fastify))
+  t.after(() => fastify.close())
 
   fastify.listen({ port: 0 }, (err) => {
-    t.error(err)
+    t.assert.ok(err instanceof Error)
 
     fastify.server.unref()
 
@@ -110,8 +110,8 @@ test('register /content-type preCompressed', t => {
           'accept-encoding': 'gzip, deflate, br'
         }
       }, (err, response) => {
-        t.error(err)
-        t.equal(response.headers['content-type'], 'text/html; charset=utf-8')
+        t.assert.ok(err instanceof Error)
+        t.assert.equal(response.headers['content-type'], 'text/html; charset=utf-8')
       })
     })
 
@@ -124,8 +124,8 @@ test('register /content-type preCompressed', t => {
           'accept-encoding': 'gzip, deflate, br'
         }
       }, (err, response) => {
-        t.error(err)
-        t.equal(response.headers['content-type'], 'text/css; charset=utf-8')
+        t.assert.ok(err instanceof Error)
+        t.assert.equal(response.headers['content-type'], 'text/css; charset=utf-8')
       })
     })
 
@@ -138,8 +138,8 @@ test('register /content-type preCompressed', t => {
           'accept-encoding': 'gzip, deflate, br'
         }
       }, (err, response) => {
-        t.error(err)
-        t.equal(response.headers['content-type'], 'image/jpeg')
+        t.assert.ok(err instanceof Error)
+        t.assert.equal(response.headers['content-type'], 'image/jpeg')
       })
     })
 
@@ -152,8 +152,8 @@ test('register /content-type preCompressed', t => {
           'accept-encoding': 'gzip, deflate, br'
         }
       }, (err, response) => {
-        t.error(err)
-        t.equal(response.headers['content-type'], 'text/plain; charset=utf-8')
+        t.assert.ok(err instanceof Error)
+        t.assert.equal(response.headers['content-type'], 'text/plain; charset=utf-8')
       })
     })
 
@@ -166,8 +166,8 @@ test('register /content-type preCompressed', t => {
           'accept-encoding': 'gzip, deflate, br'
         }
       }, (err, response) => {
-        t.error(err)
-        t.equal(response.headers['content-type'], 'application/octet-stream')
+        t.assert.ok(err instanceof Error)
+        t.assert.equal(response.headers['content-type'], 'application/octet-stream')
       })
     })
   })

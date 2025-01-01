@@ -4,7 +4,7 @@
 
 const fs = require('node:fs')
 const path = require('node:path')
-const t = require('tap')
+const { test } = require('node:test')
 const simple = require('simple-get')
 const Fastify = require('fastify')
 
@@ -18,9 +18,9 @@ const helper = {
   arrangeModule: function (t, options, mock, f) {
     const fastify = Fastify()
     fastify.register(mock, options)
-    t.teardown(fastify.close.bind(fastify))
+    t.after(() => fastify.close())
     fastify.listen({ port: 0 }, err => {
-      t.error(err)
+      t.assert.ok(err instanceof Error)
       fastify.server.unref()
       f('http://localhost:' + fastify.server.address().port)
     })
@@ -32,47 +32,47 @@ try {
   fs.mkdirSync(path.join(__dirname, 'static/shallow/empty'))
 } catch (error) {}
 
-t.test('throws when `root` is an array', t => {
+test('throws when `root` is an array', t => {
   t.plan(2)
 
   const err = dirList.validateOptions({ root: ['hello', 'world'], list: true })
-  t.type(err, TypeError)
-  t.equal(err.message, 'multi-root with list option is not supported')
+  t.assert.ok(err instanceof TypeError)
+  t.assert.equal(err.message, 'multi-root with list option is not supported')
 })
 
-t.test('throws when `list.format` option is invalid', t => {
+test('throws when `list.format` option is invalid', t => {
   t.plan(2)
 
   const err = dirList.validateOptions({ list: { format: 'hello' } })
-  t.type(err, TypeError)
-  t.equal(err.message, 'The `list.format` option must be json or html')
+  t.assert.ok(err instanceof TypeError)
+  t.assert.equal(err.message, 'The `list.format` option must be json or html')
 })
 
-t.test('throws when `list.names option` is not an array', t => {
+test('throws when `list.names option` is not an array', t => {
   t.plan(2)
 
   const err = dirList.validateOptions({ list: { names: 'hello' } })
-  t.type(err, TypeError)
-  t.equal(err.message, 'The `list.names` option must be an array')
+  t.assert.ok(err instanceof TypeError)
+  t.assert.equal(err.message, 'The `list.names` option must be an array')
 })
 
-t.test('throws when `list.jsonFormat` option is invalid', t => {
+test('throws when `list.jsonFormat` option is invalid', t => {
   t.plan(2)
 
   const err = dirList.validateOptions({ list: { jsonFormat: 'hello' } })
-  t.type(err, TypeError)
-  t.equal(err.message, 'The `list.jsonFormat` option must be name or extended')
+  t.assert.ok(err instanceof TypeError)
+  t.assert.equal(err.message, 'The `list.jsonFormat` option must be name or extended')
 })
 
-t.test('throws when `list.format` is html and `list render` is not a function', t => {
+test('throws when `list.format` is html and `list render` is not a function', t => {
   t.plan(2)
 
   const err = dirList.validateOptions({ list: { format: 'html', render: 'hello' } })
-  t.type(err, TypeError)
-  t.equal(err.message, 'The `list.render` option must be a function and is required with html format')
+  t.assert.ok(err instanceof TypeError)
+  t.assert.equal(err.message, 'The `list.render` option must be a function and is required with html format')
 })
 
-t.test('dir list wrong options', t => {
+test('dir list wrong options', t => {
   t.plan(3)
 
   const cases = [
@@ -111,13 +111,13 @@ t.test('dir list wrong options', t => {
     const fastify = Fastify()
     fastify.register(fastifyStatic, case_.options)
     fastify.listen({ port: 0 }, err => {
-      t.equal(err.message, case_.error.message)
+      t.assert.equal(err.message, case_.error.message)
       fastify.server.unref()
     })
   }
 })
 
-t.test('dir list default options', t => {
+test('dir list default options', t => {
   t.plan(2)
 
   const options = {
@@ -129,21 +129,21 @@ t.test('dir list default options', t => {
   const content = { dirs: ['empty'], files: ['sample.jpg'] }
 
   helper.arrange(t, options, (url) => {
-    t.test(route, t => {
+    test(route, t => {
       t.plan(3)
       simple.concat({
         method: 'GET',
         url: url + route
       }, (err, response, body) => {
-        t.error(err)
-        t.equal(response.statusCode, 200)
-        t.equal(body.toString(), JSON.stringify(content))
+        t.assert.ok(err instanceof Error)
+        t.assert.equal(response.statusCode, 200)
+        t.assert.equal(body.toString(), JSON.stringify(content))
       })
     })
   })
 })
 
-t.test('dir list, custom options', t => {
+test('dir list, custom options', t => {
   t.plan(2)
 
   const options = {
@@ -157,21 +157,21 @@ t.test('dir list, custom options', t => {
   const content = { dirs: ['deep', 'shallow'], files: ['.example', '100%.txt', 'a .md', 'foo.html', 'foobar.html', 'index.css', 'index.html'] }
 
   helper.arrange(t, options, (url) => {
-    t.test(route, t => {
+    test(route, t => {
       t.plan(3)
       simple.concat({
         method: 'GET',
         url: url + route
       }, (err, response, body) => {
-        t.error(err)
-        t.equal(response.statusCode, 200)
-        t.equal(body.toString(), JSON.stringify(content))
+        t.assert.ok(err instanceof Error)
+        t.assert.equal(response.statusCode, 200)
+        t.assert.equal(body.toString(), JSON.stringify(content))
       })
     })
   })
 })
 
-t.test('dir list, custom options with empty array index', t => {
+test('dir list, custom options with empty array index', t => {
   t.plan(2)
 
   const options = {
@@ -185,21 +185,21 @@ t.test('dir list, custom options with empty array index', t => {
   const content = { dirs: ['deep', 'shallow'], files: ['.example', '100%.txt', 'a .md', 'foo.html', 'foobar.html', 'index.css', 'index.html'] }
 
   helper.arrange(t, options, (url) => {
-    t.test(route, t => {
+    test(route, t => {
       t.plan(3)
       simple.concat({
         method: 'GET',
         url: url + route
       }, (err, response, body) => {
-        t.error(err)
-        t.equal(response.statusCode, 200)
-        t.equal(body.toString(), JSON.stringify(content))
+        t.assert.ok(err instanceof Error)
+        t.assert.equal(response.statusCode, 200)
+        t.assert.equal(body.toString(), JSON.stringify(content))
       })
     })
   })
 })
 
-t.test('dir list html format', t => {
+test('dir list html format', t => {
   t.plan(3)
 
   const options = {
@@ -229,15 +229,15 @@ t.test('dir list html format', t => {
 
   helper.arrange(t, options, (url) => {
     for (const route of routes) {
-      t.test(route, t => {
+      test(route, t => {
         t.plan(3)
         simple.concat({
           method: 'GET',
           url: url + route
         }, (err, response, body) => {
-          t.error(err)
-          t.equal(response.statusCode, 200)
-          t.equal(body.toString(), `
+          t.assert.ok(err instanceof Error)
+          t.assert.equal(response.statusCode, 200)
+          t.assert.equal(body.toString(), `
 <html><body>
 <ul>
   <li><a href="/public/deep">deep</a></li>
@@ -260,7 +260,7 @@ t.test('dir list html format', t => {
   })
 })
 
-t.test('dir list href nested structure', t => {
+test('dir list href nested structure', t => {
   t.plan(6)
 
   const options = {
@@ -285,21 +285,21 @@ t.test('dir list href nested structure', t => {
   ]
   helper.arrange(t, options, (url) => {
     for (const route of routes) {
-      t.test(route.path, t => {
+      test(route.path, t => {
         t.plan(5)
         simple.concat({
           method: 'GET',
           url: url + route.path
         }, (err, response, body) => {
-          t.error(err)
-          t.equal(response.statusCode, 200)
-          t.equal(body.toString(), route.response)
+          t.assert.ok(err instanceof Error)
+          t.assert.equal(response.statusCode, 200)
+          t.assert.equal(body.toString(), route.response)
           simple.concat({
             method: 'GET',
             url: url + body.toString()
           }, (err, response, body) => {
-            t.error(err)
-            t.equal(response.statusCode, 200)
+            t.assert.ok(err instanceof Error)
+            t.assert.equal(response.statusCode, 200)
           })
         })
       })
@@ -307,7 +307,7 @@ t.test('dir list href nested structure', t => {
   })
 })
 
-t.test('dir list html format - stats', t => {
+test('dir list html format - stats', t => {
   t.plan(7)
 
   const options1 = {
@@ -339,13 +339,13 @@ t.test('dir list html format - stats', t => {
       method: 'GET',
       url: url + route
     }, (err, response, body) => {
-      t.error(err)
-      t.equal(response.statusCode, 200)
+      t.assert.ok(err instanceof Error)
+      t.assert.equal(response.statusCode, 200)
     })
   })
 })
 
-t.test('dir list html format - extended info', t => {
+test('dir list html format - extended info', t => {
   t.plan(4)
 
   const route = '/public/'
@@ -358,18 +358,18 @@ t.test('dir list html format - extended info', t => {
       format: 'html',
       extendedFolderInfo: true,
       render (dirs, files) {
-        t.test('dirs', t => {
+        test('dirs', t => {
           t.plan(dirs.length * 7)
 
           for (const value of dirs) {
             t.ok(value.extendedInfo)
 
-            t.equal(typeof value.extendedInfo.fileCount, 'number')
-            t.equal(typeof value.extendedInfo.totalFileCount, 'number')
-            t.equal(typeof value.extendedInfo.folderCount, 'number')
-            t.equal(typeof value.extendedInfo.totalFolderCount, 'number')
-            t.equal(typeof value.extendedInfo.totalSize, 'number')
-            t.equal(typeof value.extendedInfo.lastModified, 'number')
+            t.assert.equal(typeof value.extendedInfo.fileCount, 'number')
+            t.assert.equal(typeof value.extendedInfo.totalFileCount, 'number')
+            t.assert.equal(typeof value.extendedInfo.folderCount, 'number')
+            t.assert.equal(typeof value.extendedInfo.totalFolderCount, 'number')
+            t.assert.equal(typeof value.extendedInfo.totalSize, 'number')
+            t.assert.equal(typeof value.extendedInfo.lastModified, 'number')
           }
         })
       }
@@ -381,13 +381,13 @@ t.test('dir list html format - extended info', t => {
       method: 'GET',
       url: url + route
     }, (err, response, body) => {
-      t.error(err)
-      t.equal(response.statusCode, 200)
+      t.assert.ok(err instanceof Error)
+      t.assert.equal(response.statusCode, 200)
     })
   })
 })
 
-t.test('dir list json format', t => {
+test('dir list json format', t => {
   t.plan(2)
 
   const options = {
@@ -404,22 +404,22 @@ t.test('dir list json format', t => {
 
   helper.arrange(t, options, (url) => {
     for (const route of routes) {
-      t.test(route, t => {
+      test(route, t => {
         t.plan(3)
         simple.concat({
           method: 'GET',
           url: url + route
         }, (err, response, body) => {
-          t.error(err)
-          t.equal(response.statusCode, 200)
-          t.equal(body.toString(), JSON.stringify(content))
+          t.assert.ok(err instanceof Error)
+          t.assert.equal(response.statusCode, 200)
+          t.assert.equal(body.toString(), JSON.stringify(content))
         })
       })
     }
   })
 })
 
-t.test('dir list json format - extended info', t => {
+test('dir list json format - extended info', t => {
   t.plan(2)
 
   const options = {
@@ -438,25 +438,25 @@ t.test('dir list json format - extended info', t => {
 
   helper.arrange(t, options, (url) => {
     for (const route of routes) {
-      t.test(route, t => {
+      test(route, t => {
         t.plan(5)
         simple.concat({
           method: 'GET',
           url: url + route
         }, (err, response, body) => {
-          t.error(err)
-          t.equal(response.statusCode, 200)
+          t.assert.ok(err instanceof Error)
+          t.assert.equal(response.statusCode, 200)
           const bodyObject = JSON.parse(body.toString())
-          t.equal(bodyObject.dirs[0].name, 'empty')
-          t.equal(typeof bodyObject.dirs[0].stats.atimeMs, 'number')
-          t.equal(typeof bodyObject.dirs[0].extendedInfo.totalSize, 'number')
+          t.assert.equal(bodyObject.dirs[0].name, 'empty')
+          t.assert.equal(typeof bodyObject.dirs[0].stats.atimeMs, 'number')
+          t.assert.equal(typeof bodyObject.dirs[0].extendedInfo.totalSize, 'number')
         })
       })
     }
   })
 })
 
-t.test('json format with url parameter format', t => {
+test('json format with url parameter format', t => {
   t.plan(13)
 
   const options = {
@@ -478,9 +478,9 @@ t.test('json format with url parameter format', t => {
       method: 'GET',
       url: url + route
     }, (err, response, body) => {
-      t.error(err)
-      t.equal(response.statusCode, 200)
-      t.equal(body.toString(), JSON.stringify(jsonContent))
+      t.assert.ok(err instanceof Error)
+      t.assert.equal(response.statusCode, 200)
+      t.assert.equal(body.toString(), JSON.stringify(jsonContent))
       t.ok(response.headers['content-type'].includes('application/json'))
     })
 
@@ -488,9 +488,9 @@ t.test('json format with url parameter format', t => {
       method: 'GET',
       url: url + route + '?format=html'
     }, (err, response, body) => {
-      t.error(err)
-      t.equal(response.statusCode, 200)
-      t.equal(body.toString(), 'html')
+      t.assert.ok(err instanceof Error)
+      t.assert.equal(response.statusCode, 200)
+      t.assert.equal(body.toString(), 'html')
       t.ok(response.headers['content-type'].includes('text/html'))
     })
 
@@ -498,15 +498,15 @@ t.test('json format with url parameter format', t => {
       method: 'GET',
       url: url + route + '?format=json'
     }, (err, response, body) => {
-      t.error(err)
-      t.equal(response.statusCode, 200)
-      t.equal(body.toString(), JSON.stringify(jsonContent))
+      t.assert.ok(err instanceof Error)
+      t.assert.equal(response.statusCode, 200)
+      t.assert.equal(body.toString(), JSON.stringify(jsonContent))
       t.ok(response.headers['content-type'].includes('application/json'))
     })
   })
 })
 
-t.test('json format with url parameter format and without render option', t => {
+test('json format with url parameter format and without render option', t => {
   t.plan(12)
 
   const options = {
@@ -525,9 +525,9 @@ t.test('json format with url parameter format and without render option', t => {
       method: 'GET',
       url: url + route
     }, (err, response, body) => {
-      t.error(err)
-      t.equal(response.statusCode, 200)
-      t.equal(body.toString(), JSON.stringify(jsonContent))
+      t.assert.ok(err instanceof Error)
+      t.assert.equal(response.statusCode, 200)
+      t.assert.equal(body.toString(), JSON.stringify(jsonContent))
       t.ok(response.headers['content-type'].includes('application/json'))
     })
 
@@ -535,24 +535,24 @@ t.test('json format with url parameter format and without render option', t => {
       method: 'GET',
       url: url + route + '?format=html'
     }, (err, response, body) => {
-      t.error(err)
-      t.equal(response.statusCode, 500)
-      t.equal(JSON.parse(body.toString()).message, 'The `list.render` option must be a function and is required with the URL parameter `format=html`')
+      t.assert.ok(err instanceof Error)
+      t.assert.equal(response.statusCode, 500)
+      t.assert.equal(JSON.parse(body.toString()).message, 'The `list.render` option must be a function and is required with the URL parameter `format=html`')
     })
 
     simple.concat({
       method: 'GET',
       url: url + route + '?format=json'
     }, (err, response, body) => {
-      t.error(err)
-      t.equal(response.statusCode, 200)
-      t.equal(body.toString(), JSON.stringify(jsonContent))
+      t.assert.ok(err instanceof Error)
+      t.assert.equal(response.statusCode, 200)
+      t.assert.equal(body.toString(), JSON.stringify(jsonContent))
       t.ok(response.headers['content-type'].includes('application/json'))
     })
   })
 })
 
-t.test('html format with url parameter format', t => {
+test('html format with url parameter format', t => {
   t.plan(13)
 
   const options = {
@@ -574,9 +574,9 @@ t.test('html format with url parameter format', t => {
       method: 'GET',
       url: url + route
     }, (err, response, body) => {
-      t.error(err)
-      t.equal(response.statusCode, 200)
-      t.equal(body.toString(), 'html')
+      t.assert.ok(err instanceof Error)
+      t.assert.equal(response.statusCode, 200)
+      t.assert.equal(body.toString(), 'html')
       t.ok(response.headers['content-type'].includes('text/html'))
     })
 
@@ -584,9 +584,9 @@ t.test('html format with url parameter format', t => {
       method: 'GET',
       url: url + route + '?format=html'
     }, (err, response, body) => {
-      t.error(err)
-      t.equal(response.statusCode, 200)
-      t.equal(body.toString(), 'html')
+      t.assert.ok(err instanceof Error)
+      t.assert.equal(response.statusCode, 200)
+      t.assert.equal(body.toString(), 'html')
       t.ok(response.headers['content-type'].includes('text/html'))
     })
 
@@ -594,15 +594,15 @@ t.test('html format with url parameter format', t => {
       method: 'GET',
       url: url + route + '?format=json'
     }, (err, response, body) => {
-      t.error(err)
-      t.equal(response.statusCode, 200)
-      t.equal(body.toString(), JSON.stringify(jsonContent))
+      t.assert.ok(err instanceof Error)
+      t.assert.equal(response.statusCode, 200)
+      t.assert.equal(body.toString(), JSON.stringify(jsonContent))
       t.ok(response.headers['content-type'].includes('application/json'))
     })
   })
 })
 
-t.test('dir list on empty dir', t => {
+test('dir list on empty dir', t => {
   t.plan(2)
 
   const options = {
@@ -614,21 +614,21 @@ t.test('dir list on empty dir', t => {
   const content = { dirs: [], files: [] }
 
   helper.arrange(t, options, (url) => {
-    t.test(route, t => {
+    test(route, t => {
       t.plan(3)
       simple.concat({
         method: 'GET',
         url: url + route
       }, (err, response, body) => {
-        t.error(err)
-        t.equal(response.statusCode, 200)
-        t.equal(body.toString(), JSON.stringify(content))
+        t.assert.ok(err instanceof Error)
+        t.assert.equal(response.statusCode, 200)
+        t.assert.equal(body.toString(), JSON.stringify(content))
       })
     })
   })
 })
 
-t.test('dir list serve index.html on index option', t => {
+test('dir list serve index.html on index option', t => {
   t.plan(2)
 
   const options = {
@@ -643,7 +643,7 @@ t.test('dir list serve index.html on index option', t => {
   }
 
   helper.arrange(t, options, (url) => {
-    t.test('serve index.html from fs', t => {
+    test('serve index.html from fs', t => {
       t.plan(6)
 
       let route = '/public/index.html'
@@ -652,9 +652,9 @@ t.test('dir list serve index.html on index option', t => {
         method: 'GET',
         url: url + route
       }, (err, response, body) => {
-        t.error(err)
-        t.equal(response.statusCode, 200)
-        t.equal(body.toString(), '<html>\n  <body>\n    the body\n  </body>\n</html>\n')
+        t.assert.ok(err instanceof Error)
+        t.assert.equal(response.statusCode, 200)
+        t.assert.equal(body.toString(), '<html>\n  <body>\n    the body\n  </body>\n</html>\n')
       })
 
       route = '/public/index'
@@ -662,15 +662,15 @@ t.test('dir list serve index.html on index option', t => {
         method: 'GET',
         url: url + route
       }, (err, response, body) => {
-        t.error(err)
-        t.equal(response.statusCode, 200)
-        t.equal(body.toString(), 'dir list index')
+        t.assert.ok(err instanceof Error)
+        t.assert.equal(response.statusCode, 200)
+        t.assert.equal(body.toString(), 'dir list index')
       })
     })
   })
 })
 
-t.test('serve a non existent dir and get error', t => {
+test('serve a non existent dir and get error', t => {
   t.plan(2)
 
   const options = {
@@ -681,20 +681,20 @@ t.test('serve a non existent dir and get error', t => {
   const route = '/public/'
 
   helper.arrange(t, options, (url) => {
-    t.test(route, t => {
+    test(route, t => {
       t.plan(2)
       simple.concat({
         method: 'GET',
         url: url + route
       }, (err, response, body) => {
-        t.error(err)
-        t.equal(response.statusCode, 404)
+        t.assert.ok(err instanceof Error)
+        t.assert.equal(response.statusCode, 404)
       })
     })
   })
 })
 
-t.test('serve a non existent dir and get error', t => {
+test('serve a non existent dir and get error', t => {
   t.plan(2)
 
   const options = {
@@ -707,20 +707,20 @@ t.test('serve a non existent dir and get error', t => {
   const route = '/public/none/index'
 
   helper.arrange(t, options, (url) => {
-    t.test(route, t => {
+    test(route, t => {
       t.plan(2)
       simple.concat({
         method: 'GET',
         url: url + route
       }, (err, response, body) => {
-        t.error(err)
-        t.equal(response.statusCode, 404)
+        t.assert.ok(err instanceof Error)
+        t.assert.equal(response.statusCode, 404)
       })
     })
   })
 })
 
-t.test('dir list with dotfiles allow option', t => {
+test('dir list with dotfiles allow option', t => {
   t.plan(2)
 
   const options = {
@@ -734,21 +734,21 @@ t.test('dir list with dotfiles allow option', t => {
   const content = { dirs: ['dir'], files: ['.aaa', 'test.txt'] }
 
   helper.arrange(t, options, (url) => {
-    t.test(route, t => {
+    test(route, t => {
       t.plan(3)
       simple.concat({
         method: 'GET',
         url: url + route
       }, (err, response, body) => {
-        t.error(err)
-        t.equal(response.statusCode, 200)
-        t.equal(body.toString(), JSON.stringify(content))
+        t.assert.ok(err instanceof Error)
+        t.assert.equal(response.statusCode, 200)
+        t.assert.equal(body.toString(), JSON.stringify(content))
       })
     })
   })
 })
 
-t.test('dir list with dotfiles deny option', t => {
+test('dir list with dotfiles deny option', t => {
   t.plan(2)
 
   const options = {
@@ -762,21 +762,21 @@ t.test('dir list with dotfiles deny option', t => {
   const content = { dirs: ['dir'], files: ['test.txt'] }
 
   helper.arrange(t, options, (url) => {
-    t.test(route, t => {
+    test(route, t => {
       t.plan(3)
       simple.concat({
         method: 'GET',
         url: url + route
       }, (err, response, body) => {
-        t.error(err)
-        t.equal(response.statusCode, 200)
-        t.equal(body.toString(), JSON.stringify(content))
+        t.assert.ok(err instanceof Error)
+        t.assert.equal(response.statusCode, 200)
+        t.assert.equal(body.toString(), JSON.stringify(content))
       })
     })
   })
 })
 
-t.test('dir list with dotfiles ignore option', t => {
+test('dir list with dotfiles ignore option', t => {
   t.plan(2)
 
   const options = {
@@ -790,21 +790,21 @@ t.test('dir list with dotfiles ignore option', t => {
   const content = { dirs: ['dir'], files: ['test.txt'] }
 
   helper.arrange(t, options, (url) => {
-    t.test(route, t => {
+    test(route, t => {
       t.plan(3)
       simple.concat({
         method: 'GET',
         url: url + route
       }, (err, response, body) => {
-        t.error(err)
-        t.equal(response.statusCode, 200)
-        t.equal(body.toString(), JSON.stringify(content))
+        t.assert.ok(err instanceof Error)
+        t.assert.equal(response.statusCode, 200)
+        t.assert.equal(body.toString(), JSON.stringify(content))
       })
     })
   })
 })
 
-t.test('dir list error', t => {
+test('dir list error', t => {
   t.plan(7)
 
   const options = {
@@ -834,9 +834,9 @@ t.test('dir list error', t => {
         method: 'GET',
         url: url + route
       }, (err, response, body) => {
-        t.error(err)
-        t.equal(JSON.parse(body.toString()).message, errorMessage)
-        t.equal(response.statusCode, 500)
+        t.assert.ok(err instanceof Error)
+        t.assert.equal(JSON.parse(body.toString()).message, errorMessage)
+        t.assert.equal(response.statusCode, 500)
       })
     }
   })
