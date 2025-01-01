@@ -8,8 +8,8 @@ const Fastify = require('fastify')
 
 const fastifyStatic = require('../')
 
-test('register /content-type', t => {
-  t.plan(6)
+test('register /content-type', async t => {
+  t.plan(5)
 
   const pluginOptions = {
     root: path.join(__dirname, '/content-type'),
@@ -20,61 +20,53 @@ test('register /content-type', t => {
 
   t.after(() => fastify.close())
 
-  const { resolve, promise } = Promise.withResolvers()
+  await fastify.listen({ port: 0 })
 
-  fastify.listen({ port: 0 }, async (err) => {
-    t.assert.ifError(err)
+  fastify.server.unref()
 
-    fastify.server.unref()
+  await t.test('/content-type/index.html', async (t) => {
+    t.plan(2)
 
-    await t.test('/content-type/index.html', async (t) => {
-      t.plan(2)
-
-      const response = await fetch('http://localhost:' + fastify.server.address().port + '/content-type/index.html')
-      t.assert.ok(response.ok)
-      t.assert.equal(response.headers.get('content-type'), 'text/html; charset=utf-8')
-    })
-
-    await t.test('/content-type/index.css', async (t) => {
-      t.plan(2)
-
-      const response = await fetch('http://localhost:' + fastify.server.address().port + '/content-type/index.css')
-      t.assert.ok(response.ok)
-      t.assert.equal(response.headers.get('content-type'), 'text/css; charset=utf-8')
-    })
-
-    await t.test('/content-type/sample.jpg', async (t) => {
-      t.plan(2)
-
-      const response = await fetch('http://localhost:' + fastify.server.address().port + '/content-type/sample.jpg')
-      t.assert.ok(response.ok)
-      t.assert.equal(response.headers.get('content-type'), 'image/jpeg')
-    })
-
-    await t.test('/content-type/test.txt', async (t) => {
-      t.plan(2)
-
-      const response = await fetch('http://localhost:' + fastify.server.address().port + '/content-type/test.txt')
-      t.assert.ok(response.ok)
-      t.assert.equal(response.headers.get('content-type'), 'text/plain; charset=utf-8')
-    })
-
-    await t.test('/content-type/binary', async (t) => {
-      t.plan(2)
-
-      const response = await fetch('http://localhost:' + fastify.server.address().port + '/content-type/binary')
-      t.assert.ok(response.ok)
-      t.assert.equal(response.headers.get('content-type'), 'application/octet-stream')
-    })
-
-    resolve()
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/content-type/index.html')
+    t.assert.ok(response.ok)
+    t.assert.equal(response.headers.get('content-type'), 'text/html; charset=utf-8')
   })
 
-  return promise
+  await t.test('/content-type/index.css', async (t) => {
+    t.plan(2)
+
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/content-type/index.css')
+    t.assert.ok(response.ok)
+    t.assert.equal(response.headers.get('content-type'), 'text/css; charset=utf-8')
+  })
+
+  await t.test('/content-type/sample.jpg', async (t) => {
+    t.plan(2)
+
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/content-type/sample.jpg')
+    t.assert.ok(response.ok)
+    t.assert.equal(response.headers.get('content-type'), 'image/jpeg')
+  })
+
+  await t.test('/content-type/test.txt', async (t) => {
+    t.plan(2)
+
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/content-type/test.txt')
+    t.assert.ok(response.ok)
+    t.assert.equal(response.headers.get('content-type'), 'text/plain; charset=utf-8')
+  })
+
+  await t.test('/content-type/binary', async (t) => {
+    t.plan(2)
+
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/content-type/binary')
+    t.assert.ok(response.ok)
+    t.assert.equal(response.headers.get('content-type'), 'application/octet-stream')
+  })
 })
 
-test('register /content-type preCompressed', t => {
-  t.plan(6)
+test('register /content-type preCompressed', async t => {
+  t.plan(5)
 
   const pluginOptions = {
     root: path.join(__dirname, '/content-type'),
@@ -86,75 +78,67 @@ test('register /content-type preCompressed', t => {
 
   t.after(() => fastify.close())
 
-  const { resolve, promise } = Promise.withResolvers()
+  await fastify.listen({ port: 0 })
 
-  fastify.listen({ port: 0 }, async (err) => {
-    t.assert.ifError(err)
+  fastify.server.unref()
 
-    fastify.server.unref()
+  await t.test('/content-type/index.html', async (t) => {
+    t.plan(2)
 
-    await t.test('/content-type/index.html', async (t) => {
-      t.plan(2)
-
-      const response = await fetch('http://localhost:' + fastify.server.address().port + '/content-type/index.html', {
-        headers: {
-          'accept-encoding': 'gzip, deflate, br'
-        }
-      })
-      t.assert.ok(response.ok)
-      t.assert.equal(response.headers.get('content-type'), 'text/html; charset=utf-8')
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/content-type/index.html', {
+      headers: {
+        'accept-encoding': 'gzip, deflate, br'
+      }
     })
-
-    await t.test('/content-type/index.css', async (t) => {
-      t.plan(2)
-
-      const response = await fetch('http://localhost:' + fastify.server.address().port + '/content-type/index.css', {
-        headers: {
-          'accept-encoding': 'gzip, deflate, br'
-        }
-      })
-      t.assert.ok(response.ok)
-      t.assert.equal(response.headers.get('content-type'), 'text/css; charset=utf-8')
-    })
-
-    await t.test('/content-type/sample.jpg', async (t) => {
-      t.plan(2)
-
-      const response = await fetch('http://localhost:' + fastify.server.address().port + '/content-type/sample.jpg', {
-        headers: {
-          'accept-encoding': 'gzip, deflate, br'
-        }
-      })
-      t.assert.ok(response.ok)
-      t.assert.equal(response.headers.get('content-type'), 'image/jpeg')
-    })
-
-    await t.test('/content-type/test.txt', async (t) => {
-      t.plan(2)
-
-      const response = await fetch('http://localhost:' + fastify.server.address().port + '/content-type/test.txt', {
-        headers: {
-          'accept-encoding': 'gzip, deflate, br'
-        }
-      })
-      t.assert.ok(response.ok)
-      t.assert.equal(response.headers.get('content-type'), 'text/plain; charset=utf-8')
-    })
-
-    await t.test('/content-type/binary', async (t) => {
-      t.plan(2)
-
-      const response = await fetch('http://localhost:' + fastify.server.address().port + '/content-type/binary', {
-        headers: {
-          'accept-encoding': 'gzip, deflate, br'
-        }
-      })
-      t.assert.ok(response.ok)
-      t.assert.equal(response.headers.get('content-type'), 'application/octet-stream')
-    })
-
-    resolve()
+    t.assert.ok(response.ok)
+    t.assert.equal(response.headers.get('content-type'), 'text/html; charset=utf-8')
   })
 
-  return promise
+  await t.test('/content-type/index.css', async (t) => {
+    t.plan(2)
+
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/content-type/index.css', {
+      headers: {
+        'accept-encoding': 'gzip, deflate, br'
+      }
+    })
+    t.assert.ok(response.ok)
+    t.assert.equal(response.headers.get('content-type'), 'text/css; charset=utf-8')
+  })
+
+  await t.test('/content-type/sample.jpg', async (t) => {
+    t.plan(2)
+
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/content-type/sample.jpg', {
+      headers: {
+        'accept-encoding': 'gzip, deflate, br'
+      }
+    })
+    t.assert.ok(response.ok)
+    t.assert.equal(response.headers.get('content-type'), 'image/jpeg')
+  })
+
+  await t.test('/content-type/test.txt', async (t) => {
+    t.plan(2)
+
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/content-type/test.txt', {
+      headers: {
+        'accept-encoding': 'gzip, deflate, br'
+      }
+    })
+    t.assert.ok(response.ok)
+    t.assert.equal(response.headers.get('content-type'), 'text/plain; charset=utf-8')
+  })
+
+  await t.test('/content-type/binary', async (t) => {
+    t.plan(2)
+
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/content-type/binary', {
+      headers: {
+        'accept-encoding': 'gzip, deflate, br'
+      }
+    })
+    t.assert.ok(response.ok)
+    t.assert.equal(response.headers.get('content-type'), 'application/octet-stream')
+  })
 })
