@@ -442,8 +442,8 @@ test('register /static/', async t => {
   })
 })
 
-test('register /static and /static2', (t) => {
-  t.plan(5)
+test('register /static and /static2', async (t) => {
+  t.plan(4)
 
   const pluginOptions = {
     root: [path.join(__dirname, '/static'), path.join(__dirname, '/static2')],
@@ -462,63 +462,50 @@ test('register /static and /static2', (t) => {
 
   t.after(() => fastify.close())
 
-  fastify.listen({ port: 0 }, (err) => {
-    t.assert.ifError(err)
+  await fastify.listen({ port: 0 })
 
-    fastify.server.unref()
+  fastify.server.unref()
 
-    test('/static/index.html', (t) => {
-      t.plan(4 + GENERIC_RESPONSE_CHECK_COUNT)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/static/index.html'
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 200)
-        t.not(body.toString(), index2Content)
-        t.assert.equal(body.toString(), indexContent)
-        genericResponseChecks(t, response)
-      })
-    })
+  await t.test('/static/index.html', async (t) => {
+    t.plan(4 + GENERIC_RESPONSE_CHECK_COUNT)
 
-    test('/static/bar.html', (t) => {
-      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/static/bar.html'
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 200)
-        t.assert.equal(body.toString(), barContent)
-        genericResponseChecks(t, response)
-      })
-    })
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/index.html')
+    t.assert.ok(response.ok)
+    t.assert.equal(response.status, 200)
+    const responseText = await response.text()
+    t.assert.equal(responseText, indexContent)
+    t.assert.notEqual(responseText, index2Content)
+    genericResponseChecks(t, response)
+  })
 
-    test('sendFile foo.html', (t) => {
-      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/foo'
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 200)
-        t.assert.equal(body.toString(), fooContent)
-        genericResponseChecks(t, response)
-      })
-    })
+  await t.test('/static/bar.html', async (t) => {
+    t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
 
-    test('sendFile bar.html', (t) => {
-      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/bar'
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 200)
-        t.assert.equal(body.toString(), barContent)
-        genericResponseChecks(t, response)
-      })
-    })
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/bar.html')
+    t.assert.ok(response.ok)
+    t.assert.equal(response.status, 200)
+    t.assert.equal(await response.text(), barContent)
+    genericResponseChecks(t, response)
+  })
+
+  await t.test('sendFile foo.html', async (t) => {
+    t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/foo')
+    t.assert.ok(response.ok)
+    t.assert.equal(response.status, 200)
+    t.assert.equal(await response.text(), fooContent)
+    genericResponseChecks(t, response)
+  })
+
+  await t.test('sendFile bar.html', async (t) => {
+    t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/bar')
+    t.assert.ok(response.ok)
+    t.assert.equal(response.status, 200)
+    t.assert.equal(await response.text(), barContent)
+    genericResponseChecks(t, response)
   })
 })
 
