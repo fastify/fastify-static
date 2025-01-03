@@ -1358,8 +1358,8 @@ test('register no prefix', async (t) => {
   })
 })
 
-test('with fastify-compress', t => {
-  t.plan(3)
+test('with fastify-compress', async t => {
+  t.plan(2)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static')
@@ -1370,39 +1370,30 @@ test('with fastify-compress', t => {
 
   t.after(() => fastify.close())
 
-  fastify.listen({ port: 0 }, err => {
-    t.assert.ifError(err)
+  await fastify.listen({ port: 0 })
 
-    test('deflate', function (t) {
-      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+  await t.test('deflate', async function (t) {
+    t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
 
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/index.html',
-        headers: {
-          'accept-encoding': ['deflate']
-        }
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 200)
-        t.assert.equal(response.headers['content-encoding'], 'deflate')
-        genericResponseChecks(t, response)
-      })
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/index.html', {
+      headers: {
+        'accept-encoding': ['deflate']
+      }
     })
+    t.assert.ok(response.ok)
+    t.assert.equal(response.status, 200)
+    t.assert.equal(response.headers.get('content-encoding'), 'deflate')
+    genericResponseChecks(t, response)
+  })
 
-    test('gzip', function (t) {
-      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+  await t.test('gzip', async function (t) {
+    t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
 
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/index.html'
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 200)
-        t.assert.equal(response.headers['content-encoding'], 'gzip')
-        genericResponseChecks(t, response)
-      })
-    })
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/index.html')
+    t.assert.ok(response.ok)
+    t.assert.equal(response.status, 200)
+    t.assert.equal(response.headers.get('content-encoding'), 'gzip')
+    genericResponseChecks(t, response)
   })
 })
 test('register /static/ with schemaHide true', t => {
