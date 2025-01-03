@@ -1114,6 +1114,7 @@ test('send options', (t) => {
     maxAge: 'maxAge'
   }
   const fastify = Fastify({ logger: false })
+  const { resolve, promise } = Promise.withResolvers()
   const fastifyStatic = require('proxyquire')('../', {
     '@fastify/send': function sendStub (req, pathName, options) {
       t.assert.equal(pathName, '/index.html')
@@ -1128,11 +1129,14 @@ test('send options', (t) => {
       t.assert.equal(options.index, 'index')
       t.assert.equal(options.lastModified, 'lastModified')
       t.assert.equal(options.maxAge, 'maxAge')
+      resolve()
       return { on: () => { }, pipe: () => { } }
     }
   })
   fastify.register(fastifyStatic, pluginOptions)
   fastify.inject({ url: '/index.html' })
+
+  return promise
 })
 
 test('setHeaders option', (t) => {
