@@ -1077,8 +1077,8 @@ test('prefix default', (t) => {
   t.assert.doesNotThrow(() => fastify.register(fastifyStatic, pluginOptions))
 })
 
-test('root not found warning', (t) => {
-  t.plan(2)
+test('root not found warning', async (t) => {
+  t.plan(1)
   const rootPath = path.join(__dirname, 'does-not-exist')
   const pluginOptions = { root: rootPath }
   const destination = concat((data) => {
@@ -1092,11 +1092,10 @@ test('root not found warning', (t) => {
   )
   const fastify = Fastify({ loggerInstance })
   fastify.register(fastifyStatic, pluginOptions)
-  fastify.listen({ port: 0 }, (err) => {
-    t.assert.ifError(err)
-    fastify.server.unref()
-    destination.end()
-  })
+
+  await fastify.listen({ port: 0 })
+  fastify.server.unref()
+  destination.end()
 })
 
 test('send options', (t) => {
