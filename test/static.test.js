@@ -599,8 +599,8 @@ test('payload.path is set', async (t) => {
   })
 })
 
-test('error responses can be customized with fastify.setErrorHandler()', t => {
-  t.plan(2)
+test('error responses can be customized with fastify.setErrorHandler()', async t => {
+  t.plan(1)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static')
@@ -608,32 +608,29 @@ test('error responses can be customized with fastify.setErrorHandler()', t => {
   const fastify = Fastify()
 
   fastify.setErrorHandler(function errorHandler (err, request, reply) {
-    reply.code(403).type('text/plain').send(err.status + ' Custom error message')
+    reply.code(403).type('text/plain').send(`${err.statusCode} Custom error message`)
+  })
+
+  fastify.get('/index.js', (_, reply) => {
+    return reply.type('text/html').sendFile('foo.js')
   })
 
   fastify.register(fastifyStatic, pluginOptions)
 
   t.after(() => fastify.close())
 
-  fastify.listen({ port: 0 }, err => {
-    t.assert.ifError(err)
+  await fastify.listen({ port: 0 })
 
-    fastify.server.unref()
+  fastify.server.unref()
 
-    test('/../index.js', t => {
-      t.plan(4)
+  await t.test('/../index.js', async t => {
+    t.plan(4)
 
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/../index.js',
-        followRedirect: false
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 403)
-        t.assert.equal(response.headers['content-type'], 'text/plain')
-        t.assert.equal(body.toString(), '403 Custom error message')
-      })
-    })
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/index.js')
+    t.assert.ok(!response.ok)
+    t.assert.equal(response.status, 403)
+    t.assert.equal(response.headers.get('content-type'), 'text/plain')
+    t.assert.equal(await response.text(), '500 Custom error message')
   })
 })
 
