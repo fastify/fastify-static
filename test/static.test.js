@@ -665,8 +665,8 @@ test('not found responses can be customized with fastify.setNotFoundHandler()', 
   })
 })
 
-test('fastify.setNotFoundHandler() is called for dotfiles when when send is configured to ignore dotfiles', t => {
-  t.plan(2)
+test('fastify.setNotFoundHandler() is called for dotfiles when send is configured to ignore dotfiles', async t => {
+  t.plan(1)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -684,27 +684,20 @@ test('fastify.setNotFoundHandler() is called for dotfiles when when send is conf
 
   t.after(() => fastify.close())
 
-  fastify.listen({ port: 0 }, err => {
-    t.assert.ifError(err)
+  await fastify.listen({ port: 0 })
 
-    fastify.server.unref()
+  fastify.server.unref()
 
-    // Requesting files with a leading dot doesn't follow the same code path as
-    // other 404 errors
-    test('/path/does/not/.exist.html', t => {
-      t.plan(4)
+  // Requesting files with a leading dot doesn't follow the same code path as
+  // other 404 errors
+  await t.test('/path/does/not/.exist.html', async t => {
+    t.plan(4)
 
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/path/does/not/.exist.html',
-        followRedirect: false
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 404)
-        t.assert.equal(response.headers['content-type'], 'text/plain')
-        t.assert.equal(body.toString(), '/path/does/not/.exist.html Not Found')
-      })
-    })
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/path/does/not/.exist.html')
+    t.assert.ok(!response.ok)
+    t.assert.equal(response.status, 404)
+    t.assert.equal(response.headers.get('content-type'), 'text/plain')
+    t.assert.equal(await response.text(), '/path/does/not/.exist.html Not Found')
   })
 })
 
