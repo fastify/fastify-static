@@ -1694,7 +1694,7 @@ test('register with wildcard false (trailing slash in the root)', async t => {
   })
 })
 
-test('register with wildcard string', (t) => {
+test('register with wildcard string', async (t) => {
   t.plan(1)
 
   const pluginOptions = {
@@ -1708,12 +1708,10 @@ test('register with wildcard string', (t) => {
     reply.send({ hello: 'world' })
   })
 
-  fastify.ready(function (err) {
-    t.assert.ok(err)
-  })
+  await t.assert.rejects(fastify.ready())
 })
 
-test('register with wildcard string on multiple root paths', (t) => {
+test('register with wildcard string on multiple root paths', async (t) => {
   t.plan(1)
 
   const pluginOptions = {
@@ -1729,11 +1727,7 @@ test('register with wildcard string on multiple root paths', (t) => {
 
   t.after(() => fastify.close())
 
-  fastify.listen({ port: 0 }, (err) => {
-    t.assert.ok(err)
-
-    fastify.server.unref()
-  })
+  await t.assert.rejects(fastify.listen({ port: 0 }))
 })
 
 test('register with wildcard false and alternative index', t => {
