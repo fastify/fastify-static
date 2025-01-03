@@ -509,14 +509,14 @@ test('register /static and /static2', async (t) => {
   })
 })
 
-test('register /static with constraints', (t) => {
-  t.plan(3)
+test('register /static with constraints', async (t) => {
+  t.plan(2)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
     prefix: '/static',
     constraints: {
-      host: 'example.com'
+      version: '1.2.0'
     }
   }
   const fastify = Fastify()
@@ -524,41 +524,34 @@ test('register /static with constraints', (t) => {
 
   t.after(() => fastify.close())
 
-  fastify.listen({ port: 0 }, (err) => {
-    t.assert.ifError(err)
+  await fastify.listen({ port: 0 })
+  fastify.server.unref()
 
-    fastify.server.unref()
+  await t.test('example.com/static/index.html', async (t) => {
+    t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
 
-    test('example.com/static/index.html', (t) => {
-      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/static/index.html',
-        headers: {
-          host: 'example.com'
-        }
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 200)
-        t.assert.equal(body.toString(), indexContent)
-        genericResponseChecks(t, response)
-      })
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/index.html', {
+      headers: {
+        'accept-version': '1.x'
+      }
     })
+    t.assert.ok(response.ok)
+    t.assert.equal(response.status, 200)
+    t.assert.equal(await response.text(), indexContent)
+    genericResponseChecks(t, response)
+  })
 
-    test('not-example.com/static/index.html', (t) => {
-      t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/static/index.html',
-        headers: {
-          host: 'not-example.com'
-        }
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 404)
-        genericErrorResponseChecks(t, response)
-      })
+  await t.test('not-example.com/static/index.html', async (t) => {
+    t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
+
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/index.html', {
+      headers: {
+        'accept-version': '2.x'
+      }
     })
+    t.assert.ok(!response.ok)
+    t.assert.equal(response.status, 404)
+    genericErrorResponseChecks(t, response)
   })
 })
 
