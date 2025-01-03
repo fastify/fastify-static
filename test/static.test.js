@@ -906,8 +906,8 @@ test('allowedPath option - request', async (t) => {
   })
 })
 
-test('download', (t) => {
-  t.plan(7)
+test('download', async (t) => {
+  t.plan(6)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -963,102 +963,76 @@ test('download', (t) => {
     })
   })
 
-  fastify.listen({ port: 0 }, (err) => {
-    t.assert.ifError(err)
+  await fastify.listen({ port: 0 })
 
-    fastify.server.unref()
+  fastify.server.unref()
 
-    test('reply.download()', (t) => {
-      t.plan(4 + GENERIC_RESPONSE_CHECK_COUNT)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/foo/bar',
-        followRedirect: false
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 200)
-        t.assert.equal(response.headers['content-disposition'], 'attachment; filename="index.html"')
-        t.assert.equal(body.toString(), indexContent)
-        genericResponseChecks(t, response)
-      })
-    })
+  await t.test('reply.download()', async (t) => {
+    t.plan(4 + GENERIC_RESPONSE_CHECK_COUNT)
 
-    test('reply.download() with fileName', t => {
-      t.plan(4 + GENERIC_RESPONSE_CHECK_COUNT)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/foo/bar/change',
-        followRedirect: false
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 200)
-        t.assert.equal(response.headers['content-disposition'], 'attachment; filename="hello-world.html"')
-        t.assert.equal(body.toString(), indexContent)
-        genericResponseChecks(t, response)
-      })
-    })
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/foo/bar')
+    t.assert.ok(response.ok)
+    t.assert.equal(response.headers.get('content-disposition'), 'attachment; filename="index.html"')
+    t.assert.equal(response.status, 200)
+    t.assert.equal(await response.text(), indexContent)
+    genericResponseChecks(t, response)
+  })
 
-    test('reply.download() with fileName', (t) => {
-      t.plan(4 + GENERIC_RESPONSE_CHECK_COUNT)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/root/path/override/test',
-        followRedirect: false
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 200)
-        t.assert.equal(response.headers['content-disposition'], 'attachment; filename="foo.html"')
-        t.assert.equal(body.toString(), deepContent)
-        genericResponseChecks(t, response)
-      })
-    })
+  await t.test('reply.download() with fileName', async t => {
+    t.plan(4 + GENERIC_RESPONSE_CHECK_COUNT)
 
-    test('reply.download() with custom opts', (t) => {
-      t.plan(5 + GENERIC_RESPONSE_CHECK_COUNT)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/foo/bar/override',
-        followRedirect: false
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 200)
-        t.assert.equal(response.headers['content-disposition'], 'attachment; filename="hello-world.html"')
-        t.assert.equal(response.headers['cache-control'], 'public, max-age=7200, immutable')
-        t.assert.equal(body.toString(), indexContent)
-        genericResponseChecks(t, response)
-      })
-    })
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/foo/bar/change')
+    t.assert.ok(response.ok)
+    t.assert.equal(response.status, 200)
+    t.assert.equal(response.headers.get('content-disposition'), 'attachment; filename="hello-world.html"')
+    t.assert.equal(await response.text(), indexContent)
+    genericResponseChecks(t, response)
+  })
 
-    test('reply.download() with custom opts (2)', (t) => {
-      t.plan(5 + GENERIC_RESPONSE_CHECK_COUNT)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/foo/bar/override/2',
-        followRedirect: false
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 200)
-        t.assert.equal(response.headers['content-disposition'], 'attachment; filename="index.html"')
-        t.assert.equal(response.headers['accept-ranges'], undefined)
-        t.assert.equal(body.toString(), indexContent)
-        genericResponseChecks(t, response)
-      })
-    })
+  await t.test('reply.download() with fileName - override', async (t) => {
+    t.plan(4 + GENERIC_RESPONSE_CHECK_COUNT)
 
-    test('reply.download() with rootPath and fileName', (t) => {
-      t.plan(4 + GENERIC_RESPONSE_CHECK_COUNT)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/root/path/override/test/change',
-        followRedirect: false
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 200)
-        t.assert.equal(response.headers['content-disposition'], 'attachment; filename="hello-world.html"')
-        t.assert.equal(body.toString(), deepContent)
-        genericResponseChecks(t, response)
-      })
-    })
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/root/path/override/test')
+    t.assert.ok(response.ok)
+    t.assert.equal(response.status, 200)
+    t.assert.equal(response.headers.get('content-disposition'), 'attachment; filename="foo.html"')
+    t.assert.equal(await response.text(), deepContent)
+    genericResponseChecks(t, response)
+  })
+
+  await t.test('reply.download() with custom opts', async (t) => {
+    t.plan(5 + GENERIC_RESPONSE_CHECK_COUNT)
+
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/foo/bar/override')
+    t.assert.ok(response.ok)
+    t.assert.equal(response.status, 200)
+    t.assert.equal(response.headers.get('content-disposition'), 'attachment; filename="hello-world.html"')
+    t.assert.equal(response.headers.get('cache-control'), 'public, max-age=7200, immutable')
+    t.assert.equal(await response.text(), indexContent)
+    genericResponseChecks(t, response)
+  })
+
+  await t.test('reply.download() with custom opts (2)', async (t) => {
+    t.plan(5 + GENERIC_RESPONSE_CHECK_COUNT)
+
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/foo/bar/override/2')
+    t.assert.ok(response.ok)
+    t.assert.equal(response.status, 200)
+    t.assert.equal(response.headers.get('content-disposition'), 'attachment; filename="index.html"')
+    t.assert.equal(response.headers.get('accept-ranges'), undefined)
+    t.assert.equal(await response.text(), indexContent)
+    genericResponseChecks(t, response)
+  })
+
+  await t.test('reply.download() with rootPath and fileName', async (t) => {
+    t.plan(4 + GENERIC_RESPONSE_CHECK_COUNT)
+
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/root/path/override/test/change')
+    t.assert.ok(response.ok)
+    t.assert.equal(response.status, 200)
+    t.assert.equal(response.headers.get('content-disposition'), 'attachment; filename="hello-world.html"')
+    t.assert.equal(await response.text(), deepContent)
+    genericResponseChecks(t, response)
   })
 })
 
