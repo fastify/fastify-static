@@ -1139,8 +1139,8 @@ test('send options', (t) => {
   return promise
 })
 
-test('setHeaders option', (t) => {
-  t.plan(6 + GENERIC_RESPONSE_CHECK_COUNT)
+test('setHeaders option', async (t) => {
+  t.plan(5 + GENERIC_RESPONSE_CHECK_COUNT)
 
   const pluginOptions = {
     root: path.join(__dirname, 'static'),
@@ -1154,23 +1154,16 @@ test('setHeaders option', (t) => {
 
   t.after(() => fastify.close())
 
-  fastify.listen({ port: 0 }, (err) => {
-    t.assert.ifError(err)
+  await fastify.listen({ port: 0 })
 
-    fastify.server.unref()
+  fastify.server.unref()
 
-    simple.concat({
-      method: 'GET',
-      url: 'http://localhost:' + fastify.server.address().port + '/index.html',
-      followRedirect: false
-    }, (err, response, body) => {
-      t.assert.ifError(err)
-      t.assert.equal(response.statusCode, 200)
-      t.assert.equal(response.headers['x-test-header'], 'test')
-      t.assert.equal(body.toString(), indexContent)
-      genericResponseChecks(t, response)
-    })
-  })
+  const response = await fetch('http://localhost:' + fastify.server.address().port + '/index.html')
+  t.assert.ok(response.ok)
+  t.assert.equal(response.status, 200)
+  t.assert.equal(response.headers.get('x-test-header'), 'test')
+  t.assert.equal(await response.text(), indexContent)
+  genericResponseChecks(t, response)
 })
 
 test('maxAge option', (t) => {
