@@ -555,8 +555,8 @@ test('register /static with constraints', async (t) => {
   })
 })
 
-test('payload.path is set', (t) => {
-  t.plan(3)
+test('payload.path is set', async (t) => {
+  t.plan(2)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -572,39 +572,30 @@ test('payload.path is set', (t) => {
 
   t.after(() => fastify.close())
 
-  fastify.listen({ port: 0 }, (err) => {
-    t.assert.ifError(err)
+  await fastify.listen({ port: 0 })
 
-    fastify.server.unref()
+  fastify.server.unref()
 
-    test('/static/index.html', (t) => {
-      t.plan(5 + GENERIC_RESPONSE_CHECK_COUNT)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/static/index.html'
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 200)
-        t.assert.equal(body.toString(), indexContent)
-        t.assert.equal(typeof gotFilename, 'string')
-        t.assert.equal(gotFilename, path.join(pluginOptions.root, 'index.html'))
-        genericResponseChecks(t, response)
-      })
-    })
+  await t.test('/static/index.html', async (t) => {
+    t.plan(5 + GENERIC_RESPONSE_CHECK_COUNT)
 
-    test('/static/this/path/doesnt/exist.html', (t) => {
-      t.plan(3 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/static/this/path/doesnt/exist.html',
-        followRedirect: false
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 404)
-        t.assert.equal(typeof gotFilename, 'undefined')
-        genericErrorResponseChecks(t, response)
-      })
-    })
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/index.html')
+    t.assert.ok(response.ok)
+    t.assert.equal(response.status, 200)
+    t.assert.equal(await response.text(), indexContent)
+    t.assert.equal(typeof gotFilename, 'string')
+    t.assert.equal(gotFilename, path.join(pluginOptions.root, 'index.html'))
+    genericResponseChecks(t, response)
+  })
+
+  await t.test('/static/this/path/doesnt/exist.html', async (t) => {
+    t.plan(3 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
+
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/this/path/doesnt/exist.html')
+    t.assert.ok(!response.ok)
+    t.assert.equal(response.status, 404)
+    t.assert.equal(typeof gotFilename, 'undefined')
+    genericErrorResponseChecks(t, response)
   })
 })
 
