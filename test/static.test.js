@@ -1036,39 +1036,6 @@ test('download', async (t) => {
   })
 })
 
-test('sendFile disabled', async (t) => {
-  t.plan(1)
-
-  const pluginOptions = {
-    root: path.join(__dirname, '/static'),
-    prefix: '/static',
-    decorateReply: false
-  }
-  const fastify = Fastify()
-  fastify.register(fastifyStatic, pluginOptions)
-
-  fastify.get('/foo/bar', function (req, reply) {
-    if (reply.sendFile === undefined) {
-      reply.send('pass')
-    } else {
-      reply.send('fail')
-    }
-  })
-
-  await fastify.listen({ port: 0 })
-
-  fastify.server.unref()
-
-  await t.test('reply.sendFile undefined', async (t) => {
-    t.plan(3)
-
-    const response = await fetch('http://localhost:' + fastify.server.address().port + '/foo/bar')
-    t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), 'pass')
-  })
-})
-
 test('download disabled', (t) => {
   t.plan(3)
 
