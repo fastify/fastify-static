@@ -811,8 +811,8 @@ test('sendFile', async (t) => {
   })
 })
 
-test('sendFile disabled', (t) => {
-  t.plan(2)
+test('sendFile disabled', async (t) => {
+  t.plan(1)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -830,23 +830,17 @@ test('sendFile disabled', (t) => {
     }
   })
 
-  fastify.listen({ port: 0 }, (err) => {
-    t.assert.ifError(err)
+  await fastify.listen({ port: 0 })
 
-    fastify.server.unref()
+  fastify.server.unref()
 
-    test('reply.sendFile undefined', (t) => {
-      t.plan(3)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/foo/bar',
-        followRedirect: false
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 200)
-        t.assert.equal(body.toString(), 'pass')
-      })
-    })
+  await t.test('reply.sendFile undefined', async (t) => {
+    t.plan(3)
+
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/foo/bar')
+    t.assert.ok(response.ok)
+    t.assert.equal(response.status, 200)
+    t.assert.equal(await response.text(), 'pass')
   })
 })
 
