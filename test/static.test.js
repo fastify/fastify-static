@@ -1497,8 +1497,8 @@ test('register /static/ without schemaHide', async t => {
   })
 })
 
-test('fastify with exposeHeadRoutes', t => {
-  t.plan(2)
+test('fastify with exposeHeadRoutes', async t => {
+  t.plan(1)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -1509,23 +1509,18 @@ test('fastify with exposeHeadRoutes', t => {
 
   t.after(() => fastify.close())
 
-  fastify.listen({ port: 0 }, err => {
-    t.assert.ifError(err)
+  await fastify.listen({ port: 0 })
 
-    fastify.server.unref()
+  fastify.server.unref()
 
-    test('/index.html', t => {
-      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
-      simple.concat({
-        method: 'HEAD',
-        url: 'http://localhost:' + fastify.server.address().port + '/index.html'
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 200)
-        t.assert.equal(body.toString(), '')
-        genericResponseChecks(t, response)
-      })
-    })
+  await t.test('/index.html', async t => {
+    t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/index.html', { method: 'HEAD' })
+    t.assert.ok(response.ok)
+    t.assert.equal(response.status, 200)
+    t.assert.equal(await response.text(), '')
+    genericResponseChecks(t, response)
   })
 })
 
