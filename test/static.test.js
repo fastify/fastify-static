@@ -741,8 +741,8 @@ test('serving disabled', async (t) => {
   })
 })
 
-test('sendFile', (t) => {
-  t.plan(5)
+test('sendFile', async (t) => {
+  t.plan(4)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -767,67 +767,47 @@ test('sendFile', (t) => {
     reply.sendFile('/index.html', { maxAge })
   })
 
-  fastify.listen({ port: 0 }, (err) => {
-    t.assert.ifError(err)
+  await fastify.listen({ port: 0 })
+  fastify.server.unref()
 
-    fastify.server.unref()
+  await t.test('reply.sendFile()', async (t) => {
+    t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/foo/bar')
+    t.assert.ok(response.ok)
+    t.assert.equal(response.status, 200)
+    t.assert.equal(await response.text(), indexContent)
+    genericResponseChecks(t, response)
+  })
 
-    test('reply.sendFile()', (t) => {
-      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/foo/bar',
-        followRedirect: false
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 200)
-        t.assert.equal(body.toString(), indexContent)
-        genericResponseChecks(t, response)
-      })
-    })
+  await t.test('reply.sendFile() with rootPath', async (t) => {
+    t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
 
-    test('reply.sendFile() with rootPath', (t) => {
-      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/root/path/override/test',
-        followRedirect: false
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 200)
-        t.assert.equal(body.toString(), deepContent)
-        genericResponseChecks(t, response)
-      })
-    })
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/root/path/override/test')
+    t.assert.ok(response.ok)
+    t.assert.equal(response.status, 200)
+    t.assert.equal(await response.text(), deepContent)
+    genericResponseChecks(t, response)
+  })
 
-    test('reply.sendFile() again without root path', (t) => {
-      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/foo/bar',
-        followRedirect: false
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 200)
-        t.assert.equal(body.toString(), indexContent)
-        genericResponseChecks(t, response)
-      })
-    })
+  await t.test('reply.sendFile() again without root path', async (t) => {
+    t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
 
-    test('reply.sendFile() with options', (t) => {
-      t.plan(4 + GENERIC_RESPONSE_CHECK_COUNT)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/foo/bar/options/override/test',
-        followRedirect: false
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 200)
-        t.assert.equal(response.headers['cache-control'], `public, max-age=${maxAge / 1000}`)
-        t.assert.equal(body.toString(), indexContent)
-        genericResponseChecks(t, response)
-      })
-    })
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/foo/bar')
+    t.assert.ok(response.ok)
+    t.assert.equal(response.status, 200)
+    t.assert.equal(await response.text(), indexContent)
+    genericResponseChecks(t, response)
+  })
+
+  await t.test('reply.sendFile() with options', async (t) => {
+    t.plan(4 + GENERIC_RESPONSE_CHECK_COUNT)
+
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/foo/bar/options/override/test')
+    t.assert.ok(response.ok)
+    t.assert.equal(response.status, 200)
+    t.assert.equal(await response.text(), indexContent)
+    t.assert.equal(response.headers.get('cache-control'), `public, max-age=${maxAge / 1000}`)
+    genericResponseChecks(t, response)
   })
 })
 
