@@ -875,8 +875,8 @@ test('allowedPath option - pathname', async (t) => {
   })
 })
 
-test('allowedPath option - request', (t) => {
-  t.plan(3)
+test('allowedPath option - request', async (t) => {
+  t.plan(2)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -884,35 +884,25 @@ test('allowedPath option - request', (t) => {
   }
   const fastify = Fastify()
   fastify.register(fastifyStatic, pluginOptions)
-  fastify.listen({ port: 0 }, (err) => {
-    t.assert.ifError(err)
+  await fastify.listen({ port: 0 })
 
-    fastify.server.unref()
+  fastify.server.unref()
 
-    test('/foobar.html not found', (t) => {
-      t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/foobar.html',
-        followRedirect: false
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 404)
-        genericErrorResponseChecks(t, response)
-      })
-    })
+  await t.test('/foobar.html not found', async (t) => {
+    t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
 
-    test('/index.css found', (t) => {
-      t.plan(2)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/index.css?key=temporaryKey',
-        followRedirect: false
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 200)
-      })
-    })
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/foobar.html')
+    t.assert.ok(!response.ok)
+    t.assert.equal(response.status, 404)
+    genericErrorResponseChecks(t, response)
+  })
+
+  await t.test('/index.css found', async (t) => {
+    t.plan(2)
+
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/index.css?key=temporaryKey')
+    t.assert.ok(response.ok)
+    t.assert.equal(response.status, 200)
   })
 })
 
