@@ -711,6 +711,8 @@ test('serving disabled', async (t) => {
   const fastify = Fastify()
   fastify.register(fastifyStatic, pluginOptions)
 
+  t.after(() => fastify.close())
+
   fastify.get('/foo/bar', (request, reply) => {
     reply.sendFile('index.html')
   })
@@ -750,6 +752,8 @@ test('sendFile', async (t) => {
   const fastify = Fastify()
   const maxAge = Math.round(Math.random() * 10) * 10000
   fastify.register(fastifyStatic, pluginOptions)
+
+  t.after(() => fastify.close())
 
   fastify.get('/foo/bar', function (req, reply) {
     reply.sendFile('/index.html')
@@ -821,6 +825,8 @@ test('sendFile disabled', async (t) => {
   const fastify = Fastify()
   fastify.register(fastifyStatic, pluginOptions)
 
+  t.after(() => fastify.close())
+
   fastify.get('/foo/bar', function (req, reply) {
     if (reply.sendFile === undefined) {
       reply.send('pass')
@@ -853,6 +859,8 @@ test('allowedPath option - pathname', async (t) => {
   const fastify = Fastify()
   fastify.register(fastifyStatic, pluginOptions)
 
+  t.after(() => fastify.close())
+
   await fastify.listen({ port: 0 })
   fastify.server.unref()
 
@@ -883,6 +891,9 @@ test('allowedPath option - request', async (t) => {
   }
   const fastify = Fastify()
   fastify.register(fastifyStatic, pluginOptions)
+
+  t.after(() => fastify.close())
+
   await fastify.listen({ port: 0 })
 
   fastify.server.unref()
@@ -914,6 +925,8 @@ test('download', async (t) => {
   }
   const fastify = Fastify()
   fastify.register(fastifyStatic, pluginOptions)
+
+  t.after(() => fastify.close())
 
   fastify.get('/foo/bar', function (req, reply) {
     reply.download('/index.html')
@@ -1054,6 +1067,8 @@ test('download disabled', async (t) => {
       reply.send('fail')
     }
   })
+
+  t.after(() => fastify.close())
 
   await fastify.listen({ port: 0 })
 
