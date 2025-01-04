@@ -2424,8 +2424,8 @@ test('inject support', async (t) => {
   t.assert.equal(response.body.toString(), indexContent)
 })
 
-test('routes should use custom errorHandler premature stream close', t => {
-  t.plan(3)
+test('routes should use custom errorHandler premature stream close', async t => {
+  t.plan(2)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -2447,16 +2447,7 @@ test('routes should use custom errorHandler premature stream close', t => {
   fastify.register(fastifyStatic, pluginOptions)
   t.after(() => fastify.close())
 
-  fastify.inject(
-    {
-      method: 'GET',
-      url: '/static/index.html'
-    },
-    (err, response) => {
-      t.assert.ifError(err)
-      t.assert.equal(response, null)
-    }
-  )
+  await t.assert.rejects(fastify.inject({ method: 'GET', url: '/static/index.html' }))
 })
 
 test('routes should fallback to default errorHandler', t => {
