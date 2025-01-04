@@ -652,8 +652,8 @@ test('dir list with dotfiles allow option', async t => {
   })
 })
 
-test('dir list with dotfiles deny option', t => {
-  t.plan(2)
+test('dir list with dotfiles deny option', async t => {
+  t.plan(1)
 
   const options = {
     root: path.join(__dirname, '/static-dotfiles'),
@@ -665,23 +665,20 @@ test('dir list with dotfiles deny option', t => {
   const route = '/public/'
   const content = { dirs: ['dir'], files: ['test.txt'] }
 
-  helper.arrange(t, options, (url) => {
-    test(route, t => {
+  await helper.arrange(t, options, async (url) => {
+    await t.test(route, async t => {
       t.plan(3)
-      simple.concat({
-        method: 'GET',
-        url: url + route
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 200)
-        t.assert.equal(body.toString(), JSON.stringify(content))
-      })
+
+      const response = await fetch(url + route)
+      t.assert.ok(response.ok)
+      t.assert.equal(response.status, 200)
+      t.assert.deepStrictEqual(await response.json(), content)
     })
   })
 })
 
-test('dir list with dotfiles ignore option', t => {
-  t.plan(2)
+test('dir list with dotfiles ignore option', async t => {
+  t.plan(1)
 
   const options = {
     root: path.join(__dirname, '/static-dotfiles'),
@@ -693,17 +690,14 @@ test('dir list with dotfiles ignore option', t => {
   const route = '/public/'
   const content = { dirs: ['dir'], files: ['test.txt'] }
 
-  helper.arrange(t, options, (url) => {
-    test(route, t => {
+  await helper.arrange(t, options, async (url) => {
+    await t.test(route, async t => {
       t.plan(3)
-      simple.concat({
-        method: 'GET',
-        url: url + route
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 200)
-        t.assert.equal(body.toString(), JSON.stringify(content))
-      })
+
+      const response = await fetch(url + route)
+      t.assert.ok(response.ok)
+      t.assert.equal(response.status, 200)
+      t.assert.deepStrictEqual(await response.json(), content)
     })
   })
 })
