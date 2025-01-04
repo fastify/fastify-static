@@ -3170,8 +3170,8 @@ test('should serve files into hidden dir with wildcard `false`', async (t) => {
   t.assert.ok(response.headers.get('cache-control'))
 })
 
-test('should not found hidden file with wildcard is `false`', (t) => {
-  t.plan(3)
+test('should not found hidden file with wildcard is `false`', async (t) => {
+  t.plan(2)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static-hidden'),
@@ -3181,20 +3181,12 @@ test('should not found hidden file with wildcard is `false`', (t) => {
   fastify.register(fastifyStatic, pluginOptions)
 
   t.after(() => fastify.close())
+  await fastify.listen({ port: 0 })
+  fastify.server.unref()
 
-  fastify.listen({ port: 0 }, (err) => {
-    t.assert.ifError(err)
-
-    fastify.server.unref()
-
-    simple.concat({
-      method: 'GET',
-      url: 'http://localhost:' + fastify.server.address().port + '/.hidden/sample.json'
-    }, (err, response, body) => {
-      t.assert.ifError(err)
-      t.assert.equal(response.statusCode, 404)
-    })
-  })
+  const response = await fetch('http://localhost:' + fastify.server.address().port + '/.hidden/sample.json')
+  t.assert.ok(!response.ok)
+  t.assert.equal(response.status, 404)
 })
 
 test('should serve files into hidden dir without wildcard option', (t) => {
