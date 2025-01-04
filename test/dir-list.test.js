@@ -491,8 +491,8 @@ test('json format with url parameter format and without render option', async t 
   })
 })
 
-test('html format with url parameter format', t => {
-  t.plan(13)
+test('html format with url parameter format', async t => {
+  t.plan(12)
 
   const options = {
     root: path.join(__dirname, '/static'),
@@ -508,36 +508,24 @@ test('html format with url parameter format', t => {
   const route = '/public/'
   const jsonContent = { dirs: ['deep', 'shallow'], files: ['.example', '100%.txt', 'a .md', 'foo.html', 'foobar.html', 'index.css', 'index.html'] }
 
-  helper.arrange(t, options, (url) => {
-    simple.concat({
-      method: 'GET',
-      url: url + route
-    }, (err, response, body) => {
-      t.assert.ifError(err)
-      t.assert.equal(response.statusCode, 200)
-      t.assert.equal(body.toString(), 'html')
-      t.ok(response.headers['content-type'].includes('text/html'))
-    })
+  await helper.arrange(t, options, async (url) => {
+    const response = await fetch(url + route)
+    t.assert.ok(response.ok)
+    t.assert.equal(response.status, 200)
+    t.assert.equal(await response.text(), 'html')
+    t.assert.ok(response.headers.get('content-type').includes('text/html'))
 
-    simple.concat({
-      method: 'GET',
-      url: url + route + '?format=html'
-    }, (err, response, body) => {
-      t.assert.ifError(err)
-      t.assert.equal(response.statusCode, 200)
-      t.assert.equal(body.toString(), 'html')
-      t.ok(response.headers['content-type'].includes('text/html'))
-    })
+    const response2 = await fetch(url + route + '?format=html')
+    t.assert.ok(response2.ok)
+    t.assert.equal(response2.status, 200)
+    t.assert.equal(await response2.text(), 'html')
+    t.assert.ok(response2.headers.get('content-type').includes('text/html'))
 
-    simple.concat({
-      method: 'GET',
-      url: url + route + '?format=json'
-    }, (err, response, body) => {
-      t.assert.ifError(err)
-      t.assert.equal(response.statusCode, 200)
-      t.assert.equal(body.toString(), JSON.stringify(jsonContent))
-      t.ok(response.headers['content-type'].includes('application/json'))
-    })
+    const response3 = await fetch(url + route + '?format=json')
+    t.assert.ok(response3.ok)
+    t.assert.equal(response3.status, 200)
+    t.assert.deepStrictEqual(await response3.json(), jsonContent)
+    t.assert.ok(response3.headers.get('content-type').includes('application/json'))
   })
 })
 
