@@ -3380,8 +3380,8 @@ test(
   }
 )
 
-test('content-length in head route should not return zero when using wildcard', t => {
-  t.plan(6)
+test('content-length in head route should not return zero when using wildcard', async t => {
+  t.plan(5)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static')
@@ -3392,26 +3392,18 @@ test('content-length in head route should not return zero when using wildcard', 
 
   t.after(() => fastify.close())
 
-  fastify.listen({ port: 0 }, err => {
-    t.assert.ifError(err)
+  await fastify.listen({ port: 0 })
+  fastify.server.unref()
 
-    fastify.server.unref()
+  const file = fs.readFileSync(path.join(__dirname, '/static/index.html'))
+  const contentLength = Buffer.byteLength(file).toString()
 
-    const file = fs.readFileSync(path.join(__dirname, '/static/index.html'))
-    const contentLength = Buffer.byteLength(file).toString()
-
-    simple.concat({
-      method: 'HEAD',
-      url: 'http://localhost:' + fastify.server.address().port + '/index.html',
-      followRedirect: false
-    }, (err, response, body) => {
-      t.assert.ifError(err)
-      t.assert.equal(response.statusCode, 200)
-      t.assert.equal(response.headers['content-type'], 'text/html; charset=utf-8')
-      t.assert.equal(response.headers['content-length'], contentLength)
-      t.assert.equal(body.toString(), '')
-    })
-  })
+  const response = await fetch('http://localhost:' + fastify.server.address().port + '/index.html', { method: 'HEAD' })
+  t.assert.ok(response.ok)
+  t.assert.equal(response.status, 200)
+  t.assert.equal(response.headers.get('content-type'), 'text/html; charset=utf-8')
+  t.assert.equal(response.headers.get('content-length'), contentLength)
+  t.assert.equal(await response.text(), '')
 })
 
 test('respect the .code when using with sendFile', t => {
