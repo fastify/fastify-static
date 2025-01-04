@@ -184,8 +184,8 @@ test('dir list, custom options with empty array index', async t => {
   })
 })
 
-test('dir list html format', t => {
-  t.plan(3)
+test('dir list html format', async t => {
+  t.plan(2)
 
   const options = {
     root: path.join(__dirname, '/static'),
@@ -212,17 +212,15 @@ test('dir list html format', t => {
 
   // check all routes by names
 
-  helper.arrange(t, options, (url) => {
+  await helper.arrange(t, options, async (url) => {
     for (const route of routes) {
-      test(route, t => {
+      await t.test(route, async t => {
         t.plan(3)
-        simple.concat({
-          method: 'GET',
-          url: url + route
-        }, (err, response, body) => {
-          t.assert.ifError(err)
-          t.assert.equal(response.statusCode, 200)
-          t.assert.equal(body.toString(), `
+
+        const response = await fetch(url + route)
+        t.assert.ok(response.ok)
+        t.assert.equal(response.status, 200)
+        t.assert.equal(await response.text(), `
 <html><body>
 <ul>
   <li><a href="/public/deep">deep</a></li>
@@ -239,7 +237,6 @@ test('dir list html format', t => {
 </ul>
 </body></html>
 `)
-        })
       })
     }
   })
