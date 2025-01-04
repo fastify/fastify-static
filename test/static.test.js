@@ -1206,83 +1206,83 @@ test('maxAge option', async (t) => {
 test('errors', async (t) => {
   t.plan(11)
 
-  await t.test('no root', (t) => {
+  await t.test('no root', async (t) => {
     t.plan(1)
     const pluginOptions = {}
     const fastify = Fastify({ logger: false })
-    t.assert.rejects(fastify.register(fastifyStatic, pluginOptions))
+    await t.assert.rejects(async () => await fastify.register(fastifyStatic, pluginOptions))
   })
 
-  await t.test('root is not a string', (t) => {
+  await t.test('root is not a string', async (t) => {
     t.plan(1)
     const pluginOptions = { root: 42 }
     const fastify = Fastify({ logger: false })
-    t.assert.rejects(fastify.register(fastifyStatic, pluginOptions))
+    await t.assert.rejects(async () => await fastify.register(fastifyStatic, pluginOptions))
   })
 
-  await t.test('root is not an absolute path', (t) => {
+  await t.test('root is not an absolute path', async (t) => {
     t.plan(1)
     const pluginOptions = { root: './my/path' }
     const fastify = Fastify({ logger: false })
-    t.assert.rejects(fastify.register(fastifyStatic, pluginOptions))
+    await t.assert.rejects(async () => await fastify.register(fastifyStatic, pluginOptions))
   })
 
-  await t.test('root is not a directory', (t) => {
+  await t.test('root is not a directory', async (t) => {
     t.plan(1)
     const pluginOptions = { root: __filename }
     const fastify = Fastify({ logger: false })
-    t.assert.rejects(fastify.register(fastifyStatic, pluginOptions))
+    await t.assert.rejects(async () => await fastify.register(fastifyStatic, pluginOptions))
   })
 
-  await t.test('root is an empty array', (t) => {
+  await t.test('root is an empty array', async (t) => {
     t.plan(1)
     const pluginOptions = { root: [] }
     const fastify = Fastify({ logger: false })
-    t.assert.rejects(fastify.register(fastifyStatic, pluginOptions))
+    await t.assert.rejects(async () => await fastify.register(fastifyStatic, pluginOptions))
   })
 
-  await t.test('root array does not contain strings', (t) => {
+  await t.test('root array does not contain strings', async (t) => {
     t.plan(1)
     const pluginOptions = { root: [1] }
     const fastify = Fastify({ logger: false })
-    t.assert.rejects(fastify.register(fastifyStatic, pluginOptions))
+    await t.assert.rejects(async () => await fastify.register(fastifyStatic, pluginOptions))
   })
 
-  await t.test('root array does not contain an absolute path', (t) => {
+  await t.test('root array does not contain an absolute path', async (t) => {
     t.plan(1)
     const pluginOptions = { root: ['./my/path'] }
     const fastify = Fastify({ logger: false })
-    t.assert.rejects(fastify.register(fastifyStatic, pluginOptions))
+    await t.assert.rejects(async () => await fastify.register(fastifyStatic, pluginOptions))
   })
 
-  await t.test('root array path is not a directory', (t) => {
+  await t.test('root array path is not a directory', async (t) => {
     t.plan(1)
     const pluginOptions = { root: [__filename] }
     const fastify = Fastify({ logger: false })
-    t.assert.rejects(fastify.register(fastifyStatic, pluginOptions))
+    await t.assert.rejects(async () => await fastify.register(fastifyStatic, pluginOptions))
   })
 
-  await t.test('all root array paths must be valid', (t) => {
+  await t.test('all root array paths must be valid', async (t) => {
     t.plan(1)
     const pluginOptions = { root: [path.join(__dirname, '/static'), 1] }
     const fastify = Fastify({ logger: false })
-    t.assert.rejects(fastify.register(fastifyStatic, pluginOptions))
+    await t.assert.rejects(async () => await fastify.register(fastifyStatic, pluginOptions))
   })
 
-  await t.test('duplicate root paths are not allowed', (t) => {
+  await t.test('duplicate root paths are not allowed', async (t) => {
     t.plan(1)
     const pluginOptions = {
       root: [path.join(__dirname, '/static'), path.join(__dirname, '/static')]
     }
     const fastify = Fastify({ logger: false })
-    t.assert.rejects(fastify.register(fastifyStatic, pluginOptions))
+    await t.assert.rejects(async () => await fastify.register(fastifyStatic, pluginOptions))
   })
 
-  await t.test('setHeaders is not a function', (t) => {
+  await t.test('setHeaders is not a function', async (t) => {
     t.plan(1)
     const pluginOptions = { root: __dirname, setHeaders: 'headers' }
     const fastify = Fastify({ logger: false })
-    t.assert.rejects(fastify.register(fastifyStatic, pluginOptions))
+    await t.assert.rejects(async () => await fastify.register(fastifyStatic, pluginOptions))
   })
 })
 
