@@ -2483,8 +2483,8 @@ test('routes should fallback to default errorHandler', async t => {
   })
 })
 
-test('percent encoded URLs in glob mode', (t) => {
-  t.plan(4)
+test('percent encoded URLs in glob mode', async (t) => {
+  t.plan(3)
 
   const fastify = Fastify({})
 
@@ -2496,23 +2496,16 @@ test('percent encoded URLs in glob mode', (t) => {
 
   t.after(() => fastify.close())
 
-  fastify.listen({ port: 0 }, (err) => {
-    t.assert.ifError(err)
-    fastify.server.unref()
+  await fastify.listen({ port: 0 })
+  fastify.server.unref()
 
-    simple.concat({
-      method: 'GET',
-      url: 'http://localhost:' + fastify.server.address().port + '/static/a .md',
-      followRedirect: false
-    }, (err, response, body) => {
-      t.assert.ifError(err)
-      t.assert.equal(response.statusCode, 200)
-      t.assert.equal(
-        fs.readFileSync(path.join(__dirname, 'static', 'a .md'), 'utf-8'),
-        body.toString()
-      )
-    })
-  })
+  const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/a .md')
+  t.assert.ok(response.ok)
+  t.assert.equal(response.status, 200)
+  t.assert.equal(
+    fs.readFileSync(path.join(__dirname, 'static', 'a .md'), 'utf-8'),
+    await response.text()
+  )
 })
 
 test('register /static and /static2 without wildcard', t => {
@@ -2584,7 +2577,7 @@ test(
     })
 
     genericResponseChecks(t, response)
-    t.assert.equal(response.headers['content-encoding'], 'br')
+    t.assert.equal(response.headers.get('content-encoding'), 'br')
     t.assert.equal(response.statusCode, 200)
     t.assert.deepStrictEqual(response.rawPayload, allThreeBr)
   }
@@ -2613,7 +2606,7 @@ test(
     })
 
     genericResponseChecks(t, response)
-    t.assert.equal(response.headers['content-encoding'], 'gzip')
+    t.assert.equal(response.headers.get('content-encoding'), 'gzip')
     t.assert.equal(response.statusCode, 200)
     t.assert.deepStrictEqual(response.rawPayload, gzipOnly)
   }
