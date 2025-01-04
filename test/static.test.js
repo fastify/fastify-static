@@ -3039,7 +3039,7 @@ test(
   }
 )
 
-test('should not redirect to protocol-relative locations', (t) => {
+test('should not redirect to protocol-relative locations', async (t) => {
   const urls = [
     ['//^/..', '/', 301],
     ['//^/.', null, 404], // it is NOT recognized as a directory by pillarjs/send
@@ -3053,29 +3053,37 @@ test('should not redirect to protocol-relative locations', (t) => {
     ['///deep/path//for//test//index.html', null, 200]
   ]
 
-  t.plan(1 + urls.length * 2)
+  t.plan(urls.length * 2)
   const fastify = Fastify()
   fastify.register(fastifyStatic, {
     root: path.join(__dirname, '/static'),
     redirect: true
   })
   t.after(() => fastify.close())
-  fastify.listen({ port: 0 }, (err, address) => {
-    t.assert.ifError(err)
-    urls.forEach(([testUrl, expected, status]) => {
-      const req = http.request(url.parse(address + testUrl), res => {
-        t.assert.equal(res.statusCode, status, `status ${testUrl}`)
 
-        if (expected) {
-          t.assert.equal(res.headers.location, expected)
-        } else {
-          t.notOk(res.headers.location)
-        }
-      })
-      req.on('error', t.error)
-      req.end()
+  const address = await fastify.listen({ port: 0 })
+  fastify.server.unref()
+
+  const promises = urls.map(([testUrl, expected, status]) => {
+    const { promise, resolve } = Promise.withResolvers()
+
+    const req = http.request(url.parse(address + testUrl), res => {
+      t.assert.equal(res.statusCode, status, `status ${testUrl}`)
+
+      if (expected) {
+        t.assert.equal(res.headers.location, expected)
+      } else {
+        t.assert.ok(!res.headers.location)
+      }
+
+      resolve()
     })
+    req.on('error', t.assert.fail)
+    req.end()
+    return promise
   })
+
+  await Promise.all(promises)
 })
 
 test('should not serve index if option is `false`', (t) => {
