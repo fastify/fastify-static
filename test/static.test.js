@@ -2287,7 +2287,7 @@ test('trailing slash behavior with redirect = false', async (t) => {
   })
 })
 
-test('if dotfiles are properly served according to plugin options', (t) => {
+test('if dotfiles are properly served according to plugin options', async (t) => {
   t.plan(3)
   const exampleContents = fs
     .readFileSync(path.join(__dirname, 'static', '.example'), {
@@ -2295,8 +2295,8 @@ test('if dotfiles are properly served according to plugin options', (t) => {
     })
     .toString()
 
-  test('freely serve dotfiles', (t) => {
-    t.plan(4)
+  await t.test('freely serve dotfiles', async (t) => {
+    t.plan(3)
     const fastify = Fastify()
 
     const pluginOptions = {
@@ -2308,22 +2308,18 @@ test('if dotfiles are properly served according to plugin options', (t) => {
     fastify.register(fastifyStatic, pluginOptions)
 
     t.after(() => fastify.close())
-    fastify.listen({ port: 0 }, (err) => {
-      t.assert.ifError(err)
 
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/static/.example'
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 200)
-        t.assert.equal(body.toString(), exampleContents)
-      })
-    })
+    await fastify.listen({ port: 0 })
+    fastify.server.unref()
+
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/.example')
+    t.assert.ok(response.ok)
+    t.assert.equal(response.status, 200)
+    t.assert.equal(await response.text(), exampleContents)
   })
 
-  test('ignore dotfiles', (t) => {
-    t.plan(3)
+  await t.test('ignore dotfiles', async (t) => {
+    t.plan(2)
     const fastify = Fastify()
 
     const pluginOptions = {
@@ -2335,21 +2331,17 @@ test('if dotfiles are properly served according to plugin options', (t) => {
     fastify.register(fastifyStatic, pluginOptions)
 
     t.after(() => fastify.close())
-    fastify.listen({ port: 0 }, (err) => {
-      t.assert.ifError(err)
 
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/static/.example'
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 404)
-      })
-    })
+    await fastify.listen({ port: 0 })
+    fastify.server.unref()
+
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/.example')
+    t.assert.ok(!response.ok)
+    t.assert.equal(response.status, 404)
   })
 
-  test('deny requests to serve a dotfile', (t) => {
-    t.plan(3)
+  await t.test('deny requests to serve a dotfile', async (t) => {
+    t.plan(2)
     const fastify = Fastify()
 
     const pluginOptions = {
@@ -2361,17 +2353,11 @@ test('if dotfiles are properly served according to plugin options', (t) => {
     fastify.register(fastifyStatic, pluginOptions)
 
     t.after(() => fastify.close())
-    fastify.listen({ port: 0 }, (err) => {
-      t.assert.ifError(err)
+    await fastify.listen({ port: 0 })
 
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/static/.example'
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 403)
-      })
-    })
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/.example')
+    t.assert.ok(!response.ok)
+    t.assert.equal(response.status, 403)
   })
 })
 
