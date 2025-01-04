@@ -2385,7 +2385,7 @@ test('register with failing glob handler', async (t) => {
 
 test(
   'register with rootpath that causes statSync to fail with non-ENOENT code',
-  (t) => {
+  async (t) => {
     const fastifyStatic = proxyquire('../', {
       'node:fs': {
         statSync: function statSyncStub (path) {
@@ -2402,10 +2402,8 @@ test(
     fastify.register(fastifyStatic, pluginOptions)
 
     t.after(() => fastify.close())
-    fastify.listen({ port: 0 }, (err) => {
-      fastify.server.unref()
-      t.assert.ok(err)
-    })
+
+    await t.assert.rejects(fastify.listen({ port: 0 }))
   }
 )
 
