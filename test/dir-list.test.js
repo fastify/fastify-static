@@ -583,8 +583,8 @@ test('dir list serve index.html on index option', async t => {
   })
 })
 
-test('serve a non existent dir and get error', t => {
-  t.plan(2)
+test('serve a non existent dir and get error', async t => {
+  t.plan(1)
 
   const options = {
     root: '/none',
@@ -593,22 +593,19 @@ test('serve a non existent dir and get error', t => {
   }
   const route = '/public/'
 
-  helper.arrange(t, options, (url) => {
-    test(route, t => {
+  await helper.arrange(t, options, async (url) => {
+    await t.test(route, async t => {
       t.plan(2)
-      simple.concat({
-        method: 'GET',
-        url: url + route
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 404)
-      })
+
+      const response = await fetch(url + route)
+      t.assert.ok(!response.ok)
+      t.assert.equal(response.status, 404)
     })
   })
 })
 
-test('serve a non existent dir and get error', t => {
-  t.plan(2)
+test('serve a non existent dir and get error', async t => {
+  t.plan(1)
 
   const options = {
     root: path.join(__dirname, '/static'),
@@ -619,16 +616,13 @@ test('serve a non existent dir and get error', t => {
   }
   const route = '/public/none/index'
 
-  helper.arrange(t, options, (url) => {
-    test(route, t => {
+  await helper.arrange(t, options, async (url) => {
+    await t.test(route, async t => {
       t.plan(2)
-      simple.concat({
-        method: 'GET',
-        url: url + route
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 404)
-      })
+
+      const response = await fetch(url + route)
+      t.assert.ok(!response.ok)
+      t.assert.equal(response.status, 404)
     })
   })
 })
