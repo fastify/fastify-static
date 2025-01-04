@@ -3436,8 +3436,8 @@ test('respect the .code when using with sendFile', async t => {
   t.assert.equal(await response.text(), '')
 })
 
-test('respect the .type when using with sendFile with contentType disabled', t => {
-  t.plan(6)
+test('respect the .type when using with sendFile with contentType disabled', async t => {
+  t.plan(5)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -3453,24 +3453,16 @@ test('respect the .type when using with sendFile with contentType disabled', t =
 
   t.after(() => fastify.close())
 
-  fastify.listen({ port: 0 }, err => {
-    t.assert.ifError(err)
+  await fastify.listen({ port: 0 })
+  fastify.server.unref()
 
-    fastify.server.unref()
+  const file = fs.readFileSync(path.join(__dirname, '/static/foo.html'))
+  const contentLength = Buffer.byteLength(file).toString()
 
-    const file = fs.readFileSync(path.join(__dirname, '/static/foo.html'))
-    const contentLength = Buffer.byteLength(file).toString()
-
-    simple.concat({
-      method: 'GET',
-      url: 'http://localhost:' + fastify.server.address().port + '/custom',
-      followRedirect: false
-    }, (err, response, body) => {
-      t.assert.ifError(err)
-      t.assert.equal(response.statusCode, 200)
-      t.assert.equal(response.headers['content-type'], 'text/html; charset=windows-1252')
-      t.assert.equal(response.headers['content-length'], contentLength)
-      t.assert.equal(body.toString(), fooContent)
-    })
-  })
+  const response = await fetch('http://localhost:' + fastify.server.address().port + '/custom')
+  t.assert.ok(response.ok)
+  t.assert.equal(response.status, 200)
+  t.assert.equal(response.headers.get('content-type'), 'text/html; charset=windows-1252')
+  t.assert.equal(response.headers.get('content-length'), contentLength)
+  t.assert.equal(await response.text(), fooContent)
 })
