@@ -3122,33 +3122,25 @@ test('should not serve index if option is `false`', async (t) => {
   })
 })
 
-test('should follow symbolic link without wildcard', (t) => {
-  t.plan(5)
+test('should follow symbolic link without wildcard', async (t) => {
+  t.plan(4)
   const fastify = Fastify()
   fastify.register(fastifyStatic, {
     root: path.join(__dirname, '/static-symbolic-link'),
     wildcard: false
   })
   t.after(() => fastify.close())
-  fastify.listen({ port: 0 }, (err) => {
-    t.assert.ifError(err)
 
-    simple.concat({
-      method: 'GET',
-      url: 'http://localhost:' + fastify.server.address().port + '/origin/subdir/subdir/index.html'
-    }, (err, response) => {
-      t.assert.ifError(err)
-      t.assert.equal(response.statusCode, 200)
-    })
+  await fastify.listen({ port: 0 })
+  fastify.server.unref()
 
-    simple.concat({
-      method: 'GET',
-      url: 'http://localhost:' + fastify.server.address().port + '/dir/symlink/subdir/subdir/index.html'
-    }, (err, response) => {
-      t.assert.ifError(err)
-      t.assert.equal(response.statusCode, 200)
-    })
-  })
+  const response = await fetch('http://localhost:' + fastify.server.address().port + '/origin/subdir/subdir/index.html')
+  t.assert.ok(response.ok)
+  t.assert.equal(response.status, 200)
+
+  const response2 = await fetch('http://localhost:' + fastify.server.address().port + '/dir/symlink/subdir/subdir/index.html')
+  t.assert.ok(response2.ok)
+  t.assert.equal(response2.status, 200)
 })
 
 test('should serve files into hidden dir with wildcard `false`', (t) => {
