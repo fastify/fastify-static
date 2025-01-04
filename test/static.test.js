@@ -58,11 +58,11 @@ const jsonHiddenContent = fs.readFileSync('./test/static-hidden/.hidden/sample.j
 
 const GENERIC_RESPONSE_CHECK_COUNT = 5
 function genericResponseChecks (t, response) {
-  t.assert.ok(/text\/(html|css)/.test(response.headers.get('content-type')))
-  t.assert.ok(response.headers.get('etag'))
-  t.assert.ok(response.headers.get('last-modified'))
-  t.assert.ok(response.headers.get('date'))
-  t.assert.ok(response.headers.get('cache-control'))
+  t.assert.ok(/text\/(html|css)/.test(response.headers.get?.('content-type') ?? response.headers['content-type']))
+  t.assert.ok(response.headers.get?.('etag') ?? response.headers.etag)
+  t.assert.ok(response.headers.get?.('last-modified') ?? response.headers['last-modified'])
+  t.assert.ok(response.headers.get?.('date') ?? response.headers.date)
+  t.assert.ok(response.headers.get?.('cache-control') ?? response.headers['cache-control'])
 }
 
 const GENERIC_ERROR_RESPONSE_CHECK_COUNT = 2
@@ -2569,7 +2569,7 @@ test(
     })
 
     genericResponseChecks(t, response)
-    t.assert.equal(response.headers.get('content-encoding'), 'br')
+    t.assert.equal(response.headers['content-encoding'], 'br')
     t.assert.equal(response.statusCode, 200)
     t.assert.deepStrictEqual(response.rawPayload, allThreeBr)
   }
@@ -2598,7 +2598,7 @@ test(
     })
 
     genericResponseChecks(t, response)
-    t.assert.equal(response.headers.get('content-encoding'), 'gzip')
+    t.assert.equal(response.headers['content-encoding'], 'gzip')
     t.assert.equal(response.statusCode, 200)
     t.assert.deepStrictEqual(response.rawPayload, gzipOnly)
   }
