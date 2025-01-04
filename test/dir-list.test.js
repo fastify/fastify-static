@@ -284,8 +284,8 @@ test('dir list href nested structure', async t => {
   })
 })
 
-test('dir list html format - stats', t => {
-  t.plan(7)
+test('dir list html format - stats', async t => {
+  t.plan(6)
 
   const options1 = {
     root: path.join(__dirname, '/static'),
@@ -294,11 +294,11 @@ test('dir list html format - stats', t => {
     list: {
       format: 'html',
       render (dirs, files) {
-        t.ok(dirs.length > 0)
-        t.ok(files.length > 0)
+        t.assert.ok(dirs.length > 0)
+        t.assert.ok(files.length > 0)
 
-        t.ok(dirs.every(every))
-        t.ok(files.every(every))
+        t.assert.ok(dirs.every(every))
+        t.assert.ok(files.every(every))
 
         function every (value) {
           return value.stats &&
@@ -311,14 +311,10 @@ test('dir list html format - stats', t => {
 
   const route = '/public/'
 
-  helper.arrange(t, options1, (url) => {
-    simple.concat({
-      method: 'GET',
-      url: url + route
-    }, (err, response, body) => {
-      t.assert.ifError(err)
-      t.assert.equal(response.statusCode, 200)
-    })
+  await helper.arrange(t, options1, async (url) => {
+    const response = await fetch(url + route)
+    t.assert.ok(response.ok)
+    t.assert.equal(response.status, 200)
   })
 })
 
