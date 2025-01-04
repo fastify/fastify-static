@@ -242,8 +242,8 @@ test('dir list html format', async t => {
   })
 })
 
-test('dir list href nested structure', t => {
-  t.plan(6)
+test('dir list href nested structure', async t => {
+  t.plan(5)
 
   const options = {
     root: path.join(__dirname, '/static'),
@@ -265,25 +265,20 @@ test('dir list href nested structure', t => {
     { path: '/public/deep/index.htm', response: '/public/deep/path' },
     { path: '/public/deep/path/', response: '/public/deep/path/for' }
   ]
-  helper.arrange(t, options, (url) => {
+  await helper.arrange(t, options, async (url) => {
     for (const route of routes) {
-      test(route.path, t => {
+      await t.test(route.path, async t => {
         t.plan(5)
-        simple.concat({
-          method: 'GET',
-          url: url + route.path
-        }, (err, response, body) => {
-          t.assert.ifError(err)
-          t.assert.equal(response.statusCode, 200)
-          t.assert.equal(body.toString(), route.response)
-          simple.concat({
-            method: 'GET',
-            url: url + body.toString()
-          }, (err, response, body) => {
-            t.assert.ifError(err)
-            t.assert.equal(response.statusCode, 200)
-          })
-        })
+
+        const response = await fetch(url + route.path)
+        t.assert.ok(response.ok)
+        t.assert.equal(response.status, 200)
+        const responseContent = await response.text()
+        t.assert.equal(responseContent, route.response)
+
+        const response2 = await fetch(url + responseContent)
+        t.assert.ok(response2.ok)
+        t.assert.equal(response2.status, 200)
       })
     }
   })
