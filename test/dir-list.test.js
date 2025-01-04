@@ -5,7 +5,6 @@
 const fs = require('node:fs')
 const path = require('node:path')
 const { test } = require('node:test')
-const simple = require('simple-get')
 const Fastify = require('fastify')
 
 const fastifyStatic = require('..')
@@ -72,7 +71,7 @@ test('throws when `list.format` is html and `list render` is not a function', t 
   t.assert.equal(err.message, 'The `list.render` option must be a function and is required with html format')
 })
 
-test('dir list wrong options', t => {
+test('dir list wrong options', async t => {
   t.plan(3)
 
   const cases = [
@@ -110,10 +109,8 @@ test('dir list wrong options', t => {
   for (const case_ of cases) {
     const fastify = Fastify()
     fastify.register(fastifyStatic, case_.options)
-    fastify.listen({ port: 0 }, err => {
-      t.assert.equal(err.message, case_.error.message)
-      fastify.server.unref()
-    })
+    await t.assert.rejects(fastify.listen({ port: 0 }), new TypeError(case_.error.message))
+    fastify.server.unref()
   }
 })
 
