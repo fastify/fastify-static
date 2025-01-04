@@ -318,8 +318,8 @@ test('dir list html format - stats', async t => {
   })
 })
 
-test('dir list html format - extended info', t => {
-  t.plan(4)
+test('dir list html format - extended info', async t => {
+  t.plan(2)
 
   const route = '/public/'
 
@@ -335,7 +335,7 @@ test('dir list html format - extended info', t => {
           t.plan(dirs.length * 7)
 
           for (const value of dirs) {
-            t.ok(value.extendedInfo)
+            t.assert.ok(value.extendedInfo)
 
             t.assert.equal(typeof value.extendedInfo.fileCount, 'number')
             t.assert.equal(typeof value.extendedInfo.totalFileCount, 'number')
@@ -349,19 +349,15 @@ test('dir list html format - extended info', t => {
     }
   }
 
-  helper.arrange(t, options, (url) => {
-    simple.concat({
-      method: 'GET',
-      url: url + route
-    }, (err, response, body) => {
-      t.assert.ifError(err)
-      t.assert.equal(response.statusCode, 200)
-    })
+  await helper.arrange(t, options, async (url) => {
+    const response = await fetch(url + route)
+    t.assert.ok(response.ok)
+    t.assert.equal(response.status, 200)
   })
 })
 
-test('dir list json format', t => {
-  t.plan(2)
+test('dir list json format', async t => {
+  t.plan(1)
 
   const options = {
     root: path.join(__dirname, '/static'),
@@ -375,18 +371,15 @@ test('dir list json format', t => {
   const routes = ['/public/shallow/']
   const content = { dirs: ['empty'], files: ['sample.jpg'] }
 
-  helper.arrange(t, options, (url) => {
+  await helper.arrange(t, options, async (url) => {
     for (const route of routes) {
-      test(route, t => {
+      await t.test(route, async t => {
         t.plan(3)
-        simple.concat({
-          method: 'GET',
-          url: url + route
-        }, (err, response, body) => {
-          t.assert.ifError(err)
-          t.assert.equal(response.statusCode, 200)
-          t.assert.equal(body.toString(), JSON.stringify(content))
-        })
+
+        const response = await fetch(url + route)
+        t.assert.ok(response.ok)
+        t.assert.equal(response.status, 200)
+        t.assert.deepStrictEqual(await response.json(), content)
       })
     }
   })
