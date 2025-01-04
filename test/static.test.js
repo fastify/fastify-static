@@ -3189,8 +3189,8 @@ test('should not found hidden file with wildcard is `false`', async (t) => {
   t.assert.equal(response.status, 404)
 })
 
-test('should serve files into hidden dir without wildcard option', (t) => {
-  t.plan(9)
+test('should serve files into hidden dir without wildcard option', async (t) => {
+  t.plan(8)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static-hidden')
@@ -3200,25 +3200,18 @@ test('should serve files into hidden dir without wildcard option', (t) => {
 
   t.after(() => fastify.close())
 
-  fastify.listen({ port: 0 }, (err) => {
-    t.assert.ifError(err)
+  await fastify.listen({ port: 0 })
+  fastify.server.unref()
 
-    fastify.server.unref()
-
-    simple.concat({
-      method: 'GET',
-      url: 'http://localhost:' + fastify.server.address().port + '/.hidden/sample.json'
-    }, (err, response, body) => {
-      t.assert.ifError(err)
-      t.assert.equal(response.statusCode, 200)
-      t.assert.equal(body.toString(), jsonHiddenContent)
-      t.assert.ok(/application\/(json)/.test(response.headers['content-type']))
-      t.assert.ok(response.headers.etag)
-      t.assert.ok(response.headers['last-modified'])
-      t.assert.ok(response.headers.date)
-      t.assert.ok(response.headers['cache-control'])
-    })
-  })
+  const response = await fetch('http://localhost:' + fastify.server.address().port + '/.hidden/sample.json')
+  t.assert.ok(response.ok)
+  t.assert.equal(response.status, 200)
+  t.assert.equal(await response.text(), jsonHiddenContent)
+  t.assert.ok(/application\/(json)/.test(response.headers.get('content-type')))
+  t.assert.ok(response.headers.get('etag'))
+  t.assert.ok(response.headers.get('last-modified'))
+  t.assert.ok(response.headers.get('date'))
+  t.assert.ok(response.headers.get('cache-control'))
 })
 
 test(
