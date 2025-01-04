@@ -385,8 +385,8 @@ test('dir list json format', async t => {
   })
 })
 
-test('dir list json format - extended info', t => {
-  t.plan(2)
+test('dir list json format - extended info', async t => {
+  t.plan(1)
 
   const options = {
     root: path.join(__dirname, '/static'),
@@ -402,21 +402,18 @@ test('dir list json format - extended info', t => {
   }
   const routes = ['/public/shallow/']
 
-  helper.arrange(t, options, (url) => {
+  await helper.arrange(t, options, async (url) => {
     for (const route of routes) {
-      test(route, t => {
+      await t.test(route, async t => {
         t.plan(5)
-        simple.concat({
-          method: 'GET',
-          url: url + route
-        }, (err, response, body) => {
-          t.assert.ifError(err)
-          t.assert.equal(response.statusCode, 200)
-          const bodyObject = JSON.parse(body.toString())
-          t.assert.equal(bodyObject.dirs[0].name, 'empty')
-          t.assert.equal(typeof bodyObject.dirs[0].stats.atimeMs, 'number')
-          t.assert.equal(typeof bodyObject.dirs[0].extendedInfo.totalSize, 'number')
-        })
+
+        const response = await fetch(url + route)
+        t.assert.ok(response.ok)
+        t.assert.equal(response.status, 200)
+        const responseContent = await response.json()
+        t.assert.equal(responseContent.dirs[0].name, 'empty')
+        t.assert.equal(typeof responseContent.dirs[0].stats.atimeMs, 'number')
+        t.assert.equal(typeof responseContent.dirs[0].extendedInfo.totalSize, 'number')
       })
     }
   })
