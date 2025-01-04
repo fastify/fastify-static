@@ -11,12 +11,9 @@ const fastifyStatic = require('..')
 const dirList = require('../lib/dirList')
 
 const helper = {
-  arrange: function (t, options, f) {
-    return helper.arrangeModule(t, options, fastifyStatic, f)
-  },
-  arrangeModule: async function (t, options, mock, f) {
+  arrange: async function (t, options, f) {
     const fastify = Fastify()
-    fastify.register(mock, options)
+    fastify.register(fastifyStatic, options)
     t.after(() => fastify.close())
     await fastify.listen({ port: 0 })
     fastify.server.unref()
@@ -702,8 +699,8 @@ test('dir list with dotfiles ignore option', async t => {
   })
 })
 
-test('dir list error', t => {
-  t.plan(7)
+test('dir list error', async t => {
+  t.plan(6)
 
   const options = {
     root: path.join(__dirname, '/static'),
@@ -720,22 +717,18 @@ test('dir list error', t => {
   const errorMessage = 'mocking send'
   dirList.send = async () => { throw new Error(errorMessage) }
 
-  const mock = t.mockRequire('..', {
-    '../lib/dirList.js': dirList
+  t.mock.module('../lib/dirList.js', {
+    defaultExport: dirList
   })
 
   const routes = ['/public/', '/public/index.htm']
 
-  helper.arrangeModule(t, options, mock, (url) => {
+  await helper.arrange(t, options, async (url) => {
     for (const route of routes) {
-      simple.concat({
-        method: 'GET',
-        url: url + route
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(JSON.parse(body.toString()).message, errorMessage)
-        t.assert.equal(response.statusCode, 500)
-      })
+      const response = await fetch(url + route)
+      t.assert.ok(!response.ok)
+      t.assert.equal(response.status, 500)
+      t.assert.equal((await response.json()).message, errorMessage)
     }
   })
 })

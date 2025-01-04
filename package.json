@@ -11,7 +11,7 @@
     "lint:fix": "eslint --fix",
     "test": "npm run test:unit && npm run test:typescript",
     "test:typescript": "tsd",
-    "test:unit": "node --test",
+    "test:unit": "node --test --experimental-test-module-mocks",
     "example": "node example/server.js"
   },
   "repository": {
