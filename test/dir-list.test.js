@@ -14,16 +14,13 @@ const helper = {
   arrange: function (t, options, f) {
     return helper.arrangeModule(t, options, fastifyStatic, f)
   },
-  arrangeModule: function (t, options, mock, f) {
+  arrangeModule: async function (t, options, mock, f) {
     const fastify = Fastify()
     fastify.register(mock, options)
     t.after(() => fastify.close())
-    fastify.listen({ port: 0 }, err => {
-      t.assert.ifError(err)
-      fastify.server.unref()
-      f('http://localhost:' + fastify.server.address().port)
-    })
-    return f
+    await fastify.listen({ port: 0 })
+    fastify.server.unref()
+    await f('http://localhost:' + fastify.server.address().port)
   }
 }
 
@@ -114,8 +111,8 @@ test('dir list wrong options', async t => {
   }
 })
 
-test('dir list default options', t => {
-  t.plan(2)
+test('dir list default options', async t => {
+  t.plan(1)
 
   const options = {
     root: path.join(__dirname, '/static'),
@@ -125,23 +122,20 @@ test('dir list default options', t => {
   const route = '/public/shallow'
   const content = { dirs: ['empty'], files: ['sample.jpg'] }
 
-  helper.arrange(t, options, (url) => {
-    test(route, t => {
+  await helper.arrange(t, options, async (url) => {
+    await t.test(route, async t => {
       t.plan(3)
-      simple.concat({
-        method: 'GET',
-        url: url + route
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 200)
-        t.assert.equal(body.toString(), JSON.stringify(content))
-      })
+
+      const response = await fetch(url + route)
+      t.assert.ok(response.ok)
+      t.assert.equal(response.status, 200)
+      t.assert.deepStrictEqual(await response.json(), content)
     })
   })
 })
 
-test('dir list, custom options', t => {
-  t.plan(2)
+test('dir list, custom options', async t => {
+  t.plan(1)
 
   const options = {
     root: path.join(__dirname, '/static'),
@@ -153,17 +147,14 @@ test('dir list, custom options', t => {
   const route = '/public/'
   const content = { dirs: ['deep', 'shallow'], files: ['.example', '100%.txt', 'a .md', 'foo.html', 'foobar.html', 'index.css', 'index.html'] }
 
-  helper.arrange(t, options, (url) => {
-    test(route, t => {
+  await helper.arrange(t, options, async (url) => {
+    await t.test(route, async t => {
       t.plan(3)
-      simple.concat({
-        method: 'GET',
-        url: url + route
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 200)
-        t.assert.equal(body.toString(), JSON.stringify(content))
-      })
+
+      const response = await fetch(url + route)
+      t.assert.ok(response.ok)
+      t.assert.equal(response.status, 200)
+      t.assert.deepStrictEqual(await response.json(), content)
     })
   })
 })
