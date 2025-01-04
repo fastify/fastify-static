@@ -2450,7 +2450,7 @@ test('routes should use custom errorHandler premature stream close', async t => 
   await t.assert.rejects(fastify.inject({ method: 'GET', url: '/static/index.html' }))
 })
 
-test('routes should fallback to default errorHandler', t => {
+test('routes should fallback to default errorHandler', async t => {
   t.plan(3)
 
   const pluginOptions = {
@@ -2473,17 +2473,13 @@ test('routes should fallback to default errorHandler', t => {
   fastify.register(fastifyStatic, pluginOptions)
   t.after(() => fastify.close())
 
-  fastify.inject({
-    method: 'GET',
-    url: '/static/index.html'
-  }, (err, response) => {
-    t.assert.ifError(err)
-    t.assert.deepStrictEqual(JSON.parse(response.payload), {
-      statusCode: 500,
-      code: 'SOMETHING_ELSE',
-      error: 'Internal Server Error',
-      message: ''
-    })
+  const response = await fastify.inject({ method: 'GET', url: '/static/index.html' })
+  t.assert.equal(response.statusCode, 500)
+  t.assert.deepStrictEqual(await response.json(), {
+    statusCode: 500,
+    code: 'SOMETHING_ELSE',
+    error: 'Internal Server Error',
+    message: ''
   })
 })
 
