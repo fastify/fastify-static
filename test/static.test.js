@@ -2508,8 +2508,8 @@ test('percent encoded URLs in glob mode', async (t) => {
   )
 })
 
-test('register /static and /static2 without wildcard', t => {
-  t.plan(3)
+test('register /static and /static2 without wildcard', async t => {
+  t.plan(2)
 
   const pluginOptions = {
     root: [path.join(__dirname, '/static'), path.join(__dirname, '/static2')],
@@ -2520,37 +2520,29 @@ test('register /static and /static2 without wildcard', t => {
 
   t.after(() => fastify.close())
 
-  fastify.listen({ port: 0 }, err => {
-    t.assert.ifError(err)
+  await fastify.listen({ port: 0 })
+  fastify.server.unref()
 
-    fastify.server.unref()
+  await t.test('/index.html', async t => {
+    t.plan(4 + GENERIC_RESPONSE_CHECK_COUNT)
 
-    test('/index.html', t => {
-      t.plan(4 + GENERIC_RESPONSE_CHECK_COUNT)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/index.html'
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 200)
-        t.not(body.toString(), index2Content)
-        t.assert.equal(body.toString(), indexContent)
-        genericResponseChecks(t, response)
-      })
-    })
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/index.html')
+    t.assert.ok(response.ok)
+    t.assert.equal(response.status, 200)
+    const responseContent = await response.text()
+    t.assert.notEqual(responseContent, index2Content)
+    t.assert.equal(responseContent, indexContent)
+    genericResponseChecks(t, response)
+  })
 
-    test('/static/bar.html', t => {
-      t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/bar.html'
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 200)
-        t.assert.equal(body.toString(), barContent)
-        genericResponseChecks(t, response)
-      })
-    })
+  await t.test('/static/bar.html', async t => {
+    t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/bar.html')
+    t.assert.ok(response.ok)
+    t.assert.equal(response.status, 200)
+    t.assert.equal(await response.text(), barContent)
+    genericResponseChecks(t, response)
   })
 })
 
