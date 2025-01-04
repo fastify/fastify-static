@@ -457,8 +457,8 @@ test('json format with url parameter format', async t => {
   })
 })
 
-test('json format with url parameter format and without render option', t => {
-  t.plan(12)
+test('json format with url parameter format and without render option', async t => {
+  t.plan(11)
 
   const options = {
     root: path.join(__dirname, '/static'),
@@ -471,35 +471,23 @@ test('json format with url parameter format and without render option', t => {
   const route = '/public/'
   const jsonContent = { dirs: ['deep', 'shallow'], files: ['.example', '100%.txt', 'a .md', 'foo.html', 'foobar.html', 'index.css', 'index.html'] }
 
-  helper.arrange(t, options, (url) => {
-    simple.concat({
-      method: 'GET',
-      url: url + route
-    }, (err, response, body) => {
-      t.assert.ifError(err)
-      t.assert.equal(response.statusCode, 200)
-      t.assert.equal(body.toString(), JSON.stringify(jsonContent))
-      t.ok(response.headers['content-type'].includes('application/json'))
-    })
+  await helper.arrange(t, options, async (url) => {
+    const response = await fetch(url + route)
+    t.assert.ok(response.ok)
+    t.assert.equal(response.status, 200)
+    t.assert.deepStrictEqual(await response.json(), jsonContent)
+    t.assert.ok(response.headers.get('content-type').includes('application/json'))
 
-    simple.concat({
-      method: 'GET',
-      url: url + route + '?format=html'
-    }, (err, response, body) => {
-      t.assert.ifError(err)
-      t.assert.equal(response.statusCode, 500)
-      t.assert.equal(JSON.parse(body.toString()).message, 'The `list.render` option must be a function and is required with the URL parameter `format=html`')
-    })
+    const response2 = await fetch(url + route + '?format=html')
+    t.assert.ok(!response2.ok)
+    t.assert.equal(response2.status, 500)
+    t.assert.equal((await response2.json()).message, 'The `list.render` option must be a function and is required with the URL parameter `format=html`')
 
-    simple.concat({
-      method: 'GET',
-      url: url + route + '?format=json'
-    }, (err, response, body) => {
-      t.assert.ifError(err)
-      t.assert.equal(response.statusCode, 200)
-      t.assert.equal(body.toString(), JSON.stringify(jsonContent))
-      t.ok(response.headers['content-type'].includes('application/json'))
-    })
+    const response3 = await fetch(url + route + '?format=json')
+    t.assert.ok(response3.ok)
+    t.assert.equal(response3.status, 200)
+    t.assert.deepStrictEqual(await response3.json(), jsonContent)
+    t.assert.ok(response3.headers.get('content-type').includes('application/json'))
   })
 })
 
