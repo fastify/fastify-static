@@ -67,8 +67,8 @@ function genericResponseChecks (t, response) {
 
 const GENERIC_ERROR_RESPONSE_CHECK_COUNT = 2
 function genericErrorResponseChecks (t, response) {
-  t.assert.equal(response.headers.get('content-type'), 'application/json; charset=utf-8')
-  t.assert.ok(response.headers.get('date'))
+  t.assert.equal(response.headers.get?.('content-type') ?? response.headers['content-type'], 'application/json; charset=utf-8')
+  t.assert.ok(response.headers.get?.('date') ?? response.headers.date)
 }
 
 test('register /static prefixAvoidTrailingSlash', async t => {
