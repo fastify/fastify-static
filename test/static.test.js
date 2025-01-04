@@ -2353,6 +2353,7 @@ test('if dotfiles are properly served according to plugin options', async (t) =>
 
     t.after(() => fastify.close())
     await fastify.listen({ port: 0 })
+    fastify.server.unref()
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/.example')
     t.assert.ok(!response.ok)
