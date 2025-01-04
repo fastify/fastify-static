@@ -2361,7 +2361,7 @@ test('if dotfiles are properly served according to plugin options', async (t) =>
   })
 })
 
-test('register with failing glob handler', (t) => {
+test('register with failing glob handler', async (t) => {
   const fastifyStatic = proxyquire.noCallThru()('../', {
     glob: function globStub (pattern, options, cb) {
       process.nextTick(function () {
@@ -2380,10 +2380,7 @@ test('register with failing glob handler', (t) => {
 
   t.after(() => fastify.close())
 
-  fastify.listen({ port: 0 }, (err) => {
-    fastify.server.unref()
-    t.assert.ok(err)
-  })
+  await t.assert.rejects(fastify.listen({ port: 0 }))
 })
 
 test(
