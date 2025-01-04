@@ -2227,8 +2227,8 @@ test('register /static with redirect true and wildcard false', async t => {
   })
 })
 
-test('trailing slash behavior with redirect = false', (t) => {
-  t.plan(6)
+test('trailing slash behavior with redirect = false', async (t) => {
+  t.plan(5)
 
   const fastify = Fastify()
   fastify.register(fastifyStatic, {
@@ -2240,65 +2240,50 @@ test('trailing slash behavior with redirect = false', (t) => {
 
   t.after(() => fastify.close())
 
-  fastify.listen({ port: 0 }, (err) => {
-    t.assert.ifError(err)
+  await fastify.listen({ port: 0 })
 
-    const host = 'http://localhost:' + fastify.server.address().port
+  fastify.server.unref()
 
-    test('prefix with no trailing slash => 404', (t) => {
-      t.plan(2)
-      simple.concat({
-        method: 'GET',
-        url: host + '/static'
-      }, (err, response) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 404)
-      })
-    })
+  const host = 'http://localhost:' + fastify.server.address().port
 
-    test('prefix with trailing trailing slash => 200', (t) => {
-      t.plan(2)
-      simple.concat({
-        method: 'GET',
-        url: host + '/static/'
-      }, (err, response) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 200)
-      })
-    })
+  await t.test('prefix with no trailing slash => 404', async (t) => {
+    t.plan(2)
 
-    test('deep path with no index.html or trailing slash => 404', (t) => {
-      t.plan(2)
-      simple.concat({
-        method: 'GET',
-        url: host + '/static/deep/path'
-      }, (err, response) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 404)
-      })
-    })
+    const response = await fetch(host + '/static')
+    t.assert.ok(!response.ok)
+    t.assert.equal(response.status, 404)
+  })
 
-    test('deep path with index.html but no trailing slash => 200', (t) => {
-      t.plan(2)
-      simple.concat({
-        method: 'GET',
-        url: host + '/static/deep/path/for/test'
-      }, (err, response) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 200)
-      })
-    })
+  await t.test('prefix with trailing trailing slash => 200', async (t) => {
+    t.plan(2)
 
-    test('deep path with index.html and trailing slash => 200', (t) => {
-      t.plan(2)
-      simple.concat({
-        method: 'GET',
-        url: host + '/static/deep/path/for/test/'
-      }, (err, response) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 200)
-      })
-    })
+    const response = await fetch(host + '/static/')
+    t.assert.ok(response.ok)
+    t.assert.equal(response.status, 200)
+  })
+
+  await t.test('deep path with no index.html or trailing slash => 404', async (t) => {
+    t.plan(2)
+
+    const response = await fetch(host + '/static/deep/path')
+    t.assert.ok(!response.ok)
+    t.assert.equal(response.status, 404)
+  })
+
+  await t.test('deep path with index.html but no trailing slash => 200', async (t) => {
+    t.plan(2)
+
+    const response = await fetch(host + '/static/deep/path/for/test')
+    t.assert.ok(response.ok)
+    t.assert.equal(response.status, 200)
+  })
+
+  await t.test('deep path with index.html and trailing slash => 200', async (t) => {
+    t.plan(2)
+
+    const response = await fetch(host + '/static/deep/path/for/test/')
+    t.assert.ok(response.ok)
+    t.assert.equal(response.status, 200)
   })
 })
 
