@@ -529,8 +529,8 @@ test('html format with url parameter format', async t => {
   })
 })
 
-test('dir list on empty dir', t => {
-  t.plan(2)
+test('dir list on empty dir', async t => {
+  t.plan(1)
 
   const options = {
     root: path.join(__dirname, '/static'),
@@ -540,23 +540,20 @@ test('dir list on empty dir', t => {
   const route = '/public/shallow/empty'
   const content = { dirs: [], files: [] }
 
-  helper.arrange(t, options, (url) => {
-    test(route, t => {
+  await helper.arrange(t, options, async (url) => {
+    await t.test(route, async t => {
       t.plan(3)
-      simple.concat({
-        method: 'GET',
-        url: url + route
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 200)
-        t.assert.equal(body.toString(), JSON.stringify(content))
-      })
+
+      const response = await fetch(url + route)
+      t.assert.ok(response.ok)
+      t.assert.equal(response.status, 200)
+      t.assert.deepStrictEqual(await response.json(), content)
     })
   })
 })
 
-test('dir list serve index.html on index option', t => {
-  t.plan(2)
+test('dir list serve index.html on index option', async t => {
+  t.plan(1)
 
   const options = {
     root: path.join(__dirname, '/static'),
@@ -569,30 +566,19 @@ test('dir list serve index.html on index option', t => {
     }
   }
 
-  helper.arrange(t, options, (url) => {
-    test('serve index.html from fs', t => {
+  await helper.arrange(t, options, async (url) => {
+    await t.test('serve index.html from fs', async t => {
       t.plan(6)
 
-      let route = '/public/index.html'
+      const response = await fetch(url + '/public/index.html')
+      t.assert.ok(response.ok)
+      t.assert.equal(response.status, 200)
+      t.assert.equal(await response.text(), '<html>\n  <body>\n    the body\n  </body>\n</html>\n')
 
-      simple.concat({
-        method: 'GET',
-        url: url + route
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 200)
-        t.assert.equal(body.toString(), '<html>\n  <body>\n    the body\n  </body>\n</html>\n')
-      })
-
-      route = '/public/index'
-      simple.concat({
-        method: 'GET',
-        url: url + route
-      }, (err, response, body) => {
-        t.assert.ifError(err)
-        t.assert.equal(response.statusCode, 200)
-        t.assert.equal(body.toString(), 'dir list index')
-      })
+      const response2 = await fetch(url + '/public/index')
+      t.assert.ok(response2.ok)
+      t.assert.equal(response2.status, 200)
+      t.assert.equal(await response2.text(), 'dir list index')
     })
   })
 })
