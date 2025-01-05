@@ -484,7 +484,7 @@ test('register /static and /static2', async (t) => {
     t.assert.deepStrictEqual(response.status, 200)
     const responseText = await response.text()
     t.assert.deepStrictEqual(responseText, indexContent)
-    t.assert.notEqual(responseText, index2Content)
+    t.assert.notDeepStrictEqual(responseText, index2Content)
     genericResponseChecks(t, response)
   })
 
@@ -2556,7 +2556,7 @@ test('register /static and /static2 without wildcard', async t => {
     t.assert.ok(response.ok)
     t.assert.deepStrictEqual(response.status, 200)
     const responseContent = await response.text()
-    t.assert.notStrictEqual(responseContent, index2Content)
+    t.assert.notDeepStrictEqual(responseContent, index2Content)
     t.assert.deepStrictEqual(responseContent, indexContent)
     genericResponseChecks(t, response)
   })
