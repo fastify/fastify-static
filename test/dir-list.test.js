@@ -717,8 +717,13 @@ test('dir list error', async t => {
   const errorMessage = 'mocking send'
   dirList.send = async () => { throw new Error(errorMessage) }
 
-  t.mock.module('../lib/dirList.js', {
-    defaultExport: dirList
+  t.beforeEach((ctx) => {
+    ctx['initialDirList'] = ctx['../lib/dirList.js']
+    ctx['../lib/dirList.js'] = dirList
+  })
+
+  t.afterEach((ctx) => {
+    ctx['../lib/dirList.js'] = ctx['initialDirList']
   })
 
   const routes = ['/public/', '/public/index.htm']
