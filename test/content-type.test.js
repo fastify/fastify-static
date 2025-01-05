@@ -29,7 +29,7 @@ test('register /content-type', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/content-type/index.html')
     t.assert.ok(response.ok)
-    t.assert.equal(response.headers.get('content-type'), 'text/html; charset=utf-8')
+    t.assert.deepStrictEqual(response.headers.get('content-type'), 'text/html; charset=utf-8')
   })
 
   await t.test('/content-type/index.css', async (t) => {
@@ -37,7 +37,7 @@ test('register /content-type', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/content-type/index.css')
     t.assert.ok(response.ok)
-    t.assert.equal(response.headers.get('content-type'), 'text/css; charset=utf-8')
+    t.assert.deepStrictEqual(response.headers.get('content-type'), 'text/css; charset=utf-8')
   })
 
   await t.test('/content-type/sample.jpg', async (t) => {
@@ -45,7 +45,7 @@ test('register /content-type', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/content-type/sample.jpg')
     t.assert.ok(response.ok)
-    t.assert.equal(response.headers.get('content-type'), 'image/jpeg')
+    t.assert.deepStrictEqual(response.headers.get('content-type'), 'image/jpeg')
   })
 
   await t.test('/content-type/test.txt', async (t) => {
@@ -53,7 +53,7 @@ test('register /content-type', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/content-type/test.txt')
     t.assert.ok(response.ok)
-    t.assert.equal(response.headers.get('content-type'), 'text/plain; charset=utf-8')
+    t.assert.deepStrictEqual(response.headers.get('content-type'), 'text/plain; charset=utf-8')
   })
 
   await t.test('/content-type/binary', async (t) => {
@@ -61,7 +61,7 @@ test('register /content-type', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/content-type/binary')
     t.assert.ok(response.ok)
-    t.assert.equal(response.headers.get('content-type'), 'application/octet-stream')
+    t.assert.deepStrictEqual(response.headers.get('content-type'), 'application/octet-stream')
   })
 })
 
@@ -91,7 +91,7 @@ test('register /content-type preCompressed', async t => {
       }
     })
     t.assert.ok(response.ok)
-    t.assert.equal(response.headers.get('content-type'), 'text/html; charset=utf-8')
+    t.assert.deepStrictEqual(response.headers.get('content-type'), 'text/html; charset=utf-8')
   })
 
   await t.test('/content-type/index.css', async (t) => {
@@ -103,7 +103,7 @@ test('register /content-type preCompressed', async t => {
       }
     })
     t.assert.ok(response.ok)
-    t.assert.equal(response.headers.get('content-type'), 'text/css; charset=utf-8')
+    t.assert.deepStrictEqual(response.headers.get('content-type'), 'text/css; charset=utf-8')
   })
 
   await t.test('/content-type/sample.jpg', async (t) => {
@@ -115,7 +115,7 @@ test('register /content-type preCompressed', async t => {
       }
     })
     t.assert.ok(response.ok)
-    t.assert.equal(response.headers.get('content-type'), 'image/jpeg')
+    t.assert.deepStrictEqual(response.headers.get('content-type'), 'image/jpeg')
   })
 
   await t.test('/content-type/test.txt', async (t) => {
@@ -127,7 +127,7 @@ test('register /content-type preCompressed', async t => {
       }
     })
     t.assert.ok(response.ok)
-    t.assert.equal(response.headers.get('content-type'), 'text/plain; charset=utf-8')
+    t.assert.deepStrictEqual(response.headers.get('content-type'), 'text/plain; charset=utf-8')
   })
 
   await t.test('/content-type/binary', async (t) => {
@@ -139,6 +139,6 @@ test('register /content-type preCompressed', async t => {
       }
     })
     t.assert.ok(response.ok)
-    t.assert.equal(response.headers.get('content-type'), 'application/octet-stream')
+    t.assert.deepStrictEqual(response.headers.get('content-type'), 'application/octet-stream')
   })
 })

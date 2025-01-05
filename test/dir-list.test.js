@@ -30,7 +30,7 @@ test('throws when `root` is an array', t => {
 
   const err = dirList.validateOptions({ root: ['hello', 'world'], list: true })
   t.assert.ok(err instanceof TypeError)
-  t.assert.equal(err.message, 'multi-root with list option is not supported')
+  t.assert.deepStrictEqual(err.message, 'multi-root with list option is not supported')
 })
 
 test('throws when `list.format` option is invalid', t => {
@@ -38,7 +38,7 @@ test('throws when `list.format` option is invalid', t => {
 
   const err = dirList.validateOptions({ list: { format: 'hello' } })
   t.assert.ok(err instanceof TypeError)
-  t.assert.equal(err.message, 'The `list.format` option must be json or html')
+  t.assert.deepStrictEqual(err.message, 'The `list.format` option must be json or html')
 })
 
 test('throws when `list.names option` is not an array', t => {
@@ -46,7 +46,7 @@ test('throws when `list.names option` is not an array', t => {
 
   const err = dirList.validateOptions({ list: { names: 'hello' } })
   t.assert.ok(err instanceof TypeError)
-  t.assert.equal(err.message, 'The `list.names` option must be an array')
+  t.assert.deepStrictEqual(err.message, 'The `list.names` option must be an array')
 })
 
 test('throws when `list.jsonFormat` option is invalid', t => {
@@ -54,7 +54,7 @@ test('throws when `list.jsonFormat` option is invalid', t => {
 
   const err = dirList.validateOptions({ list: { jsonFormat: 'hello' } })
   t.assert.ok(err instanceof TypeError)
-  t.assert.equal(err.message, 'The `list.jsonFormat` option must be name or extended')
+  t.assert.deepStrictEqual(err.message, 'The `list.jsonFormat` option must be name or extended')
 })
 
 test('throws when `list.format` is html and `list render` is not a function', t => {
@@ -62,7 +62,7 @@ test('throws when `list.format` is html and `list render` is not a function', t 
 
   const err = dirList.validateOptions({ list: { format: 'html', render: 'hello' } })
   t.assert.ok(err instanceof TypeError)
-  t.assert.equal(err.message, 'The `list.render` option must be a function and is required with html format')
+  t.assert.deepStrictEqual(err.message, 'The `list.render` option must be a function and is required with html format')
 })
 
 test('dir list wrong options', async t => {
@@ -125,7 +125,7 @@ test('dir list default options', async t => {
 
       const response = await fetch(url + route)
       t.assert.ok(response.ok)
-      t.assert.equal(response.status, 200)
+      t.assert.deepStrictEqual(response.status, 200)
       t.assert.deepStrictEqual(await response.json(), content)
     })
   })
@@ -150,7 +150,7 @@ test('dir list, custom options', async t => {
 
       const response = await fetch(url + route)
       t.assert.ok(response.ok)
-      t.assert.equal(response.status, 200)
+      t.assert.deepStrictEqual(response.status, 200)
       t.assert.deepStrictEqual(await response.json(), content)
     })
   })
@@ -175,7 +175,7 @@ test('dir list, custom options with empty array index', async t => {
 
       const response = await fetch(url + route)
       t.assert.ok(response.ok)
-      t.assert.equal(response.status, 200)
+      t.assert.deepStrictEqual(response.status, 200)
       t.assert.deepStrictEqual(await response.json(), content)
     })
   })
@@ -216,8 +216,8 @@ test('dir list html format', async t => {
 
         const response = await fetch(url + route)
         t.assert.ok(response.ok)
-        t.assert.equal(response.status, 200)
-        t.assert.equal(await response.text(), `
+        t.assert.deepStrictEqual(response.status, 200)
+        t.assert.deepStrictEqual(await response.text(), `
 <html><body>
 <ul>
   <li><a href="/public/deep">deep</a></li>
@@ -269,13 +269,13 @@ test('dir list href nested structure', async t => {
 
         const response = await fetch(url + route.path)
         t.assert.ok(response.ok)
-        t.assert.equal(response.status, 200)
+        t.assert.deepStrictEqual(response.status, 200)
         const responseContent = await response.text()
-        t.assert.equal(responseContent, route.response)
+        t.assert.deepStrictEqual(responseContent, route.response)
 
         const response2 = await fetch(url + responseContent)
         t.assert.ok(response2.ok)
-        t.assert.equal(response2.status, 200)
+        t.assert.deepStrictEqual(response2.status, 200)
       })
     }
   })
@@ -311,7 +311,7 @@ test('dir list html format - stats', async t => {
   await helper.arrange(t, options1, async (url) => {
     const response = await fetch(url + route)
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
+    t.assert.deepStrictEqual(response.status, 200)
   })
 })
 
@@ -334,12 +334,12 @@ test('dir list html format - extended info', async t => {
           for (const value of dirs) {
             t.assert.ok(value.extendedInfo)
 
-            t.assert.equal(typeof value.extendedInfo.fileCount, 'number')
-            t.assert.equal(typeof value.extendedInfo.totalFileCount, 'number')
-            t.assert.equal(typeof value.extendedInfo.folderCount, 'number')
-            t.assert.equal(typeof value.extendedInfo.totalFolderCount, 'number')
-            t.assert.equal(typeof value.extendedInfo.totalSize, 'number')
-            t.assert.equal(typeof value.extendedInfo.lastModified, 'number')
+            t.assert.deepStrictEqual(typeof value.extendedInfo.fileCount, 'number')
+            t.assert.deepStrictEqual(typeof value.extendedInfo.totalFileCount, 'number')
+            t.assert.deepStrictEqual(typeof value.extendedInfo.folderCount, 'number')
+            t.assert.deepStrictEqual(typeof value.extendedInfo.totalFolderCount, 'number')
+            t.assert.deepStrictEqual(typeof value.extendedInfo.totalSize, 'number')
+            t.assert.deepStrictEqual(typeof value.extendedInfo.lastModified, 'number')
           }
         })
       }
@@ -349,7 +349,7 @@ test('dir list html format - extended info', async t => {
   await helper.arrange(t, options, async (url) => {
     const response = await fetch(url + route)
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
+    t.assert.deepStrictEqual(response.status, 200)
   })
 })
 
@@ -375,7 +375,7 @@ test('dir list json format', async t => {
 
         const response = await fetch(url + route)
         t.assert.ok(response.ok)
-        t.assert.equal(response.status, 200)
+        t.assert.deepStrictEqual(response.status, 200)
         t.assert.deepStrictEqual(await response.json(), content)
       })
     }
@@ -406,11 +406,11 @@ test('dir list json format - extended info', async t => {
 
         const response = await fetch(url + route)
         t.assert.ok(response.ok)
-        t.assert.equal(response.status, 200)
+        t.assert.deepStrictEqual(response.status, 200)
         const responseContent = await response.json()
-        t.assert.equal(responseContent.dirs[0].name, 'empty')
-        t.assert.equal(typeof responseContent.dirs[0].stats.atimeMs, 'number')
-        t.assert.equal(typeof responseContent.dirs[0].extendedInfo.totalSize, 'number')
+        t.assert.deepStrictEqual(responseContent.dirs[0].name, 'empty')
+        t.assert.deepStrictEqual(typeof responseContent.dirs[0].stats.atimeMs, 'number')
+        t.assert.deepStrictEqual(typeof responseContent.dirs[0].extendedInfo.totalSize, 'number')
       })
     }
   })
@@ -436,19 +436,19 @@ test('json format with url parameter format', async t => {
   await helper.arrange(t, options, async (url) => {
     const response = await fetch(url + route)
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
+    t.assert.deepStrictEqual(response.status, 200)
     t.assert.deepStrictEqual(await response.json(), jsonContent)
     t.assert.ok(response.headers.get('content-type').includes('application/json'))
 
     const response2 = await fetch(url + route + '?format=html')
     t.assert.ok(response2.ok)
-    t.assert.equal(response2.status, 200)
-    t.assert.equal(await response2.text(), 'html')
+    t.assert.deepStrictEqual(response2.status, 200)
+    t.assert.deepStrictEqual(await response2.text(), 'html')
     t.assert.ok(response2.headers.get('content-type').includes('text/html'))
 
     const response3 = await fetch(url + route + '?format=json')
     t.assert.ok(response3.ok)
-    t.assert.equal(response3.status, 200)
+    t.assert.deepStrictEqual(response3.status, 200)
     t.assert.deepStrictEqual(await response3.json(), jsonContent)
     t.assert.ok(response3.headers.get('content-type').includes('application/json'))
   })
@@ -471,18 +471,18 @@ test('json format with url parameter format and without render option', async t 
   await helper.arrange(t, options, async (url) => {
     const response = await fetch(url + route)
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
+    t.assert.deepStrictEqual(response.status, 200)
     t.assert.deepStrictEqual(await response.json(), jsonContent)
     t.assert.ok(response.headers.get('content-type').includes('application/json'))
 
     const response2 = await fetch(url + route + '?format=html')
     t.assert.ok(!response2.ok)
-    t.assert.equal(response2.status, 500)
-    t.assert.equal((await response2.json()).message, 'The `list.render` option must be a function and is required with the URL parameter `format=html`')
+    t.assert.deepStrictEqual(response2.status, 500)
+    t.assert.deepStrictEqual((await response2.json()).message, 'The `list.render` option must be a function and is required with the URL parameter `format=html`')
 
     const response3 = await fetch(url + route + '?format=json')
     t.assert.ok(response3.ok)
-    t.assert.equal(response3.status, 200)
+    t.assert.deepStrictEqual(response3.status, 200)
     t.assert.deepStrictEqual(await response3.json(), jsonContent)
     t.assert.ok(response3.headers.get('content-type').includes('application/json'))
   })
@@ -508,19 +508,19 @@ test('html format with url parameter format', async t => {
   await helper.arrange(t, options, async (url) => {
     const response = await fetch(url + route)
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), 'html')
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), 'html')
     t.assert.ok(response.headers.get('content-type').includes('text/html'))
 
     const response2 = await fetch(url + route + '?format=html')
     t.assert.ok(response2.ok)
-    t.assert.equal(response2.status, 200)
-    t.assert.equal(await response2.text(), 'html')
+    t.assert.deepStrictEqual(response2.status, 200)
+    t.assert.deepStrictEqual(await response2.text(), 'html')
     t.assert.ok(response2.headers.get('content-type').includes('text/html'))
 
     const response3 = await fetch(url + route + '?format=json')
     t.assert.ok(response3.ok)
-    t.assert.equal(response3.status, 200)
+    t.assert.deepStrictEqual(response3.status, 200)
     t.assert.deepStrictEqual(await response3.json(), jsonContent)
     t.assert.ok(response3.headers.get('content-type').includes('application/json'))
   })
@@ -543,7 +543,7 @@ test('dir list on empty dir', async t => {
 
       const response = await fetch(url + route)
       t.assert.ok(response.ok)
-      t.assert.equal(response.status, 200)
+      t.assert.deepStrictEqual(response.status, 200)
       t.assert.deepStrictEqual(await response.json(), content)
     })
   })
@@ -569,13 +569,13 @@ test('dir list serve index.html on index option', async t => {
 
       const response = await fetch(url + '/public/index.html')
       t.assert.ok(response.ok)
-      t.assert.equal(response.status, 200)
-      t.assert.equal(await response.text(), '<html>\n  <body>\n    the body\n  </body>\n</html>\n')
+      t.assert.deepStrictEqual(response.status, 200)
+      t.assert.deepStrictEqual(await response.text(), '<html>\n  <body>\n    the body\n  </body>\n</html>\n')
 
       const response2 = await fetch(url + '/public/index')
       t.assert.ok(response2.ok)
-      t.assert.equal(response2.status, 200)
-      t.assert.equal(await response2.text(), 'dir list index')
+      t.assert.deepStrictEqual(response2.status, 200)
+      t.assert.deepStrictEqual(await response2.text(), 'dir list index')
     })
   })
 })
@@ -596,7 +596,7 @@ test('serve a non existent dir and get error', async t => {
 
       const response = await fetch(url + route)
       t.assert.ok(!response.ok)
-      t.assert.equal(response.status, 404)
+      t.assert.deepStrictEqual(response.status, 404)
     })
   })
 })
@@ -619,7 +619,7 @@ test('serve a non existent dir and get error', async t => {
 
       const response = await fetch(url + route)
       t.assert.ok(!response.ok)
-      t.assert.equal(response.status, 404)
+      t.assert.deepStrictEqual(response.status, 404)
     })
   })
 })
@@ -643,7 +643,7 @@ test('dir list with dotfiles allow option', async t => {
 
       const response = await fetch(url + route)
       t.assert.ok(response.ok)
-      t.assert.equal(response.status, 200)
+      t.assert.deepStrictEqual(response.status, 200)
       t.assert.deepStrictEqual(await response.json(), content)
     })
   })
@@ -668,7 +668,7 @@ test('dir list with dotfiles deny option', async t => {
 
       const response = await fetch(url + route)
       t.assert.ok(response.ok)
-      t.assert.equal(response.status, 200)
+      t.assert.deepStrictEqual(response.status, 200)
       t.assert.deepStrictEqual(await response.json(), content)
     })
   })
@@ -693,7 +693,7 @@ test('dir list with dotfiles ignore option', async t => {
 
       const response = await fetch(url + route)
       t.assert.ok(response.ok)
-      t.assert.equal(response.status, 200)
+      t.assert.deepStrictEqual(response.status, 200)
       t.assert.deepStrictEqual(await response.json(), content)
     })
   })
@@ -727,8 +727,8 @@ test('dir list error', async t => {
     for (const route of routes) {
       const response = await fetch(url + route)
       t.assert.ok(!response.ok)
-      t.assert.equal(response.status, 500)
-      t.assert.equal((await response.json()).message, errorMessage)
+      t.assert.deepStrictEqual(response.status, 500)
+      t.assert.deepStrictEqual((await response.json()).message, errorMessage)
     }
   })
 })

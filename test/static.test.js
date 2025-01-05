@@ -66,7 +66,7 @@ function genericResponseChecks (t, response) {
 
 const GENERIC_ERROR_RESPONSE_CHECK_COUNT = 2
 function genericErrorResponseChecks (t, response) {
-  t.assert.equal(response.headers.get?.('content-type') ?? response.headers['content-type'], 'application/json; charset=utf-8')
+  t.assert.deepStrictEqual(response.headers.get?.('content-type') ?? response.headers['content-type'], 'application/json; charset=utf-8')
   t.assert.ok(response.headers.get?.('date') ?? response.headers.date)
 }
 
@@ -93,8 +93,8 @@ test('register /static prefixAvoidTrailingSlash', async t => {
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/index.html')
 
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), indexContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), indexContent)
 
     genericResponseChecks(t, response)
   })
@@ -105,7 +105,7 @@ test('register /static prefixAvoidTrailingSlash', async t => {
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/index.css')
 
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
+    t.assert.deepStrictEqual(response.status, 200)
     genericResponseChecks(t, response)
   })
 
@@ -114,8 +114,8 @@ test('register /static prefixAvoidTrailingSlash', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), indexContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), indexContent)
     genericResponseChecks(t, response)
   })
 
@@ -124,8 +124,8 @@ test('register /static prefixAvoidTrailingSlash', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), indexContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), indexContent)
     genericResponseChecks(t, response)
   })
 
@@ -134,8 +134,8 @@ test('register /static prefixAvoidTrailingSlash', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test/purpose/foo.html')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), deepContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), deepContent)
     genericResponseChecks(t, response)
   })
 
@@ -144,8 +144,8 @@ test('register /static prefixAvoidTrailingSlash', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test/')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), innerIndex)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), innerIndex)
     genericResponseChecks(t, response)
   })
 
@@ -154,7 +154,7 @@ test('register /static prefixAvoidTrailingSlash', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/this/path/for/test')
     t.assert.ok(!response.ok)
-    t.assert.equal(response.status, 404)
+    t.assert.deepStrictEqual(response.status, 404)
     genericErrorResponseChecks(t, response)
   })
 
@@ -163,7 +163,7 @@ test('register /static prefixAvoidTrailingSlash', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/this/path/doesnt/exist.html')
     t.assert.ok(!response.ok)
-    t.assert.equal(response.status, 404)
+    t.assert.deepStrictEqual(response.status, 404)
     genericErrorResponseChecks(t, response)
   })
 
@@ -172,7 +172,7 @@ test('register /static prefixAvoidTrailingSlash', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/../index.js')
     t.assert.ok(!response.ok)
-    t.assert.equal(response.status, 404)
+    t.assert.deepStrictEqual(response.status, 404)
     genericErrorResponseChecks(t, response)
   })
 
@@ -181,7 +181,7 @@ test('register /static prefixAvoidTrailingSlash', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/foobar.html')
     t.assert.ok(!response.ok)
-    t.assert.equal(response.status, 404)
+    t.assert.deepStrictEqual(response.status, 404)
   })
 
   await t.test('file retrieve with HEAD method', async t => {
@@ -192,8 +192,8 @@ test('register /static prefixAvoidTrailingSlash', async t => {
     })
 
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), '')
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), '')
     genericResponseChecks(t, response)
   })
 })
@@ -219,8 +219,8 @@ test('register /static', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/index.html')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), indexContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), indexContent)
     genericResponseChecks(t, response)
   })
 
@@ -229,7 +229,7 @@ test('register /static', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/index.css')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
+    t.assert.deepStrictEqual(response.status, 200)
     genericResponseChecks(t, response)
   })
 
@@ -238,8 +238,8 @@ test('register /static', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), indexContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), indexContent)
     genericResponseChecks(t, response)
   })
 
@@ -248,7 +248,7 @@ test('register /static', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static')
     t.assert.ok(!response.ok)
-    t.assert.equal(response.status, 404)
+    t.assert.deepStrictEqual(response.status, 404)
   })
 
   await t.test('/static/deep/path/for/test/purpose/foo.html', async (t) => {
@@ -256,8 +256,8 @@ test('register /static', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test/purpose/foo.html')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), deepContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), deepContent)
     genericResponseChecks(t, response)
   })
 
@@ -266,8 +266,8 @@ test('register /static', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test/')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), innerIndex)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), innerIndex)
     genericResponseChecks(t, response)
   })
 
@@ -276,7 +276,7 @@ test('register /static', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/this/path/for/test')
     t.assert.ok(!response.ok)
-    t.assert.equal(response.status, 404)
+    t.assert.deepStrictEqual(response.status, 404)
     genericErrorResponseChecks(t, response)
   })
 
@@ -285,7 +285,7 @@ test('register /static', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/this/path/doesnt/exist.html')
     t.assert.ok(!response.ok)
-    t.assert.equal(response.status, 404)
+    t.assert.deepStrictEqual(response.status, 404)
     genericErrorResponseChecks(t, response)
   })
 
@@ -296,7 +296,7 @@ test('register /static', async (t) => {
       redirect: 'error'
     })
     t.assert.ok(!response.ok)
-    t.assert.equal(response.status, 404)
+    t.assert.deepStrictEqual(response.status, 404)
     genericErrorResponseChecks(t, response)
   })
 
@@ -305,7 +305,7 @@ test('register /static', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/foobar.html')
     t.assert.ok(!response.ok)
-    t.assert.equal(response.status, 404)
+    t.assert.deepStrictEqual(response.status, 404)
   })
 })
 
@@ -330,8 +330,8 @@ test('register /static/', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/index.html')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), indexContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), indexContent)
     genericResponseChecks(t, response)
   })
 
@@ -342,8 +342,8 @@ test('register /static/', async t => {
       method: 'HEAD'
     })
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), '')
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), '')
     genericResponseChecks(t, response)
   })
 
@@ -352,7 +352,7 @@ test('register /static/', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/index.css')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
+    t.assert.deepStrictEqual(response.status, 200)
     genericResponseChecks(t, response)
   })
 
@@ -361,8 +361,8 @@ test('register /static/', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), indexContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), indexContent)
     genericResponseChecks(t, response)
   })
 
@@ -371,7 +371,7 @@ test('register /static/', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static')
     t.assert.ok(!response.ok)
-    t.assert.equal(response.status, 404)
+    t.assert.deepStrictEqual(response.status, 404)
   })
 
   await t.test('/static/deep/path/for/test/purpose/foo.html', async (t) => {
@@ -379,8 +379,8 @@ test('register /static/', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test/purpose/foo.html')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), deepContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), deepContent)
     genericResponseChecks(t, response)
   })
 
@@ -389,8 +389,8 @@ test('register /static/', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test/')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), innerIndex)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), innerIndex)
     genericResponseChecks(t, response)
   })
 
@@ -399,7 +399,7 @@ test('register /static/', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/this/path/for/test')
     t.assert.ok(!response.ok)
-    t.assert.equal(response.status, 404)
+    t.assert.deepStrictEqual(response.status, 404)
     genericErrorResponseChecks(t, response)
   })
 
@@ -408,7 +408,7 @@ test('register /static/', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/this/path/doesnt/exist.html')
     t.assert.ok(!response.ok)
-    t.assert.equal(response.status, 404)
+    t.assert.deepStrictEqual(response.status, 404)
     genericErrorResponseChecks(t, response)
   })
 
@@ -417,7 +417,7 @@ test('register /static/', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/../index.js')
     t.assert.ok(!response.ok)
-    t.assert.equal(response.status, 404)
+    t.assert.deepStrictEqual(response.status, 404)
     genericErrorResponseChecks(t, response)
   })
 
@@ -426,8 +426,8 @@ test('register /static/', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/index.html')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), indexContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), indexContent)
     genericResponseChecks(t, response)
 
     const response2 = await fetch('http://localhost:' + fastify.server.address().port + '/static/index.html', {
@@ -437,7 +437,7 @@ test('register /static/', async t => {
       cache: 'no-cache'
     })
     t.assert.ok(!response2.ok)
-    t.assert.equal(response2.status, 304)
+    t.assert.deepStrictEqual(response2.status, 304)
   })
 })
 
@@ -470,9 +470,9 @@ test('register /static and /static2', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/index.html')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
+    t.assert.deepStrictEqual(response.status, 200)
     const responseText = await response.text()
-    t.assert.equal(responseText, indexContent)
+    t.assert.deepStrictEqual(responseText, indexContent)
     t.assert.notEqual(responseText, index2Content)
     genericResponseChecks(t, response)
   })
@@ -482,8 +482,8 @@ test('register /static and /static2', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/bar.html')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), barContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), barContent)
     genericResponseChecks(t, response)
   })
 
@@ -492,8 +492,8 @@ test('register /static and /static2', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/foo')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), fooContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), fooContent)
     genericResponseChecks(t, response)
   })
 
@@ -502,8 +502,8 @@ test('register /static and /static2', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/bar')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), barContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), barContent)
     genericResponseChecks(t, response)
   })
 })
@@ -535,8 +535,8 @@ test('register /static with constraints', async (t) => {
       }
     })
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), indexContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), indexContent)
     genericResponseChecks(t, response)
   })
 
@@ -549,7 +549,7 @@ test('register /static with constraints', async (t) => {
       }
     })
     t.assert.ok(!response.ok)
-    t.assert.equal(response.status, 404)
+    t.assert.deepStrictEqual(response.status, 404)
     genericErrorResponseChecks(t, response)
   })
 })
@@ -580,10 +580,10 @@ test('payload.path is set', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/index.html')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), indexContent)
-    t.assert.equal(typeof gotFilename, 'string')
-    t.assert.equal(gotFilename, path.join(pluginOptions.root, 'index.html'))
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), indexContent)
+    t.assert.deepStrictEqual(typeof gotFilename, 'string')
+    t.assert.deepStrictEqual(gotFilename, path.join(pluginOptions.root, 'index.html'))
     genericResponseChecks(t, response)
   })
 
@@ -592,8 +592,8 @@ test('payload.path is set', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/this/path/doesnt/exist.html')
     t.assert.ok(!response.ok)
-    t.assert.equal(response.status, 404)
-    t.assert.equal(typeof gotFilename, 'undefined')
+    t.assert.deepStrictEqual(response.status, 404)
+    t.assert.deepStrictEqual(typeof gotFilename, 'undefined')
     genericErrorResponseChecks(t, response)
   })
 })
@@ -627,9 +627,9 @@ test('error responses can be customized with fastify.setErrorHandler()', async t
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/index.js')
     t.assert.ok(!response.ok)
-    t.assert.equal(response.status, 403)
-    t.assert.equal(response.headers.get('content-type'), 'text/plain')
-    t.assert.equal(await response.text(), '500 Custom error message')
+    t.assert.deepStrictEqual(response.status, 403)
+    t.assert.deepStrictEqual(response.headers.get('content-type'), 'text/plain')
+    t.assert.deepStrictEqual(await response.text(), '500 Custom error message')
   })
 })
 
@@ -658,9 +658,9 @@ test('not found responses can be customized with fastify.setNotFoundHandler()', 
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/path/does/not/exist.html')
     t.assert.ok(!response.ok)
-    t.assert.equal(response.status, 404)
-    t.assert.equal(response.headers.get('content-type'), 'text/plain')
-    t.assert.equal(await response.text(), '/path/does/not/exist.html Not Found')
+    t.assert.deepStrictEqual(response.status, 404)
+    t.assert.deepStrictEqual(response.headers.get('content-type'), 'text/plain')
+    t.assert.deepStrictEqual(await response.text(), '/path/does/not/exist.html Not Found')
   })
 })
 
@@ -694,9 +694,9 @@ test('fastify.setNotFoundHandler() is called for dotfiles when send is configure
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/path/does/not/.exist.html')
     t.assert.ok(!response.ok)
-    t.assert.equal(response.status, 404)
-    t.assert.equal(response.headers.get('content-type'), 'text/plain')
-    t.assert.equal(await response.text(), '/path/does/not/.exist.html Not Found')
+    t.assert.deepStrictEqual(response.status, 404)
+    t.assert.deepStrictEqual(response.headers.get('content-type'), 'text/plain')
+    t.assert.deepStrictEqual(await response.text(), '/path/does/not/.exist.html Not Found')
   })
 })
 
@@ -728,7 +728,7 @@ test('serving disabled', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/index.html')
     t.assert.ok(!response.ok)
-    t.assert.equal(response.status, 404)
+    t.assert.deepStrictEqual(response.status, 404)
   })
 
   await t.test('/static/index.html via sendFile found', async (t) => {
@@ -736,8 +736,8 @@ test('serving disabled', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/foo/bar')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), indexContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), indexContent)
     genericResponseChecks(t, response)
   })
 })
@@ -777,8 +777,8 @@ test('sendFile', async (t) => {
     t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/foo/bar')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), indexContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), indexContent)
     genericResponseChecks(t, response)
   })
 
@@ -787,8 +787,8 @@ test('sendFile', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/root/path/override/test')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), deepContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), deepContent)
     genericResponseChecks(t, response)
   })
 
@@ -797,8 +797,8 @@ test('sendFile', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/foo/bar')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), indexContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), indexContent)
     genericResponseChecks(t, response)
   })
 
@@ -807,9 +807,9 @@ test('sendFile', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/foo/bar/options/override/test')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), indexContent)
-    t.assert.equal(response.headers.get('cache-control'), `public, max-age=${maxAge / 1000}`)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), indexContent)
+    t.assert.deepStrictEqual(response.headers.get('cache-control'), `public, max-age=${maxAge / 1000}`)
     genericResponseChecks(t, response)
   })
 })
@@ -844,8 +844,8 @@ test('sendFile disabled', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/foo/bar')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), 'pass')
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), 'pass')
   })
 })
 
@@ -869,7 +869,7 @@ test('allowedPath option - pathname', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/foobar.html')
     t.assert.ok(!response.ok)
-    t.assert.equal(response.status, 404)
+    t.assert.deepStrictEqual(response.status, 404)
     genericErrorResponseChecks(t, response)
   })
 
@@ -878,7 +878,7 @@ test('allowedPath option - pathname', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/index.css')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
+    t.assert.deepStrictEqual(response.status, 200)
   })
 })
 
@@ -903,7 +903,7 @@ test('allowedPath option - request', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/foobar.html')
     t.assert.ok(!response.ok)
-    t.assert.equal(response.status, 404)
+    t.assert.deepStrictEqual(response.status, 404)
     genericErrorResponseChecks(t, response)
   })
 
@@ -912,7 +912,7 @@ test('allowedPath option - request', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/index.css?key=temporaryKey')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
+    t.assert.deepStrictEqual(response.status, 200)
   })
 })
 
@@ -984,9 +984,9 @@ test('download', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/foo/bar')
     t.assert.ok(response.ok)
-    t.assert.equal(response.headers.get('content-disposition'), 'attachment; filename="index.html"')
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), indexContent)
+    t.assert.deepStrictEqual(response.headers.get('content-disposition'), 'attachment; filename="index.html"')
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), indexContent)
     genericResponseChecks(t, response)
   })
 
@@ -995,9 +995,9 @@ test('download', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/foo/bar/change')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(response.headers.get('content-disposition'), 'attachment; filename="hello-world.html"')
-    t.assert.equal(await response.text(), indexContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(response.headers.get('content-disposition'), 'attachment; filename="hello-world.html"')
+    t.assert.deepStrictEqual(await response.text(), indexContent)
     genericResponseChecks(t, response)
   })
 
@@ -1006,9 +1006,9 @@ test('download', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/root/path/override/test')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(response.headers.get('content-disposition'), 'attachment; filename="foo.html"')
-    t.assert.equal(await response.text(), deepContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(response.headers.get('content-disposition'), 'attachment; filename="foo.html"')
+    t.assert.deepStrictEqual(await response.text(), deepContent)
     genericResponseChecks(t, response)
   })
 
@@ -1017,10 +1017,10 @@ test('download', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/foo/bar/override')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(response.headers.get('content-disposition'), 'attachment; filename="hello-world.html"')
-    t.assert.equal(response.headers.get('cache-control'), 'public, max-age=7200, immutable')
-    t.assert.equal(await response.text(), indexContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(response.headers.get('content-disposition'), 'attachment; filename="hello-world.html"')
+    t.assert.deepStrictEqual(response.headers.get('cache-control'), 'public, max-age=7200, immutable')
+    t.assert.deepStrictEqual(await response.text(), indexContent)
     genericResponseChecks(t, response)
   })
 
@@ -1029,10 +1029,10 @@ test('download', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/foo/bar/override/2')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(response.headers.get('content-disposition'), 'attachment; filename="index.html"')
-    t.assert.equal(response.headers.get('accept-ranges'), undefined)
-    t.assert.equal(await response.text(), indexContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(response.headers.get('content-disposition'), 'attachment; filename="index.html"')
+    t.assert.deepStrictEqual(response.headers.get('accept-ranges'), null)
+    t.assert.deepStrictEqual(await response.text(), indexContent)
     genericResponseChecks(t, response)
   })
 
@@ -1041,9 +1041,9 @@ test('download', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/root/path/override/test/change')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(response.headers.get('content-disposition'), 'attachment; filename="hello-world.html"')
-    t.assert.equal(await response.text(), deepContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(response.headers.get('content-disposition'), 'attachment; filename="hello-world.html"')
+    t.assert.deepStrictEqual(await response.text(), deepContent)
     genericResponseChecks(t, response)
   })
 })
@@ -1061,7 +1061,7 @@ test('download disabled', async (t) => {
 
   fastify.get('/foo/bar', function (req, reply) {
     if (reply.download === undefined) {
-      t.assert.equal(reply.download, undefined)
+      t.assert.deepStrictEqual(reply.download, undefined)
       reply.send('pass')
     } else {
       reply.send('fail')
@@ -1079,8 +1079,8 @@ test('download disabled', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/foo/bar')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), 'pass')
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), 'pass')
   })
 })
 
@@ -1096,7 +1096,7 @@ test('root not found warning', async (t) => {
   const rootPath = path.join(__dirname, 'does-not-exist')
   const pluginOptions = { root: rootPath }
   const destination = concat((data) => {
-    t.assert.equal(JSON.parse(data).msg, `"root" path "${rootPath}" must exist`)
+    t.assert.deepStrictEqual(JSON.parse(data).msg, `"root" path "${rootPath}" must exist`)
   })
   const loggerInstance = pino(
     {
@@ -1131,18 +1131,18 @@ test('send options', (t) => {
   const { resolve, promise } = Promise.withResolvers()
   const fastifyStatic = require('proxyquire')('../', {
     '@fastify/send': function sendStub (req, pathName, options) {
-      t.assert.equal(pathName, '/index.html')
-      t.assert.equal(options.root, path.join(__dirname, '/static'))
-      t.assert.equal(options.acceptRanges, 'acceptRanges')
-      t.assert.equal(options.contentType, 'contentType')
-      t.assert.equal(options.cacheControl, 'cacheControl')
-      t.assert.equal(options.dotfiles, 'dotfiles')
-      t.assert.equal(options.etag, 'etag')
-      t.assert.equal(options.extensions, 'extensions')
-      t.assert.equal(options.immutable, 'immutable')
-      t.assert.equal(options.index, 'index')
-      t.assert.equal(options.lastModified, 'lastModified')
-      t.assert.equal(options.maxAge, 'maxAge')
+      t.assert.deepStrictEqual(pathName, '/index.html')
+      t.assert.deepStrictEqual(options.root, path.join(__dirname, '/static'))
+      t.assert.deepStrictEqual(options.acceptRanges, 'acceptRanges')
+      t.assert.deepStrictEqual(options.contentType, 'contentType')
+      t.assert.deepStrictEqual(options.cacheControl, 'cacheControl')
+      t.assert.deepStrictEqual(options.dotfiles, 'dotfiles')
+      t.assert.deepStrictEqual(options.etag, 'etag')
+      t.assert.deepStrictEqual(options.extensions, 'extensions')
+      t.assert.deepStrictEqual(options.immutable, 'immutable')
+      t.assert.deepStrictEqual(options.index, 'index')
+      t.assert.deepStrictEqual(options.lastModified, 'lastModified')
+      t.assert.deepStrictEqual(options.maxAge, 'maxAge')
       resolve()
       return { on: () => { }, pipe: () => { } }
     }
@@ -1159,7 +1159,7 @@ test('setHeaders option', async (t) => {
   const pluginOptions = {
     root: path.join(__dirname, 'static'),
     setHeaders: function (res, pathName) {
-      t.assert.equal(pathName, path.join(__dirname, 'static/index.html'))
+      t.assert.deepStrictEqual(pathName, path.join(__dirname, 'static/index.html'))
       res.setHeader('X-Test-Header', 'test')
     }
   }
@@ -1174,9 +1174,9 @@ test('setHeaders option', async (t) => {
 
   const response = await fetch('http://localhost:' + fastify.server.address().port + '/index.html')
   t.assert.ok(response.ok)
-  t.assert.equal(response.status, 200)
-  t.assert.equal(response.headers.get('x-test-header'), 'test')
-  t.assert.equal(await response.text(), indexContent)
+  t.assert.deepStrictEqual(response.status, 200)
+  t.assert.deepStrictEqual(response.headers.get('x-test-header'), 'test')
+  t.assert.deepStrictEqual(await response.text(), indexContent)
   genericResponseChecks(t, response)
 })
 
@@ -1197,9 +1197,9 @@ test('maxAge option', async (t) => {
 
   const response = await fetch('http://localhost:' + fastify.server.address().port + '/index.html')
   t.assert.ok(response.ok)
-  t.assert.equal(response.status, 200)
-  t.assert.equal(response.headers.get('cache-control'), 'public, max-age=3600')
-  t.assert.equal(await response.text(), indexContent)
+  t.assert.deepStrictEqual(response.status, 200)
+  t.assert.deepStrictEqual(response.headers.get('cache-control'), 'public, max-age=3600')
+  t.assert.deepStrictEqual(await response.text(), indexContent)
   genericResponseChecks(t, response)
 })
 
@@ -1310,8 +1310,8 @@ test('register no prefix', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/index.html')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), indexContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), indexContent)
     genericResponseChecks(t, response)
   })
 
@@ -1320,7 +1320,7 @@ test('register no prefix', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/index.css')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
+    t.assert.deepStrictEqual(response.status, 200)
     genericResponseChecks(t, response)
   })
 
@@ -1329,7 +1329,7 @@ test('register no prefix', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port)
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
+    t.assert.deepStrictEqual(response.status, 200)
     t.assert.deepStrictEqual(await response.json(), { hello: 'world' })
   })
 
@@ -1338,8 +1338,8 @@ test('register no prefix', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/deep/path/for/test/purpose/foo.html')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), deepContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), deepContent)
     genericResponseChecks(t, response)
   })
 
@@ -1348,8 +1348,8 @@ test('register no prefix', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/deep/path/for/test/')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), innerIndex)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), innerIndex)
     genericResponseChecks(t, response)
   })
 
@@ -1358,7 +1358,7 @@ test('register no prefix', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/this/path/doesnt/exist.html')
     t.assert.ok(!response.ok)
-    t.assert.equal(response.status, 404)
+    t.assert.deepStrictEqual(response.status, 404)
     genericErrorResponseChecks(t, response)
   })
 
@@ -1367,7 +1367,7 @@ test('register no prefix', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/../index.js')
     t.assert.ok(!response.ok)
-    t.assert.equal(response.status, 404)
+    t.assert.deepStrictEqual(response.status, 404)
     genericErrorResponseChecks(t, response)
   })
 })
@@ -1395,8 +1395,8 @@ test('with fastify-compress', async t => {
       }
     })
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(response.headers.get('content-encoding'), 'deflate')
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(response.headers.get('content-encoding'), 'deflate')
     genericResponseChecks(t, response)
   })
 
@@ -1405,8 +1405,8 @@ test('with fastify-compress', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/index.html')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(response.headers.get('content-encoding'), 'gzip')
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(response.headers.get('content-encoding'), 'gzip')
     genericResponseChecks(t, response)
   })
 })
@@ -1438,8 +1438,8 @@ test('register /static/ with schemaHide true', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/index.html')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(response.headers.get('content-type'), 'text/html; charset=utf-8')
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(response.headers.get('content-type'), 'text/html; charset=utf-8')
     genericResponseChecks(t, response)
   })
 })
@@ -1472,8 +1472,8 @@ test('register /static/ with schemaHide false', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/index.html')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(response.headers.get('content-type'), 'text/html; charset=utf-8')
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(response.headers.get('content-type'), 'text/html; charset=utf-8')
     genericResponseChecks(t, response)
   })
 })
@@ -1505,8 +1505,8 @@ test('register /static/ without schemaHide', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/index.html')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(response.headers.get('content-type'), 'text/html; charset=utf-8')
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(response.headers.get('content-type'), 'text/html; charset=utf-8')
     genericResponseChecks(t, response)
   })
 })
@@ -1532,8 +1532,8 @@ test('fastify with exposeHeadRoutes', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/index.html', { method: 'HEAD' })
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), '')
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), '')
     genericResponseChecks(t, response)
   })
 })
@@ -1563,8 +1563,8 @@ test('register with wildcard false', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/index.html')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), indexContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), indexContent)
     genericResponseChecks(t, response)
   })
 
@@ -1573,7 +1573,7 @@ test('register with wildcard false', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/index.css')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
+    t.assert.deepStrictEqual(response.status, 200)
     genericResponseChecks(t, response)
   })
 
@@ -1582,8 +1582,8 @@ test('register with wildcard false', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port)
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), indexContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), indexContent)
     genericResponseChecks(t, response)
   })
 
@@ -1592,7 +1592,7 @@ test('register with wildcard false', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/not-defined')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
+    t.assert.deepStrictEqual(response.status, 200)
     t.assert.deepStrictEqual(await response.json(), { hello: 'world' })
   })
 
@@ -1601,8 +1601,8 @@ test('register with wildcard false', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/deep/path/for/test/purpose/foo.html')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), deepContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), deepContent)
     genericResponseChecks(t, response)
   })
 
@@ -1611,8 +1611,8 @@ test('register with wildcard false', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/deep/path/for/test/')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), innerIndex)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), innerIndex)
     genericResponseChecks(t, response)
   })
 
@@ -1621,7 +1621,7 @@ test('register with wildcard false', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/../index.js')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
+    t.assert.deepStrictEqual(response.status, 200)
     t.assert.deepStrictEqual(await response.json(), { hello: 'world' })
   })
 
@@ -1630,8 +1630,8 @@ test('register with wildcard false', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/index.css')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), '')
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), '')
     genericResponseChecks(t, response)
   })
 })
@@ -1665,7 +1665,7 @@ test('register with wildcard false (trailing slash in the root)', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/assets/index.css')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
+    t.assert.deepStrictEqual(response.status, 200)
     genericResponseChecks(t, response)
   })
 
@@ -1674,7 +1674,7 @@ test('register with wildcard false (trailing slash in the root)', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/assets/not-defined')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
+    t.assert.deepStrictEqual(response.status, 200)
     t.assert.deepStrictEqual(await response.json(), { hello: 'world' })
   })
 
@@ -1683,8 +1683,8 @@ test('register with wildcard false (trailing slash in the root)', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/assets/deep/path/for/test/purpose/foo.html')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), deepContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), deepContent)
     genericResponseChecks(t, response)
   })
 
@@ -1693,7 +1693,7 @@ test('register with wildcard false (trailing slash in the root)', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/assets/../index.js')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
+    t.assert.deepStrictEqual(response.status, 200)
     t.assert.deepStrictEqual(await response.json(), { hello: 'world' })
   })
 
@@ -1702,8 +1702,8 @@ test('register with wildcard false (trailing slash in the root)', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/assets/index.css')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), '')
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), '')
     genericResponseChecks(t, response)
   })
 })
@@ -1770,8 +1770,8 @@ test('register with wildcard false and alternative index', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/index.html')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), indexContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), indexContent)
     genericResponseChecks(t, response)
   })
 
@@ -1780,8 +1780,8 @@ test('register with wildcard false and alternative index', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/index.html', { method: 'HEAD' })
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), '')
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), '')
     genericResponseChecks(t, response)
   })
 
@@ -1790,7 +1790,7 @@ test('register with wildcard false and alternative index', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/index.css')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
+    t.assert.deepStrictEqual(response.status, 200)
     genericResponseChecks(t, response)
   })
 
@@ -1799,8 +1799,8 @@ test('register with wildcard false and alternative index', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port)
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), foobarContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), foobarContent)
     genericResponseChecks(t, response)
   })
 
@@ -1811,8 +1811,8 @@ test('register with wildcard false and alternative index', async t => {
       method: 'HEAD'
     })
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), '')
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), '')
     genericResponseChecks(t, response)
   })
 
@@ -1821,7 +1821,7 @@ test('register with wildcard false and alternative index', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/not-defined')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
+    t.assert.deepStrictEqual(response.status, 200)
     t.assert.deepStrictEqual(await response.json(), { hello: 'world' })
   })
 
@@ -1830,8 +1830,8 @@ test('register with wildcard false and alternative index', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/deep/path/for/test/purpose/')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), deepContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), deepContent)
     genericResponseChecks(t, response)
   })
 
@@ -1840,8 +1840,8 @@ test('register with wildcard false and alternative index', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/deep/path/for/test/')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), innerIndex)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), innerIndex)
     genericResponseChecks(t, response)
   })
 
@@ -1852,8 +1852,8 @@ test('register with wildcard false and alternative index', async t => {
       method: 'HEAD'
     })
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), '')
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), '')
     genericResponseChecks(t, response)
   })
 
@@ -1862,7 +1862,7 @@ test('register with wildcard false and alternative index', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/../index.js')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
+    t.assert.deepStrictEqual(response.status, 200)
     t.assert.deepStrictEqual(await response.json(), { hello: 'world' })
   })
 })
@@ -1894,8 +1894,8 @@ test('register /static with wildcard false and alternative index', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/index.html')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), indexContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), indexContent)
     genericResponseChecks(t, response)
   })
 
@@ -1906,8 +1906,8 @@ test('register /static with wildcard false and alternative index', async t => {
       method: 'HEAD'
     })
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), '')
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), '')
     genericResponseChecks(t, response)
   })
 
@@ -1916,7 +1916,7 @@ test('register /static with wildcard false and alternative index', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/index.css')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
+    t.assert.deepStrictEqual(response.status, 200)
     genericResponseChecks(t, response)
   })
 
@@ -1929,7 +1929,7 @@ test('register /static with wildcard false and alternative index', async t => {
     // to verify we do not get a redirect when not requested
     const testurl = 'http://localhost:' + fastify.server.address().port + '/static'
     const req = http.request(url.parse(testurl), res => {
-      t.assert.equal(res.statusCode, 200)
+      t.assert.deepStrictEqual(res.statusCode, 200)
       let body = ''
       res.on('data', (chunk) => {
         body += chunk.toString()
@@ -1950,8 +1950,8 @@ test('register /static with wildcard false and alternative index', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), foobarContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), foobarContent)
     genericResponseChecks(t, response)
   })
 
@@ -1962,8 +1962,8 @@ test('register /static with wildcard false and alternative index', async t => {
       method: 'HEAD'
     })
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), '')
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), '')
     genericResponseChecks(t, response)
   })
 
@@ -1972,7 +1972,7 @@ test('register /static with wildcard false and alternative index', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/not-defined')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
+    t.assert.deepStrictEqual(response.status, 200)
     t.assert.deepStrictEqual(await response.json(), { hello: 'world' })
   })
 
@@ -1981,8 +1981,8 @@ test('register /static with wildcard false and alternative index', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test/purpose/')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), deepContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), deepContent)
     genericResponseChecks(t, response)
   })
 
@@ -1991,8 +1991,8 @@ test('register /static with wildcard false and alternative index', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test/')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), innerIndex)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), innerIndex)
     genericResponseChecks(t, response)
   })
 
@@ -2001,7 +2001,7 @@ test('register /static with wildcard false and alternative index', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/../index.js')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
+    t.assert.deepStrictEqual(response.status, 200)
     t.assert.deepStrictEqual(await response.json(), { hello: 'world' })
   })
 })
@@ -2034,8 +2034,8 @@ test('register /static with redirect true', async t => {
     // simple-get doesn't tell us about redirects so use http.request directly
     const testurl = 'http://localhost:' + fastify.server.address().port + '/static?a=b'
     const req = http.request(url.parse(testurl), res => {
-      t.assert.equal(res.statusCode, 301)
-      t.assert.equal(res.headers.location, '/static/?a=b')
+      t.assert.deepStrictEqual(res.statusCode, 301)
+      t.assert.deepStrictEqual(res.headers.location, '/static/?a=b')
       resolve()
     })
     req.on('error', (err) => console.error(err))
@@ -2045,8 +2045,8 @@ test('register /static with redirect true', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static?a=b')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), indexContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), indexContent)
     genericResponseChecks(t, response)
   })
 
@@ -2058,8 +2058,8 @@ test('register /static with redirect true', async t => {
     // simple-get doesn't tell us about redirects so use http.request directly
     const testurl = 'http://localhost:' + fastify.server.address().port + '/static'
     const req = http.request(url.parse(testurl), res => {
-      t.assert.equal(res.statusCode, 301)
-      t.assert.equal(res.headers.location, '/static/')
+      t.assert.deepStrictEqual(res.statusCode, 301)
+      t.assert.deepStrictEqual(res.headers.location, '/static/')
 
       resolve()
     })
@@ -2074,8 +2074,8 @@ test('register /static with redirect true', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), indexContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), indexContent)
     genericResponseChecks(t, response)
   })
 
@@ -2084,7 +2084,7 @@ test('register /static with redirect true', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/deep')
     t.assert.ok(!response.ok)
-    t.assert.equal(response.status, 404)
+    t.assert.deepStrictEqual(response.status, 404)
     genericErrorResponseChecks(t, response)
   })
 
@@ -2096,8 +2096,8 @@ test('register /static with redirect true', async t => {
     // simple-get doesn't tell us about redirects so use http.request directly
     const testurl = 'http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test?a=b'
     const req = http.request(url.parse(testurl), res => {
-      t.assert.equal(res.statusCode, 301)
-      t.assert.equal(res.headers.location, '/static/deep/path/for/test/?a=b')
+      t.assert.deepStrictEqual(res.statusCode, 301)
+      t.assert.deepStrictEqual(res.headers.location, '/static/deep/path/for/test/?a=b')
       resolve()
     })
     req.on('error', (err) => console.error(err))
@@ -2108,8 +2108,8 @@ test('register /static with redirect true', async t => {
     // verify the redirect with query parameters works
     const response = await fetch(testurl)
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), innerIndex)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), innerIndex)
     genericResponseChecks(t, response)
   })
 
@@ -2118,8 +2118,8 @@ test('register /static with redirect true', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), innerIndex)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), innerIndex)
     genericResponseChecks(t, response)
   })
 })
@@ -2153,8 +2153,8 @@ test('register /static with redirect true and wildcard false', async t => {
     // simple-get doesn't tell us about redirects so use http.request directly
     const testurl = 'http://localhost:' + fastify.server.address().port + '/static?a=b'
     const req = http.request(url.parse(testurl), res => {
-      t.assert.equal(res.statusCode, 301)
-      t.assert.equal(res.headers.location, '/static/?a=b')
+      t.assert.deepStrictEqual(res.statusCode, 301)
+      t.assert.deepStrictEqual(res.headers.location, '/static/?a=b')
       resolve()
     })
     req.on('error', err => console.error(err))
@@ -2163,8 +2163,8 @@ test('register /static with redirect true and wildcard false', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static?a=b')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), indexContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), indexContent)
     genericResponseChecks(t, response)
   })
 
@@ -2173,8 +2173,8 @@ test('register /static with redirect true and wildcard false', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/?a=b')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), indexContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), indexContent)
     genericResponseChecks(t, response)
   })
 
@@ -2183,8 +2183,8 @@ test('register /static with redirect true and wildcard false', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/?a=b', { method: 'HEAD' })
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), '')
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), '')
     genericResponseChecks(t, response)
   })
 
@@ -2193,7 +2193,7 @@ test('register /static with redirect true and wildcard false', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/deep')
     t.assert.ok(!response.ok)
-    t.assert.equal(response.status, 404)
+    t.assert.deepStrictEqual(response.status, 404)
     genericErrorResponseChecks(t, response)
   })
 
@@ -2205,8 +2205,8 @@ test('register /static with redirect true and wildcard false', async t => {
     // simple-get doesn't tell us about redirects so use http.request directly
     const testurl = 'http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test?a=b'
     const req = http.request(url.parse(testurl), res => {
-      t.assert.equal(res.statusCode, 301)
-      t.assert.equal(res.headers.location, '/static/deep/path/for/test/?a=b')
+      t.assert.deepStrictEqual(res.statusCode, 301)
+      t.assert.deepStrictEqual(res.headers.location, '/static/deep/path/for/test/?a=b')
       resolve()
     })
     req.on('error', err => console.error(err))
@@ -2215,8 +2215,8 @@ test('register /static with redirect true and wildcard false', async t => {
 
     const response = await fetch(testurl)
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), innerIndex)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), innerIndex)
     genericResponseChecks(t, response)
   })
 
@@ -2225,8 +2225,8 @@ test('register /static with redirect true and wildcard false', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), innerIndex)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), innerIndex)
     genericResponseChecks(t, response)
   })
 
@@ -2235,8 +2235,8 @@ test('register /static with redirect true and wildcard false', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test', { method: 'HEAD' })
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), '')
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), '')
     genericResponseChecks(t, response)
   })
 })
@@ -2265,7 +2265,7 @@ test('trailing slash behavior with redirect = false', async (t) => {
 
     const response = await fetch(host + '/static')
     t.assert.ok(!response.ok)
-    t.assert.equal(response.status, 404)
+    t.assert.deepStrictEqual(response.status, 404)
   })
 
   await t.test('prefix with trailing trailing slash => 200', async (t) => {
@@ -2273,7 +2273,7 @@ test('trailing slash behavior with redirect = false', async (t) => {
 
     const response = await fetch(host + '/static/')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
+    t.assert.deepStrictEqual(response.status, 200)
   })
 
   await t.test('deep path with no index.html or trailing slash => 404', async (t) => {
@@ -2281,7 +2281,7 @@ test('trailing slash behavior with redirect = false', async (t) => {
 
     const response = await fetch(host + '/static/deep/path')
     t.assert.ok(!response.ok)
-    t.assert.equal(response.status, 404)
+    t.assert.deepStrictEqual(response.status, 404)
   })
 
   await t.test('deep path with index.html but no trailing slash => 200', async (t) => {
@@ -2289,7 +2289,7 @@ test('trailing slash behavior with redirect = false', async (t) => {
 
     const response = await fetch(host + '/static/deep/path/for/test')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
+    t.assert.deepStrictEqual(response.status, 200)
   })
 
   await t.test('deep path with index.html and trailing slash => 200', async (t) => {
@@ -2297,7 +2297,7 @@ test('trailing slash behavior with redirect = false', async (t) => {
 
     const response = await fetch(host + '/static/deep/path/for/test/')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
+    t.assert.deepStrictEqual(response.status, 200)
   })
 })
 
@@ -2328,8 +2328,8 @@ test('if dotfiles are properly served according to plugin options', async (t) =>
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/.example')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), exampleContents)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), exampleContents)
   })
 
   await t.test('ignore dotfiles', async (t) => {
@@ -2351,7 +2351,7 @@ test('if dotfiles are properly served according to plugin options', async (t) =>
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/.example')
     t.assert.ok(!response.ok)
-    t.assert.equal(response.status, 404)
+    t.assert.deepStrictEqual(response.status, 404)
   })
 
   await t.test('deny requests to serve a dotfile', async (t) => {
@@ -2372,7 +2372,7 @@ test('if dotfiles are properly served according to plugin options', async (t) =>
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/.example')
     t.assert.ok(!response.ok)
-    t.assert.equal(response.status, 403)
+    t.assert.deepStrictEqual(response.status, 403)
   })
 })
 
@@ -2435,8 +2435,8 @@ test('inject support', async (t) => {
     method: 'GET',
     url: '/static/index.html'
   })
-  t.assert.equal(response.statusCode, 200)
-  t.assert.equal(response.body.toString(), indexContent)
+  t.assert.deepStrictEqual(response.statusCode, 200)
+  t.assert.deepStrictEqual(response.body.toString(), indexContent)
 })
 
 test('routes should use custom errorHandler premature stream close', async t => {
@@ -2489,7 +2489,7 @@ test('routes should fallback to default errorHandler', async t => {
   t.after(() => fastify.close())
 
   const response = await fastify.inject({ method: 'GET', url: '/static/index.html' })
-  t.assert.equal(response.statusCode, 500)
+  t.assert.deepStrictEqual(response.statusCode, 500)
   t.assert.deepStrictEqual(await response.json(), {
     statusCode: 500,
     code: 'SOMETHING_ELSE',
@@ -2516,8 +2516,8 @@ test('percent encoded URLs in glob mode', async (t) => {
 
   const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/a .md')
   t.assert.ok(response.ok)
-  t.assert.equal(response.status, 200)
-  t.assert.equal(
+  t.assert.deepStrictEqual(response.status, 200)
+  t.assert.deepStrictEqual(
     fs.readFileSync(path.join(__dirname, 'static', 'a .md'), 'utf-8'),
     await response.text()
   )
@@ -2543,10 +2543,10 @@ test('register /static and /static2 without wildcard', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/index.html')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
+    t.assert.deepStrictEqual(response.status, 200)
     const responseContent = await response.text()
     t.assert.notEqual(responseContent, index2Content)
-    t.assert.equal(responseContent, indexContent)
+    t.assert.deepStrictEqual(responseContent, indexContent)
     genericResponseChecks(t, response)
   })
 
@@ -2555,8 +2555,8 @@ test('register /static and /static2 without wildcard', async t => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/bar.html')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), barContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), barContent)
     genericResponseChecks(t, response)
   })
 })
@@ -2584,8 +2584,8 @@ test(
     })
 
     genericResponseChecks(t, response)
-    t.assert.equal(response.headers['content-encoding'], 'br')
-    t.assert.equal(response.statusCode, 200)
+    t.assert.deepStrictEqual(response.headers['content-encoding'], 'br')
+    t.assert.deepStrictEqual(response.statusCode, 200)
     t.assert.deepStrictEqual(response.rawPayload, allThreeBr)
   }
 )
@@ -2613,8 +2613,8 @@ test(
     })
 
     genericResponseChecks(t, response)
-    t.assert.equal(response.headers['content-encoding'], 'gzip')
-    t.assert.equal(response.statusCode, 200)
+    t.assert.deepStrictEqual(response.headers['content-encoding'], 'gzip')
+    t.assert.deepStrictEqual(response.statusCode, 200)
     t.assert.deepStrictEqual(response.rawPayload, gzipOnly)
   }
 )
@@ -2642,8 +2642,8 @@ test(
     })
 
     genericResponseChecks(t, response)
-    t.assert.equal(response.headers['content-encoding'], 'gzip')
-    t.assert.equal(response.statusCode, 200)
+    t.assert.deepStrictEqual(response.headers['content-encoding'], 'gzip')
+    t.assert.deepStrictEqual(response.statusCode, 200)
     t.assert.deepStrictEqual(response.rawPayload, allThreeGzip)
   }
 )
@@ -2671,8 +2671,8 @@ test(
     })
 
     genericResponseChecks(t, response)
-    t.assert.equal(response.headers['content-encoding'], 'gzip')
-    t.assert.equal(response.statusCode, 200)
+    t.assert.deepStrictEqual(response.headers['content-encoding'], 'gzip')
+    t.assert.deepStrictEqual(response.statusCode, 200)
     t.assert.deepStrictEqual(response.rawPayload, allThreeGzip)
   }
 )
@@ -2700,9 +2700,9 @@ test(
     })
 
     genericResponseChecks(t, response)
-    t.assert.equal(response.headers['content-encoding'], undefined)
-    t.assert.equal(response.statusCode, 200)
-    t.assert.equal(response.body, uncompressedStatic)
+    t.assert.deepStrictEqual(response.headers['content-encoding'], undefined)
+    t.assert.deepStrictEqual(response.statusCode, 200)
+    t.assert.deepStrictEqual(response.body, uncompressedStatic)
   }
 )
 
@@ -2730,8 +2730,8 @@ test(
     })
 
     genericResponseChecks(t, response)
-    t.assert.equal(response.headers['content-encoding'], 'br')
-    t.assert.equal(response.statusCode, 200)
+    t.assert.deepStrictEqual(response.headers['content-encoding'], 'br')
+    t.assert.deepStrictEqual(response.statusCode, 200)
     t.assert.deepStrictEqual(response.rawPayload, allThreeBr)
   }
 )
@@ -2760,8 +2760,8 @@ test(
     })
 
     genericResponseChecks(t, response)
-    t.assert.equal(response.headers['content-encoding'], 'gzip')
-    t.assert.equal(response.statusCode, 200)
+    t.assert.deepStrictEqual(response.headers['content-encoding'], 'gzip')
+    t.assert.deepStrictEqual(response.statusCode, 200)
     t.assert.deepStrictEqual(response.rawPayload, gzipOnly)
   }
 )
@@ -2790,8 +2790,8 @@ test(
     })
 
     genericResponseChecks(t, response)
-    t.assert.equal(response.headers['content-encoding'], 'gzip')
-    t.assert.equal(response.statusCode, 200)
+    t.assert.deepStrictEqual(response.headers['content-encoding'], 'gzip')
+    t.assert.deepStrictEqual(response.statusCode, 200)
     t.assert.deepStrictEqual(response.rawPayload, allThreeGzip)
   }
 )
@@ -2820,8 +2820,8 @@ test(
     })
 
     genericResponseChecks(t, response)
-    t.assert.equal(response.headers['content-encoding'], 'gzip')
-    t.assert.equal(response.statusCode, 200)
+    t.assert.deepStrictEqual(response.headers['content-encoding'], 'gzip')
+    t.assert.deepStrictEqual(response.statusCode, 200)
     t.assert.deepStrictEqual(response.rawPayload, allThreeGzip)
   }
 )
@@ -2850,9 +2850,9 @@ test(
     })
 
     genericResponseChecks(t, response)
-    t.assert.equal(response.headers['content-encoding'], undefined)
-    t.assert.equal(response.statusCode, 200)
-    t.assert.equal(response.body, uncompressedStatic)
+    t.assert.deepStrictEqual(response.headers['content-encoding'], undefined)
+    t.assert.deepStrictEqual(response.statusCode, 200)
+    t.assert.deepStrictEqual(response.body, uncompressedStatic)
   }
 )
 
@@ -2876,9 +2876,9 @@ test(
     })
 
     genericResponseChecks(t, response)
-    t.assert.equal(response.headers['content-encoding'], undefined)
-    t.assert.equal(response.statusCode, 200)
-    t.assert.equal(response.body, uncompressedStatic)
+    t.assert.deepStrictEqual(response.headers['content-encoding'], undefined)
+    t.assert.deepStrictEqual(response.statusCode, 200)
+    t.assert.deepStrictEqual(response.body, uncompressedStatic)
   }
 )
 
@@ -2905,8 +2905,8 @@ test(
     })
 
     genericResponseChecks(t, response)
-    t.assert.equal(response.headers['content-encoding'], 'br')
-    t.assert.equal(response.statusCode, 200)
+    t.assert.deepStrictEqual(response.headers['content-encoding'], 'br')
+    t.assert.deepStrictEqual(response.statusCode, 200)
     t.assert.deepStrictEqual(response.rawPayload, indexBr)
   }
 )
@@ -2935,8 +2935,8 @@ test(
     })
 
     genericResponseChecks(t, response)
-    t.assert.equal(response.headers['content-encoding'], 'br')
-    t.assert.equal(response.statusCode, 200)
+    t.assert.deepStrictEqual(response.headers['content-encoding'], 'br')
+    t.assert.deepStrictEqual(response.statusCode, 200)
     t.assert.deepStrictEqual(response.rawPayload, dirIndexBr)
   }
 )
@@ -2963,8 +2963,8 @@ test(
     })
 
     genericResponseChecks(t, response)
-    t.assert.equal(response.headers['content-encoding'], 'gzip')
-    t.assert.equal(response.statusCode, 200)
+    t.assert.deepStrictEqual(response.headers['content-encoding'], 'gzip')
+    t.assert.deepStrictEqual(response.statusCode, 200)
     t.assert.deepStrictEqual(response.rawPayload, dirIndexGz)
   }
 )
@@ -2993,8 +2993,8 @@ test(
     })
 
     genericResponseChecks(t, response)
-    t.assert.equal(response.headers['content-encoding'], 'br')
-    t.assert.equal(response.statusCode, 200)
+    t.assert.deepStrictEqual(response.headers['content-encoding'], 'br')
+    t.assert.deepStrictEqual(response.statusCode, 200)
     t.assert.deepStrictEqual(response.rawPayload, allThreeBr)
   }
 )
@@ -3021,9 +3021,9 @@ test(
       }
     })
 
-    t.assert.equal(response.headers['content-type'], 'image/jpeg')
-    t.assert.equal(response.headers['content-encoding'], 'br')
-    t.assert.equal(response.statusCode, 200)
+    t.assert.deepStrictEqual(response.headers['content-type'], 'image/jpeg')
+    t.assert.deepStrictEqual(response.headers['content-encoding'], 'br')
+    t.assert.deepStrictEqual(response.statusCode, 200)
   }
 )
 
@@ -3049,7 +3049,7 @@ test(
       }
     })
 
-    t.assert.equal(response.statusCode, 404)
+    t.assert.deepStrictEqual(response.statusCode, 404)
     genericErrorResponseChecks(t, response)
   }
 )
@@ -3083,10 +3083,10 @@ test('should not redirect to protocol-relative locations', async (t) => {
     const { promise, resolve } = Promise.withResolvers()
 
     const req = http.request(url.parse(address + testUrl), res => {
-      t.assert.equal(res.statusCode, status, `status ${testUrl}`)
+      t.assert.deepStrictEqual(res.statusCode, status, `status ${testUrl}`)
 
       if (expected) {
-        t.assert.equal(res.headers.location, expected)
+        t.assert.deepStrictEqual(res.headers.location, expected)
       } else {
         t.assert.ok(!res.headers.location)
       }
@@ -3122,8 +3122,8 @@ test('should not serve index if option is `false`', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/index.html')
     t.assert.ok(response.ok)
-    t.assert.equal(response.status, 200)
-    t.assert.equal(await response.text(), indexContent)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), indexContent)
     genericResponseChecks(t, response)
   })
 
@@ -3132,7 +3132,7 @@ test('should not serve index if option is `false`', async (t) => {
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/static')
     t.assert.ok(!response.ok)
-    t.assert.equal(response.status, 404)
+    t.assert.deepStrictEqual(response.status, 404)
     genericErrorResponseChecks(t, response)
   })
 })
@@ -3151,11 +3151,11 @@ test('should follow symbolic link without wildcard', async (t) => {
 
   const response = await fetch('http://localhost:' + fastify.server.address().port + '/origin/subdir/subdir/index.html')
   t.assert.ok(response.ok)
-  t.assert.equal(response.status, 200)
+  t.assert.deepStrictEqual(response.status, 200)
 
   const response2 = await fetch('http://localhost:' + fastify.server.address().port + '/dir/symlink/subdir/subdir/index.html')
   t.assert.ok(response2.ok)
-  t.assert.equal(response2.status, 200)
+  t.assert.deepStrictEqual(response2.status, 200)
 })
 
 test('should serve files into hidden dir with wildcard `false`', async (t) => {
@@ -3176,8 +3176,8 @@ test('should serve files into hidden dir with wildcard `false`', async (t) => {
 
   const response = await fetch('http://localhost:' + fastify.server.address().port + '/.hidden/sample.json')
   t.assert.ok(response.ok)
-  t.assert.equal(response.status, 200)
-  t.assert.equal(await response.text(), jsonHiddenContent)
+  t.assert.deepStrictEqual(response.status, 200)
+  t.assert.deepStrictEqual(await response.text(), jsonHiddenContent)
   t.assert.ok(/application\/(json)/.test(response.headers.get('content-type')))
   t.assert.ok(response.headers.get('etag'))
   t.assert.ok(response.headers.get('last-modified'))
@@ -3201,7 +3201,7 @@ test('should not found hidden file with wildcard is `false`', async (t) => {
 
   const response = await fetch('http://localhost:' + fastify.server.address().port + '/.hidden/sample.json')
   t.assert.ok(!response.ok)
-  t.assert.equal(response.status, 404)
+  t.assert.deepStrictEqual(response.status, 404)
 })
 
 test('should serve files into hidden dir without wildcard option', async (t) => {
@@ -3220,8 +3220,8 @@ test('should serve files into hidden dir without wildcard option', async (t) => 
 
   const response = await fetch('http://localhost:' + fastify.server.address().port + '/.hidden/sample.json')
   t.assert.ok(response.ok)
-  t.assert.equal(response.status, 200)
-  t.assert.equal(await response.text(), jsonHiddenContent)
+  t.assert.deepStrictEqual(response.status, 200)
+  t.assert.deepStrictEqual(await response.text(), jsonHiddenContent)
   t.assert.ok(/application\/(json)/.test(response.headers.get('content-type')))
   t.assert.ok(response.headers.get('etag'))
   t.assert.ok(response.headers.get('last-modified'))
@@ -3251,8 +3251,8 @@ test(
     })
 
     genericResponseChecks(t, response)
-    t.assert.equal(response.headers['content-encoding'], 'gzip')
-    t.assert.equal(response.statusCode, 200)
+    t.assert.deepStrictEqual(response.headers['content-encoding'], 'gzip')
+    t.assert.deepStrictEqual(response.statusCode, 200)
     t.assert.deepStrictEqual(response.rawPayload, allThreeGzip)
   }
 )
@@ -3279,7 +3279,7 @@ test(
     })
 
     genericResponseChecks(t, response)
-    t.assert.equal(response.statusCode, 200)
+    t.assert.deepStrictEqual(response.statusCode, 200)
     t.assert.deepStrictEqual(response.body, foobarContent)
   }
 )
@@ -3303,7 +3303,7 @@ test(
       }
     })
     genericResponseChecks(t, response)
-    t.assert.equal(response.statusCode, 200)
+    t.assert.deepStrictEqual(response.statusCode, 200)
     t.assert.deepStrictEqual(response.body, foobarContent)
   }
 )
@@ -3327,7 +3327,7 @@ test(
       }
     })
     genericResponseChecks(t, response)
-    t.assert.equal(response.statusCode, 200)
+    t.assert.deepStrictEqual(response.statusCode, 200)
     t.assert.deepStrictEqual(response.body, foobarContent)
   }
 )
@@ -3353,7 +3353,7 @@ test(
         'accept-encoding': '*, *'
       }
     })
-    t.assert.equal(response.statusCode, 200)
+    t.assert.deepStrictEqual(response.statusCode, 200)
     t.assert.deepStrictEqual(response.body, aContent)
 
     const response2 = await fastify.inject({
@@ -3363,7 +3363,7 @@ test(
         'accept-encoding': '*, *'
       }
     })
-    t.assert.equal(response2.statusCode, 200)
+    t.assert.deepStrictEqual(response2.statusCode, 200)
     t.assert.deepStrictEqual(response2.body, aContent)
   }
 )
@@ -3390,7 +3390,7 @@ test(
         'accept-encoding': '*, *'
       }
     })
-    t.assert.equal(response.statusCode, 200)
+    t.assert.deepStrictEqual(response.statusCode, 200)
     t.assert.deepStrictEqual(response.body, txtContent)
   }
 )
@@ -3415,10 +3415,10 @@ test('content-length in head route should not return zero when using wildcard', 
 
   const response = await fetch('http://localhost:' + fastify.server.address().port + '/index.html', { method: 'HEAD' })
   t.assert.ok(response.ok)
-  t.assert.equal(response.status, 200)
-  t.assert.equal(response.headers.get('content-type'), 'text/html; charset=utf-8')
-  t.assert.equal(response.headers.get('content-length'), contentLength)
-  t.assert.equal(await response.text(), '')
+  t.assert.deepStrictEqual(response.status, 200)
+  t.assert.deepStrictEqual(response.headers.get('content-type'), 'text/html; charset=utf-8')
+  t.assert.deepStrictEqual(response.headers.get('content-length'), contentLength)
+  t.assert.deepStrictEqual(await response.text(), '')
 })
 
 test('respect the .code when using with sendFile', async t => {
@@ -3445,10 +3445,10 @@ test('respect the .code when using with sendFile', async t => {
 
   const response = await fetch('http://localhost:' + fastify.server.address().port + '/custom', { method: 'HEAD' })
   t.assert.ok(!response.ok)
-  t.assert.equal(response.status, 404)
-  t.assert.equal(response.headers.get('content-type'), 'text/html; charset=utf-8')
-  t.assert.equal(response.headers.get('content-length'), contentLength)
-  t.assert.equal(await response.text(), '')
+  t.assert.deepStrictEqual(response.status, 404)
+  t.assert.deepStrictEqual(response.headers.get('content-type'), 'text/html; charset=utf-8')
+  t.assert.deepStrictEqual(response.headers.get('content-length'), contentLength)
+  t.assert.deepStrictEqual(await response.text(), '')
 })
 
 test('respect the .type when using with sendFile with contentType disabled', async t => {
@@ -3476,8 +3476,8 @@ test('respect the .type when using with sendFile with contentType disabled', asy
 
   const response = await fetch('http://localhost:' + fastify.server.address().port + '/custom')
   t.assert.ok(response.ok)
-  t.assert.equal(response.status, 200)
-  t.assert.equal(response.headers.get('content-type'), 'text/html; charset=windows-1252')
-  t.assert.equal(response.headers.get('content-length'), contentLength)
-  t.assert.equal(await response.text(), fooContent)
+  t.assert.deepStrictEqual(response.status, 200)
+  t.assert.deepStrictEqual(response.headers.get('content-type'), 'text/html; charset=windows-1252')
+  t.assert.deepStrictEqual(response.headers.get('content-length'), contentLength)
+  t.assert.deepStrictEqual(await response.text(), fooContent)
 })
