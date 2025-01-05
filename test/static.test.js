@@ -70,6 +70,17 @@ function genericErrorResponseChecks (t, response) {
   t.assert.ok(response.headers.get?.('date') ?? response.headers.date)
 }
 
+if (typeof Promise.withResolvers === 'undefined') {
+  Promise.withResolvers = function () {
+    let promiseResolve, promiseReject
+    const promise = new Promise((resolve, reject) => {
+      promiseResolve = resolve
+      promiseReject = reject
+    })
+    return { promise, resolve: promiseResolve, reject: promiseReject }
+  }
+}
+
 test('register /static prefixAvoidTrailingSlash', async t => {
   t.plan(11)
 
