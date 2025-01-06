@@ -6,12 +6,12 @@
   "type": "commonjs",
   "types": "types/index.d.ts",
   "scripts": {
-    "coverage": "c8 --100 --reporter=html node --test test/*.test.js",
+    "coverage": "c8 --100 --reporter=html node --test test/static.test.js test/dir-list.test.js test/content-type.test.js",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "test": "npm run test:unit && npm run test:typescript",
     "test:typescript": "tsd",
-    "test:unit": "c8 --100 node --test test/*.test.js",
+    "test:unit": "c8 --100 node --test test/static.test.js test/dir-list.test.js test/content-type.test.js",
     "example": "node example/server.js"
   },
   "repository": {
