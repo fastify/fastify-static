@@ -4117,12 +4117,8 @@ t.test('register /static/ with custom log level', t => {
         write: (logLine) => {
           const log = JSON.parse(logLine)
 
-          /*
-            Do not expecting any request to be log since an higher log level then info has been set for the plugin.
-            Fails the test otherwise.
-          */
           if (log.reqId) {
-            t.fail()
+            t.fail('Not expecting any log since plugin\'s log level is set at WARN')
           }
         },
       },
