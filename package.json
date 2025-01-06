@@ -6,7 +6,7 @@
   "type": "commonjs",
   "types": "types/index.d.ts",
   "scripts": {
-    "coverage": "c8 --100 --reporter=html node --test --test test/*.test.js",
+    "coverage": "c8 --100 --reporter=html node --test test/*.test.js",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "test": "npm run test:unit && npm run test:typescript",
