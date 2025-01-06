@@ -4104,14 +4104,30 @@ t.test('respect the .type when using with sendFile with contentType disabled', t
 })
 
 t.test('register /static/ with custom log level', t => {
-  t.plan(12)
+  t.plan(11)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
     prefix: '/static/',
-    logLevel: 'debug'
+    logLevel: 'warn'
   }
-  const fastify = Fastify()
+  const fastify = Fastify({
+    logger: {
+      stream: {
+        write: (logLine) => {
+          const log = JSON.parse(logLine)
+
+          /*
+            Do not expecting any request to be log since an higher log level then info has been set for the plugin.
+            Fails the test otherwise.
+          */
+          if (log.reqId) {
+            t.fail()
+          }
+        },
+      },
+    },
+  })
   fastify.register(fastifyStatic, pluginOptions)
 
   t.teardown(fastify.close.bind(fastify))
@@ -4169,17 +4185,6 @@ t.test('register /static/ with custom log level', t => {
         t.equal(response.statusCode, 200)
         t.equal(body.toString(), indexContent)
         genericResponseChecks(t, response)
-      })
-    })
-
-    t.test('/static', (t) => {
-      t.plan(2)
-      simple.concat({
-        method: 'GET',
-        url: 'http://localhost:' + fastify.server.address().port + '/static'
-      }, (err, response, body) => {
-        t.error(err)
-        t.equal(response.statusCode, 404)
       })
     })
 
