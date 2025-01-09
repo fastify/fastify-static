@@ -11,7 +11,7 @@
     "lint:fix": "eslint --fix",
     "test": "npm run test:unit && npm run test:typescript",
     "test:typescript": "tsd",
-    "test:unit": "borp -C",
+    "test:unit": "borp -C --check-coverage --lines 100",
     "example": "node example/server.js"
   },
   "repository": {
