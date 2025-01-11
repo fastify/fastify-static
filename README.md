@@ -145,7 +145,7 @@ If set to false prefix will get trailing "/" at the end. If set to true, prefix 
 
 Default: `true`
 
-A flag that define if the fastify route hide-schema attribute is hidden or not
+A flag that defines if the fastify route hide-schema attribute is hidden or not
 
 #### `setHeaders`
 
@@ -431,7 +431,7 @@ This option determines the output format when `json` is selected.
 
 Default: `false`
 
-Try to send the brotli encoded asset first (when supported within the `Accept-Encoding` headers), retry for gzip, then the fall back to the original `pathname`. You may choose to skip compression for smaller files that don't benefit from it.
+Try to send the brotli encoded asset first (when supported within the `Accept-Encoding` headers), retry for gzip, and then fall back to the original `pathname`. You may choose to skip compression for smaller files that do not benefit from it.
 
 Assume this structure with the compressed asset as a sibling of the un-compressed counterpart:
 
@@ -462,7 +462,7 @@ If a request matches the URL `prefix` but a file cannot be found for the
 request, Fastify's 404 handler will be called. You can set a custom 404
 handler with [`fastify.setNotFoundHandler()`](https://fastify.dev/docs/latest/Reference/Server/#setnotfoundhandler).
 
-When registering `@fastify/static` within an encapsulated context, the `wildcard` option may need to be set to `false` in order to support index resolution and nested not-found-handler:
+When registering `@fastify/static` within an encapsulated context, the `wildcard` option may need to be set to `false` to support index resolution and nested not-found-handler:
 
 ```js
 const app = require('fastify')();
