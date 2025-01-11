@@ -23,7 +23,7 @@ const helper = {
 
 try {
   fs.mkdirSync(path.join(__dirname, 'static/shallow/empty'))
-} catch (error) {}
+} catch {}
 
 test('throws when `root` is an array', t => {
   t.plan(2)
@@ -249,7 +249,7 @@ test('dir list href nested structure', async t => {
     list: {
       format: 'html',
       names: ['index', 'index.htm'],
-      render (dirs, files) {
+      render (dirs) {
         return dirs[0].href
       }
     }
@@ -298,8 +298,7 @@ test('dir list html format - stats', async t => {
         t.assert.ok(files.every(every))
 
         function every (value) {
-          return value.stats &&
-            value.stats.atime &&
+          return value.stats?.atime &&
             !value.extendedInfo
         }
       }
@@ -327,7 +326,7 @@ test('dir list html format - extended info', async t => {
     list: {
       format: 'html',
       extendedFolderInfo: true,
-      render (dirs, files) {
+      render (dirs) {
         test('dirs', t => {
           t.plan(dirs.length * 7)
 
@@ -425,7 +424,7 @@ test('json format with url parameter format', async t => {
     index: false,
     list: {
       format: 'json',
-      render (dirs, files) {
+      render () {
         return 'html'
       }
     }
@@ -497,7 +496,7 @@ test('html format with url parameter format', async t => {
     index: false,
     list: {
       format: 'html',
-      render (dirs, files) {
+      render () {
         return 'html'
       }
     }
@@ -718,12 +717,12 @@ test('dir list error', async t => {
   dirList.send = async () => { throw new Error(errorMessage) }
 
   t.beforeEach((ctx) => {
-    ctx['initialDirList'] = ctx['../lib/dirList.js']
+    ctx.initialDirList = ctx['../lib/dirList.js']
     ctx['../lib/dirList.js'] = dirList
   })
 
   t.afterEach((ctx) => {
-    ctx['../lib/dirList.js'] = ctx['initialDirList']
+    ctx['../lib/dirList.js'] = ctx.initialDirList
   })
 
   const routes = ['/public/', '/public/index.htm']

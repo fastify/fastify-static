@@ -462,11 +462,11 @@ test('register /static and /static2', async (t) => {
   const fastify = Fastify()
   fastify.register(fastifyStatic, pluginOptions)
 
-  fastify.get('/foo', (req, rep) => {
+  fastify.get('/foo', (_req, rep) => {
     rep.sendFile('foo.html')
   })
 
-  fastify.get('/bar', (req, rep) => {
+  fastify.get('/bar', (_req, rep) => {
     rep.sendFile('bar.html')
   })
 
@@ -575,7 +575,7 @@ test('payload.path is set', async (t) => {
   const fastify = Fastify()
   let gotFilename
   fastify.register(fastifyStatic, pluginOptions)
-  fastify.addHook('onSend', function (req, reply, payload, next) {
+  fastify.addHook('onSend', function (_req, _reply, payload, next) {
     gotFilename = payload.path
     next()
   })
@@ -617,7 +617,7 @@ test('error responses can be customized with fastify.setErrorHandler()', async t
   }
   const fastify = Fastify()
 
-  fastify.setErrorHandler(function errorHandler (err, request, reply) {
+  fastify.setErrorHandler(function errorHandler (err, _request, reply) {
     reply.code(403).type('text/plain').send(`${err.statusCode} Custom error message`)
   })
 
@@ -724,7 +724,7 @@ test('serving disabled', async (t) => {
 
   t.after(() => fastify.close())
 
-  fastify.get('/foo/bar', (request, reply) => {
+  fastify.get('/foo/bar', (_request, reply) => {
     reply.sendFile('index.html')
   })
 
@@ -766,18 +766,18 @@ test('sendFile', async (t) => {
 
   t.after(() => fastify.close())
 
-  fastify.get('/foo/bar', function (req, reply) {
+  fastify.get('/foo/bar', function (_req, reply) {
     reply.sendFile('/index.html')
   })
 
-  fastify.get('/root/path/override/test', (request, reply) => {
+  fastify.get('/root/path/override/test', (_request, reply) => {
     reply.sendFile(
       '/foo.html',
       path.join(__dirname, 'static', 'deep', 'path', 'for', 'test', 'purpose')
     )
   })
 
-  fastify.get('/foo/bar/options/override/test', function (req, reply) {
+  fastify.get('/foo/bar/options/override/test', function (_req, reply) {
     reply.sendFile('/index.html', { maxAge })
   })
 
@@ -838,7 +838,7 @@ test('sendFile disabled', async (t) => {
 
   t.after(() => fastify.close())
 
-  fastify.get('/foo/bar', function (req, reply) {
+  fastify.get('/foo/bar', function (_req, reply) {
     if (reply.sendFile === undefined) {
       reply.send('pass')
     } else {
@@ -898,7 +898,7 @@ test('allowedPath option - request', async (t) => {
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
-    allowedPath: (pathName, root, request) => request.query.key === 'temporaryKey'
+    allowedPath: (_pathName, _root, request) => request.query.key === 'temporaryKey'
   }
   const fastify = Fastify()
   fastify.register(fastifyStatic, pluginOptions)
@@ -939,26 +939,26 @@ test('download', async (t) => {
 
   t.after(() => fastify.close())
 
-  fastify.get('/foo/bar', function (req, reply) {
+  fastify.get('/foo/bar', function (_req, reply) {
     reply.download('/index.html')
   })
 
-  fastify.get('/foo/bar/change', function (req, reply) {
+  fastify.get('/foo/bar/change', function (_req, reply) {
     reply.download('/index.html', 'hello-world.html')
   })
 
-  fastify.get('/foo/bar/override', function (req, reply) {
+  fastify.get('/foo/bar/override', function (_req, reply) {
     reply.download('/index.html', 'hello-world.html', {
       maxAge: '2 hours',
       immutable: true
     })
   })
 
-  fastify.get('/foo/bar/override/2', function (req, reply) {
+  fastify.get('/foo/bar/override/2', function (_req, reply) {
     reply.download('/index.html', { acceptRanges: false })
   })
 
-  fastify.get('/root/path/override/test', (request, reply) => {
+  fastify.get('/root/path/override/test', (_request, reply) => {
     reply.download('/foo.html', {
       root: path.join(
         __dirname,
@@ -972,7 +972,7 @@ test('download', async (t) => {
     })
   })
 
-  fastify.get('/root/path/override/test/change', (request, reply) => {
+  fastify.get('/root/path/override/test/change', (_request, reply) => {
     reply.download('/foo.html', 'hello-world.html', {
       root: path.join(
         __dirname,
@@ -1070,7 +1070,7 @@ test('download disabled', async (t) => {
   const fastify = Fastify()
   fastify.register(fastifyStatic, pluginOptions)
 
-  fastify.get('/foo/bar', function (req, reply) {
+  fastify.get('/foo/bar', function (_req, reply) {
     if (reply.download === undefined) {
       t.assert.deepStrictEqual(reply.download, undefined)
       reply.send('pass')
@@ -1141,7 +1141,7 @@ test('send options', (t) => {
   const fastify = Fastify({ logger: false })
   const { resolve, promise } = Promise.withResolvers()
   const fastifyStatic = require('proxyquire')('../', {
-    '@fastify/send': function sendStub (req, pathName, options) {
+    '@fastify/send': function sendStub (_req, pathName, options) {
       t.assert.deepStrictEqual(pathName, '/index.html')
       t.assert.deepStrictEqual(options.root, path.join(__dirname, '/static'))
       t.assert.deepStrictEqual(options.acceptRanges, 'acceptRanges')
@@ -1306,7 +1306,7 @@ test('register no prefix', async (t) => {
   const fastify = Fastify()
   fastify.register(fastifyStatic, pluginOptions)
 
-  fastify.get('/', (request, reply) => {
+  fastify.get('/', (_request, reply) => {
     reply.send({ hello: 'world' })
   })
 
@@ -1559,7 +1559,7 @@ test('register with wildcard false', async t => {
   const fastify = Fastify()
   fastify.register(fastifyStatic, pluginOptions)
 
-  fastify.get('/*', (request, reply) => {
+  fastify.get('/*', (_request, reply) => {
     reply.send({ hello: 'world' })
   })
 
@@ -1661,7 +1661,7 @@ test('register with wildcard false (trailing slash in the root)', async t => {
   })
   fastify.register(fastifyStatic, pluginOptions)
 
-  fastify.get('/*', (request, reply) => {
+  fastify.get('/*', (_request, reply) => {
     reply.send({ hello: 'world' })
   })
 
@@ -1729,7 +1729,7 @@ test('register with wildcard string', async (t) => {
   const fastify = Fastify()
   fastify.register(fastifyStatic, pluginOptions)
 
-  fastify.get('/*', (request, reply) => {
+  fastify.get('/*', (_request, reply) => {
     reply.send({ hello: 'world' })
   })
 
@@ -1746,7 +1746,7 @@ test('register with wildcard string on multiple root paths', async (t) => {
   const fastify = Fastify()
   fastify.register(fastifyStatic, pluginOptions)
 
-  fastify.get('/*', (request, reply) => {
+  fastify.get('/*', (_request, reply) => {
     reply.send({ hello: 'world' })
   })
 
@@ -1766,7 +1766,7 @@ test('register with wildcard false and alternative index', async t => {
   const fastify = Fastify()
   fastify.register(fastifyStatic, pluginOptions)
 
-  fastify.get('/*', (request, reply) => {
+  fastify.get('/*', (_request, reply) => {
     reply.send({ hello: 'world' })
   })
 
@@ -1890,7 +1890,7 @@ test('register /static with wildcard false and alternative index', async t => {
   const fastify = Fastify()
   fastify.register(fastifyStatic, pluginOptions)
 
-  fastify.get('/*', (request, reply) => {
+  fastify.get('/*', (_request, reply) => {
     reply.send({ hello: 'world' })
   })
 
@@ -2389,7 +2389,7 @@ test('if dotfiles are properly served according to plugin options', async (t) =>
 
 test('register with failing glob handler', async (t) => {
   const fastifyStatic = proxyquire.noCallThru()('../', {
-    glob: function globStub (pattern, options, cb) {
+    glob: function globStub (_pattern, _options, cb) {
       process.nextTick(function () {
         return cb(new Error('mock glob error'))
       })
@@ -2414,7 +2414,7 @@ test(
   async (t) => {
     const fastifyStatic = proxyquire('../', {
       'node:fs': {
-        statSync: function statSyncStub (path) {
+        statSync: function statSyncStub () {
           throw new Error({ code: 'MOCK' })
         }
       }
@@ -2463,7 +2463,7 @@ test('routes should use custom errorHandler premature stream close', async t => 
   fastify.addHook('onRoute', function (routeOptions) {
     t.assert.ok(routeOptions.errorHandler instanceof Function)
 
-    routeOptions.onRequest = (request, reply, done) => {
+    routeOptions.onRequest = (_request, _reply, done) => {
       const fakeError = new Error()
       fakeError.code = 'ERR_STREAM_PREMATURE_CLOSE'
       done(fakeError)
@@ -2489,7 +2489,7 @@ test('routes should fallback to default errorHandler', async t => {
   fastify.addHook('onRoute', function (routeOptions) {
     t.assert.ok(routeOptions.errorHandler instanceof Function)
 
-    routeOptions.preHandler = (request, reply, done) => {
+    routeOptions.preHandler = (_request, _reply, done) => {
       const fakeError = new Error()
       fakeError.code = 'SOMETHING_ELSE'
       done(fakeError)
