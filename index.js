@@ -443,7 +443,7 @@ function checkRootPathForErrors (fastify, rootPath) {
 
 function checkPath (fastify, rootPath) {
   if (typeof rootPath !== 'string') {
-    throw new Error('"root" option must be a string')
+    throw new TypeError('"root" option must be a string')
   }
   if (path.isAbsolute(rootPath) === false) {
     throw new Error('"root" option must be an absolute path')
