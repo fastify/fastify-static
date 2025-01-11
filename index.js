@@ -77,7 +77,7 @@ async function fastifyStatic (fastify, opts) {
   if (opts.decorateReply !== false) {
     fastify.decorateReply('sendFile', function (filePath, rootPath, options) {
       const opts = typeof rootPath === 'object' ? rootPath : options
-      const root = typeof rootPath === 'string' ? rootPath : opts && opts.root
+      const root = typeof rootPath === 'string' ? rootPath : opts?.root
       pumpSendToReply(
         this.request,
         this,
