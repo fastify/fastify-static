@@ -62,7 +62,7 @@ const options: FastifyStaticOptions = {
     expectType<Stats>(stat)
   },
   preCompressed: false,
-  allowedPath: (pathName: string, root: string, request: FastifyRequest) => {
+  allowedPath: (_pathName: string, _root: string, _request: FastifyRequest) => {
     return true
   },
   constraints: {
@@ -121,7 +121,7 @@ expectAssignable<FastifyStaticOptions>({
 appWithImplicitHttp
   .register(fastifyStatic, options)
   .after(() => {
-    appWithImplicitHttp.get('/', (request, reply) => {
+    appWithImplicitHttp.get('/', (_request, reply) => {
       reply.sendFile('some-file-name')
     })
   })
@@ -131,23 +131,23 @@ const appWithHttp2 = fastify({ http2: true })
 appWithHttp2
   .register(fastifyStatic, options)
   .after(() => {
-    appWithHttp2.get('/', (request, reply) => {
+    appWithHttp2.get('/', (_request, reply) => {
       reply.sendFile('some-file-name')
     })
 
-    appWithHttp2.get('/download', (request, reply) => {
+    appWithHttp2.get('/download', (_request, reply) => {
       reply.download('some-file-name')
     })
 
-    appWithHttp2.get('/download/1', (request, reply) => {
+    appWithHttp2.get('/download/1', (_request, reply) => {
       reply.download('some-file-name', { maxAge: '2 days' })
     })
 
-    appWithHttp2.get('/download/2', (request, reply) => {
+    appWithHttp2.get('/download/2', (_request, reply) => {
       reply.download('some-file-name', 'some-filename', { cacheControl: false, acceptRanges: true })
     })
 
-    appWithHttp2.get('/download/3', (request, reply) => {
+    appWithHttp2.get('/download/3', (_request, reply) => {
       reply.download('some-file-name', 'some-filename', { contentType: false })
     })
   })
@@ -158,35 +158,35 @@ options.root = ['']
 multiRootAppWithImplicitHttp
   .register(fastifyStatic, options)
   .after(() => {
-    multiRootAppWithImplicitHttp.get('/', (request, reply) => {
+    multiRootAppWithImplicitHttp.get('/', (_request, reply) => {
       reply.sendFile('some-file-name')
     })
 
-    multiRootAppWithImplicitHttp.get('/', (request, reply) => {
+    multiRootAppWithImplicitHttp.get('/', (_request, reply) => {
       reply.sendFile('some-file-name', { cacheControl: false, acceptRanges: true })
     })
 
-    multiRootAppWithImplicitHttp.get('/', (request, reply) => {
+    multiRootAppWithImplicitHttp.get('/', (_request, reply) => {
       reply.sendFile('some-file-name', 'some-root-name', { cacheControl: false, acceptRanges: true })
     })
 
-    multiRootAppWithImplicitHttp.get('/', (request, reply) => {
+    multiRootAppWithImplicitHttp.get('/', (_request, reply) => {
       reply.sendFile('some-file-name', 'some-root-name-2', { contentType: false })
     })
 
-    multiRootAppWithImplicitHttp.get('/download', (request, reply) => {
+    multiRootAppWithImplicitHttp.get('/download', (_request, reply) => {
       reply.download('some-file-name')
     })
 
-    multiRootAppWithImplicitHttp.get('/download/1', (request, reply) => {
+    multiRootAppWithImplicitHttp.get('/download/1', (_request, reply) => {
       reply.download('some-file-name', { maxAge: '2 days' })
     })
 
-    multiRootAppWithImplicitHttp.get('/download/2', (request, reply) => {
+    multiRootAppWithImplicitHttp.get('/download/2', (_request, reply) => {
       reply.download('some-file-name', 'some-filename', { cacheControl: false, acceptRanges: true })
     })
 
-    multiRootAppWithImplicitHttp.get('/download/3', (request, reply) => {
+    multiRootAppWithImplicitHttp.get('/download/3', (_request, reply) => {
       reply.download('some-file-name', 'some-filename', { contentType: false })
     })
   })
@@ -198,7 +198,7 @@ options.index = false
 noIndexApp
   .register(fastifyStatic, options)
   .after(() => {
-    noIndexApp.get('/', (request, reply) => {
+    noIndexApp.get('/', (_request, reply) => {
       reply.send('<h1>fastify-static</h1>')
     })
   })
@@ -208,7 +208,7 @@ options.root = new URL('')
 const URLRootApp = fastify()
 URLRootApp.register(fastifyStatic, options)
   .after(() => {
-    URLRootApp.get('/', (request, reply) => {
+    URLRootApp.get('/', (_request, reply) => {
       reply.send('<h1>fastify-static</h1>')
     })
   })
@@ -219,7 +219,7 @@ options.index = 'index.html'
 defaultIndexApp
   .register(fastifyStatic, options)
   .after(() => {
-    defaultIndexApp.get('/', (request, reply) => {
+    defaultIndexApp.get('/', (_request, reply) => {
       reply.send('<h1>fastify-static</h1>')
     })
   })
