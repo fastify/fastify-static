@@ -139,7 +139,7 @@ Constraints that will be added to registered routes. See Fastify's documentation
 
 Default: `info`
 
-Set log level to registered routes.
+Set log level for registered routes.
 
 #### `prefixAvoidTrailingSlash`
 
