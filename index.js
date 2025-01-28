@@ -108,7 +108,7 @@ async function fastifyStatic (fastify, opts) {
 
   if (opts.serve !== false) {
     if (opts.wildcard && typeof opts.wildcard !== 'boolean') {
-      throw new Error('"wildcard" option must be a boolean')
+      throw new TypeError('"wildcard" option must be a boolean')
     }
     if (opts.wildcard === undefined || opts.wildcard === true) {
       fastify.route({
