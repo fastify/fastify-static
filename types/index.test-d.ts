@@ -68,7 +68,8 @@ const options: FastifyStaticOptions = {
   constraints: {
     host: /.*\.example\.com/,
     version: '1.0.2'
-  }
+  },
+  logLevel: 'warn'
 }
 
 expectError<FastifyStaticOptions>({

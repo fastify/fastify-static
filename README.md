@@ -136,6 +136,12 @@ Default: `{}`
 Constraints to add to registered routes. See Fastify's documentation for
 [route constraints](https://fastify.dev/docs/latest/Reference/Routes/#constraints).
 
+#### `logLevel`
+
+Default: `info`
+
+Set log level for registered routes.
+
 #### `prefixAvoidTrailingSlash`
 
 Default: `false`
