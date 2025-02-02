@@ -78,7 +78,7 @@ async function fastifyStatic (fastify, opts) {
   if (opts.decorateReply !== false) {
     fastify.decorateReply('sendFile', function (filePath, rootPath, options) {
       const opts = typeof rootPath === 'object' ? rootPath : options
-      const root = typeof rootPath === 'string' ? rootPath : opts && opts.root
+      const root = typeof rootPath === 'string' ? rootPath : opts?.root
       pumpSendToReply(
         this.request,
         this,
@@ -109,7 +109,7 @@ async function fastifyStatic (fastify, opts) {
 
   if (opts.serve !== false) {
     if (opts.wildcard && typeof opts.wildcard !== 'boolean') {
-      throw new Error('"wildcard" option must be a boolean')
+      throw new TypeError('"wildcard" option must be a boolean')
     }
     if (opts.wildcard === undefined || opts.wildcard === true) {
       fastify.route({
@@ -444,7 +444,7 @@ function checkRootPathForErrors (fastify, rootPath) {
 
 function checkPath (fastify, rootPath) {
   if (typeof rootPath !== 'string') {
-    throw new Error('"root" option must be a string')
+    throw new TypeError('"root" option must be a string')
   }
   if (path.isAbsolute(rootPath) === false) {
     throw new Error('"root" option must be an absolute path')

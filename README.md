@@ -115,12 +115,13 @@ fastify.get('/path/without/cache/control', function (req, reply) {
 
 #### `root` (required)
 
-The absolute path of the directory that contains the files to serve.
-The file to serve will be determined by combining `req.url` with the
-provided root directory.
+The absolute path of the directory containing the files to serve.
+The file to serve is determined by combining `req.url` with the
+root directory.
 
-You can also provide an array of directories containing files to serve.
-This is useful for serving multiple static directories under a single prefix. Files are served in a "first found, first served" manner, so the order in which you list the directories is important. For best performance, you should always list your main asset directory first. Duplicate paths will raise an error.
+An array of directories can be provided to serve multiple static directories
+under a single prefix. Files are served in a "first found, first served" manner,
+so list directories in order of priority. Duplicate paths will raise an error.
 
 #### `prefix`
 
@@ -132,7 +133,7 @@ A URL path prefix used to create a virtual mount path for the static directory.
 
 Default: `{}`
 
-Constraints that will be added to registered routes. See Fastify's documentation for
+Constraints to add to registered routes. See Fastify's documentation for
 [route constraints](https://fastify.dev/docs/latest/Reference/Routes/#constraints).
 
 #### `logLevel`
@@ -145,13 +146,13 @@ Set log level for registered routes.
 
 Default: `false`
 
-If set to false prefix will get trailing "/" at the end. If set to true, prefix will not append "/" to prefix.
+If `false`, the prefix gets a trailing "/". If `true`, no trailing "/" is added to the prefix.
 
 #### `schemaHide`
 
 Default: `true`
 
-A flag that define if the fastify route hide-schema attribute is hidden or not
+A flag that defines if the fastify route hide-schema attribute is hidden or not.
 
 #### `setHeaders`
 
@@ -159,7 +160,7 @@ Default: `undefined`
 
 A function to set custom headers on the response. Alterations to the headers
 must be done synchronously. The function is called as `fn(res, path, stat)`,
-where the arguments are:
+with the arguments:
 
 - `res` The response object.
 - `path` The path of the file that is being sent.
@@ -172,7 +173,7 @@ The following options are also supported and will be passed directly to the
 
 - [`acceptRanges`](https://www.npmjs.com/package/@fastify/send#acceptranges)
 - [`contentType`](https://www.npmjs.com/package/@fastify/send#contenttype)
-- [`cacheControl`](https://www.npmjs.com/package/@fastify/send#cachecontrol) (Enable or disable setting Cache-Control response header, defaults to true. **Important:** If you want to provide a custom Cache-Control response header, this option must be false.)
+- [`cacheControl`](https://www.npmjs.com/package/@fastify/send#cachecontrol) - Enable or disable setting Cache-Control response header (defaults to `true`). To provide a custom Cache-Control header, set this option to false
 - [`dotfiles`](https://www.npmjs.com/package/@fastify/send#dotfiles)
 - [`etag`](https://www.npmjs.com/package/@fastify/send#etag)
 - [`extensions`](https://www.npmjs.com/package/@fastify/send#extensions)
@@ -181,7 +182,7 @@ The following options are also supported and will be passed directly to the
 - [`lastModified`](https://www.npmjs.com/package/@fastify/send#lastmodified)
 - [`maxAge`](https://www.npmjs.com/package/@fastify/send#maxage)
 
-You're able to alter this options when calling `reply.download('filename.html', options)` or `reply.download('filename.html', 'otherfilename.html', options)` on each response to a request.
+These options can be altered when calling `reply.sendFile('filename.html', options)` or `reply.sendFile('filename.html', 'otherfilename.html', options)` on each response.
 
 #### `redirect`
 
@@ -189,61 +190,56 @@ Default: `false`
 
 If set to `true`, `@fastify/static` redirects to the directory with a trailing slash.
 
-This option cannot be set to `true` with `wildcard` set to `false` on a server
-with `ignoreTrailingSlash` set to `true`.
+This option cannot be `true` if `wildcard` is `false` and `ignoreTrailingSlash` is `true`.
 
-If this option is set to `false`, then requesting directories without trailing
-slash will trigger your app's 404 handler using `reply.callNotFound()`.
+If `false`, requesting directories without a trailing slash triggers the app's 404 handler using `reply.callNotFound()`.
 
 #### `wildcard`
 
 Default: `true`
 
-If set to `true`, `@fastify/static` adds a wildcard route to serve files.
-If set to `false`, `@fastify/static` globs the filesystem for all defined
-files in the served folder (`${root}/**/**`), and just creates the routes needed for
-those and it will not serve the newly added file on the filesystem.
+If `true`, `@fastify/static` adds a wildcard route to serve files.
+If `false`, it globs the filesystem for all defined files in the
+served folder (`${root}/**/**`) and creates the necessary routes,
+but will not serve newly added files.
 
-The default options of https://www.npmjs.com/package/glob are applied
-for getting the file list.
+The default options of [`glob`](https://www.npmjs.com/package/glob)
+are applied for getting the file list.
 
-This option cannot be set to `false` with `redirect` set to `true` on a server
-with `ignoreTrailingSlash` set to `true`.
+This option cannot be `false` if `redirect` is `true` and `ignoreTrailingSlash` is `true`.
 
 #### `allowedPath`
 
 Default: `(pathName, root, request) => true`
 
-This function allows filtering the served files. Also, with the help of the request object a more complex path authentication is possible.
-If the function returns `true`, the file will be served.
-If the function returns `false`, Fastify's 404 handler will be called.
+This function filters served files. Using the request object, complex path authentication is possible.
+Returning `true` serves the file; returning `false` calls Fastify's 404 handler.
 
 #### `index`
 
 Default: `undefined`
 
-Under the hood we use [send](https://github.com/pillarjs/send#index) lib that by default supports "index.html" files.
-To disable this set false or to supply a new index pass a string or an array in preferred order.
+Under the hood, [`@fastify/send`](https://www.npmjs.com/package/@fastify/send) supports "index.html" files by default.
+To disable this, set `false`, or supply a new index by passing a string or an array in preferred order.
 
 #### `serveDotFiles`
 
 Default: `false`
 
-When `true`, files in hidden directories (e.g. `.foo`) will be served.
+If `true`, serves files in hidden directories (e.g., `.foo`).
 
 #### `list`
 
 Default: `undefined`
 
-If set, it provides the directory list calling the directory path.
+If set, provides the directory list by calling the directory path.
+Default response is JSON.
 
-Default response is json.
+Multi-root is not supported within the `list` option.
 
-Note:
-- Multi-root is not supported within the `list` option.
-- If `dotfiles` option value is `deny` or `ignore`, dotfiles will be excluded.
+If `dotfiles` is `deny` or `ignore`, dotfiles are excluded.
 
-**Example:**
+Example:
 
 ```js
 fastify.register(require('@fastify/static'), {
@@ -257,7 +253,7 @@ fastify.register(require('@fastify/static'), {
 Request
 
 ```bash
-GET .../public
+GET /public
 ```
 
 Response
@@ -272,17 +268,17 @@ Default: `json`
 
 Options: `html`, `json`
 
-Directory list can be also in `html` format; in that case, `list.render` function is required.
+Directory list can be in `html` format; in that case, `list.render` function is required.
 
-You can override the option with URL parameter `format`. Options are `html` and `json`.
+This option can be overridden by the URL parameter `format`. Options are `html` and `json`.
 
 ```bash
-GET .../public/assets?format=json
+GET /public/assets?format=json
 ```
 
-will return the response as json independent of `list.format`.
+Returns the response as JSON, regardless of `list.format`.
 
-**Example:**
+Example:
 
 ```js
 fastify.register(require('@fastify/static'), {
@@ -309,7 +305,7 @@ fastify.register(require('@fastify/static'), {
 Request
 
 ```bash
-GET .../public
+GET /public
 ```
 
 Response
@@ -333,11 +329,11 @@ Response
 
 Default: `['']`
 
-Directory list can respond to different routes, declared in `list.names` options.
+Directory list can respond to different routes declared in `list.names`.
 
-Note: if a file with the same name exists, the actual file is sent.
+> 🛈 Note: If a file with the same name exists, the actual file is sent.
 
-**Example:**
+Example:
 
 ```js
 fastify.register(require('@fastify/static'), {
@@ -351,20 +347,20 @@ fastify.register(require('@fastify/static'), {
 })
 ```
 
-Dir list respond with the same content to
+Dir list respond with the same content to:
 
 ```bash
-GET .../public
-GET .../public/
-GET .../public/index
-GET .../public/index.json
+GET /public
+GET /public/
+GET /public/index
+GET /public/index.json
 ```
 
 #### `list.extendedFolderInfo`
 
 Default: `undefined`
 
-If `true` some extended information for folders will be accessible in `list.render` and in the json response.
+If `true`, extended information for folders will be accessible in `list.render` and the JSON response.
 
 ```js
 render(dirs, files) {
@@ -378,7 +374,7 @@ render(dirs, files) {
 }
 ```
 
-Warning: This will slightly decrease the performance, especially for deeply nested file structures.
+> ⚠ Warning: This will slightly decrease the performance, especially for deeply nested file structures.
 
 #### `list.jsonFormat`
 
@@ -386,7 +382,7 @@ Default: `names`
 
 Options: `names`, `extended`
 
-This option determines the output format when `json` is selected.
+Determines the output format when `json` is selected.
 
 `names`:
 ```json
@@ -410,13 +406,11 @@ This option determines the output format when `json` is selected.
       "name": "dir1",
       "stats": {
         "dev": 2100,
-        "size": 4096,
-        ...
+        "size": 4096
       },
       "extendedInfo": {
         "fileCount": 4,
-        "totalSize": 51233,
-        ...
+        "totalSize": 51233
       }
     }
   ],
@@ -425,8 +419,7 @@ This option determines the output format when `json` is selected.
       "name": "file1.txt",
       "stats": {
         "dev": 2200,
-        "size": 554,
-        ...
+        "size": 554
       }
     }
   ]
@@ -437,9 +430,9 @@ This option determines the output format when `json` is selected.
 
 Default: `false`
 
-Try to send the brotli encoded asset first (when supported within the `Accept-Encoding` headers), retry for gzip, then the fall back to the original `pathname`. You may choose to skip compression for smaller files that don't benefit from it.
+First, try to send the brotli encoded asset (if supported by `Accept-Encoding` headers), then gzip, and finally the original `pathname`. Skip compression for smaller files that do not benefit from it.
 
-Assume this structure with the compressed asset as a sibling of the un-compressed counterpart:
+Assume this structure with the compressed asset as a sibling of the uncompressed counterpart:
 
 ```
 ./public
@@ -453,22 +446,21 @@ Assume this structure with the compressed asset as a sibling of the un-compresse
 
 #### Disable serving
 
-If you would just like to use the reply decorator and not serve whole directories automatically, you can simply pass the option `{ serve: false }`. This will prevent the plugin from serving everything under `root`.
+To use only the reply decorator without serving directories, pass `{ serve: false }`.
+This prevents the plugin from serving everything under `root`.
 
 #### Disabling reply decorator
 
-The reply object is decorated with a `sendFile` function by default.  If you want to
-disable this, pass the option `{ decorateReply: false }`.  If @fastify/static is
-registered to multiple prefixes in the same route only one can initialize reply
-decorators.
+The reply object is decorated with a `sendFile` function by default. To disable this,
+pass `{ decorateReply: false }`. If `@fastify/static` is registered to multiple prefixes
+in the same route, only one can initialize reply decorators.
 
 #### Handling 404s
 
-If a request matches the URL `prefix` but a file cannot be found for the
-request, Fastify's 404 handler will be called. You can set a custom 404
-handler with [`fastify.setNotFoundHandler()`](https://fastify.dev/docs/latest/Reference/Server/#setnotfoundhandler).
+If a request matches the URL `prefix` but no file is found, Fastify's 404
+handler is called. Set a custom 404 handler with [`fastify.setNotFoundHandler()`](https://fastify.dev/docs/latest/Reference/Server/#setnotfoundhandler).
 
-When registering `@fastify/static` within an encapsulated context, the `wildcard` option may need to be set to `false` in order to support index resolution and nested not-found-handler:
+When registering `@fastify/static` within an encapsulated context, the `wildcard` option may need to be set to `false` to support index resolution and nested not-found-handler:
 
 ```js
 const app = require('fastify')();
@@ -489,13 +481,12 @@ This code will send the `index.html` for the paths `docs`, `docs/`, and `docs/in
 
 ### Handling Errors
 
-If an error occurs while trying to send a file, the error will be passed
-to Fastify's error handler. You can set a custom error handler with
-[`fastify.setErrorHandler()`](https://fastify.dev/docs/latest/Reference/Server/#seterrorhandler).
+If an error occurs while sending a file, it is passed to Fastify's error handler.
+Set a custom handler with [`fastify.setErrorHandler()`](https://fastify.dev/docs/latest/Reference/Server/#seterrorhandler).
 
 ### Payload `stream.path`
 
-If you need to access the file path inside the `onSend` hook, you can use `payload.path`.
+Access the file path inside the `onSend` hook using `payload.path`.
 
 ```js
 fastify.addHook('onSend', function (req, reply, payload, next) {
