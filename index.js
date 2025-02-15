@@ -290,14 +290,7 @@ async function fastifyStatic (fastify, opts) {
         if (metadata.error.code === 'ENOENT') {
         // when preCompress is enabled and the path is a directory without a trailing slash
           if (opts.preCompressed && encoding) {
-            if (opts.redirect === true) {
-              try {
-                reply.redirect(getRedirectUrl(request.raw.url), 301)
-              } /* c8 ignore start */ catch (error) {
-                // the try-catch here is actually unreachable, but we keep it for safety and prevent DoS attack
-                await reply.send(error)
-              } /* c8 ignore stop */
-            } else {
+            if (opts.redirect !== true) {
               const indexPathname = findIndexFile(pathname, options.root, options.index)
               if (indexPathname) {
                 return pumpSendToReply(
