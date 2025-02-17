@@ -290,17 +290,19 @@ async function fastifyStatic (fastify, opts) {
         if (metadata.error.code === 'ENOENT') {
         // when preCompress is enabled and the path is a directory without a trailing slash
           if (opts.preCompressed && encoding) {
-            const indexPathname = findIndexFile(pathname, options.root, options.index)
-            if (indexPathname) {
-              return pumpSendToReply(
-                request,
-                reply,
-                pathname + '/',
-                rootPath,
-                undefined,
-                undefined,
-                checkedEncodings
-              )
+            if (opts.redirect !== true) {
+              const indexPathname = findIndexFile(pathname, options.root, options.index)
+              if (indexPathname) {
+                return pumpSendToReply(
+                  request,
+                  reply,
+                  pathname + '/',
+                  rootPath,
+                  undefined,
+                  undefined,
+                  checkedEncodings
+                )
+              }
             }
           }
 

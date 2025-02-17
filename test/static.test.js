@@ -2953,6 +2953,34 @@ test(
 )
 
 test(
+  'will redirect to preCompressed index without trailing slash when redirect is true',
+  async (t) => {
+    const pluginOptions = {
+      root: path.join(__dirname, '/static-pre-compressed'),
+      prefix: '/static-pre-compressed/',
+      preCompressed: true,
+      redirect: true,
+    }
+
+    const fastify = Fastify()
+
+    fastify.register(fastifyStatic, pluginOptions)
+    t.after(() => fastify.close())
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '/static-pre-compressed/dir',
+      headers: {
+        'accept-encoding': 'gzip, deflate, br'
+      }
+    })
+
+    t.assert.deepStrictEqual(response.statusCode, 301)
+    t.assert.deepStrictEqual(response.headers.location, '/static-pre-compressed/dir/')
+  }
+)
+
+test(
   'will serve precompressed gzip index in subdir',
   async (t) => {
     const pluginOptions = {
@@ -3035,6 +3063,34 @@ test(
     t.assert.deepStrictEqual(response.headers['content-type'], 'image/jpeg')
     t.assert.deepStrictEqual(response.headers['content-encoding'], 'br')
     t.assert.deepStrictEqual(response.statusCode, 200)
+  }
+)
+
+test(
+  'will not redirect but serve a file if preCompressed but no compressed file exists and redirect is true',
+  async (t) => {
+    const pluginOptions = {
+      root: path.join(__dirname, '/static-pre-compressed'),
+      prefix: '/static-pre-compressed/',
+      preCompressed: true,
+      redirect: true
+    }
+
+    const fastify = Fastify()
+
+    fastify.register(fastifyStatic, pluginOptions)
+    t.after(() => fastify.close())
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '/static-pre-compressed/baz.json',
+      headers: {
+        'accept-encoding': '*'
+      }
+    })
+
+    t.assert.deepStrictEqual(response.statusCode, 200)
+    t.assert.deepStrictEqual(response.headers['content-type'], 'application/json; charset=utf-8')
   }
 )
 
