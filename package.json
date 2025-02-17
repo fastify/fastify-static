@@ -1,6 +1,6 @@
 {
   "name": "@fastify/static",
-  "version": "8.1.0",
+  "version": "8.1.1",
   "description": "Plugin for serving static files as fast as possible.",
   "main": "index.js",
   "type": "commonjs",
