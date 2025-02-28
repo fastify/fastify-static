@@ -111,6 +111,31 @@ fastify.get('/path/without/cache/control', function (req, reply) {
 
 ```
 
+### Managing cache-control headers
+
+Production sites should use a reverse-proxy to manage caching headers.
+However, here is an example of using fastify-static to host a Single Page Application (for example a [vite.js](https://vite.dev/) build) with sane caching.
+
+```js
+fastify.register(require('@fastify/static'), {
+  root: path.join(import.meta.dirname, 'dist'), // import.meta.dirname node.js >= v20.11.0
+  // By default all assets are immutable and can be cached for a long period due to cache bursting techniques
+  maxAge: '30d',
+  immutable: true,
+})
+
+// Explicitly reduce caching of assets that don't use cache bursting techniques
+fastify.get('/', function (req, reply) {
+  // index.html should never be cached
+  reply.sendFile('index.html', {maxAge: 0, immutable: false})
+})
+
+fastify.get('/favicon.ico', function (req, reply) {
+  // favicon can be cached for a short period
+  reply.sendFile('index.html', {maxAge: '1d', immutable: false})
+})
+```
+
 ### Options
 
 #### `root` (required)
