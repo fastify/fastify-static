@@ -284,6 +284,7 @@ async function fastifyStatic (fastify, opts) {
               prefix,
               dotfiles: opts.dotfiles
             }).catch((err) => reply.send(err))
+            return
           }
         }
 
