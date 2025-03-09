@@ -132,7 +132,7 @@ fastify.get('/', function (req, reply) {
 
 fastify.get('/favicon.ico', function (req, reply) {
   // favicon can be cached for a short period
-  reply.sendFile('index.html', {maxAge: '1d', immutable: false})
+  reply.sendFile('favicon.ico', {maxAge: '1d', immutable: false})
 })
 ```
 
