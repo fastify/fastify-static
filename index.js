@@ -1,4 +1,4 @@
-'use strict'
+'unse strict'
 
 const path = require('node:path')
 const { fileURLToPath } = require('node:url')
@@ -135,7 +135,7 @@ async function fastifyStatic (fastify, opts) {
         rootPath = rootPath.split(path.win32.sep).join(path.posix.sep)
         !rootPath.endsWith('/') && (rootPath += '/')
         const files = await glob('**/**', {
-          cwd: rootPath, absolute: false, follow: true, nodir: true, dot: opts.serveDotFiles
+          cwd: rootPath, absolute: false, follow: true, nodir: true, dot: opts.serveDotFiles, ignore: opts.globIgnore
         })
 
         for (let file of files) {

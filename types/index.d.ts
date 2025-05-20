@@ -94,6 +94,7 @@ declare namespace fastifyStatic {
     setHeaders?: (res: SetHeadersResponse, path: string, stat: Stats) => void;
     redirect?: boolean;
     wildcard?: boolean;
+    globIgnore?: string[];
     list?: boolean | ListOptionsJsonFormat | ListOptionsHtmlFormat;
     allowedPath?: (pathName: string, root: string, request: FastifyRequest) => boolean;
     /**

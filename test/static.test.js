@@ -3669,3 +3669,77 @@ test('register /static/ with custom log level', async t => {
     t.assert.deepStrictEqual(response2.status, 304)
   })
 })
+
+test('register with wildcard false and globIgnore', async t => {
+  t.plan(5)
+
+  const indexContent = fs
+    .readFileSync('./test/static-filtered/index.html')
+    .toString('utf8')
+
+  const deepContent = fs
+    .readFileSync('./test/static-filtered/deep/path/to/baz.html')
+    .toString('utf8')
+
+  const pluginOptions = {
+    root: path.join(__dirname, '/static-filtered'),
+    wildcard: false,
+    globIgnore: ['**/*.private']
+  }
+  const fastify = Fastify()
+  fastify.register(fastifyStatic, pluginOptions)
+
+  t.after(() => fastify.close())
+
+  await fastify.listen({ port: 0 })
+
+  fastify.server.unref()
+
+  await t.test('/index.html', async t => {
+    t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/index.html')
+    t.assert.ok(response.ok)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), indexContent)
+    genericResponseChecks(t, response)
+  })
+
+  await t.test('/bar.private', async t => {
+    t.plan(2)
+
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/bar.private')
+    t.assert.ok(!response.ok)
+    t.assert.deepStrictEqual(response.status, 404)
+    await response.text()
+  })
+
+  await t.test('/', async (t) => {
+    t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+
+    const response = await fetch('http://localhost:' + fastify.server.address().port)
+    t.assert.ok(response.ok)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), indexContent)
+    genericResponseChecks(t, response)
+  })
+
+  await t.test('/deep/path/to/baz.html', async (t) => {
+    t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/deep/path/to/baz.html')
+    t.assert.ok(response.ok)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), deepContent)
+    genericResponseChecks(t, response)
+  })
+
+  await t.test('/deep/path/to/baz.private', async (t) => {
+    t.plan(2)
+
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/deep/path/to/baz.private')
+    t.assert.ok(!response.ok)
+    t.assert.deepStrictEqual(response.status, 404)
+    await response.text()
+  })
+})
