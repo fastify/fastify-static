@@ -364,7 +364,7 @@ Default: `['']`
 
 Directory list can respond to different routes declared in `list.names`.
 
-> 🛈 Note: If a file with the same name exists, the actual file is sent.
+> ℹ️ Note: If a file with the same name exists, the actual file is sent.
 
 Example:
 
