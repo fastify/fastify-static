@@ -233,6 +233,14 @@ are applied for getting the file list.
 
 This option cannot be `false` if `redirect` is `true` and `ignoreTrailingSlash` is `true`.
 
+#### `globIgnore`
+
+Default: `undefined`
+
+This is passed to [`glob`](https://www.npmjs.com/package/glob)
+as the `ignore` option. It can be used to ignore files or directories
+when using the `wildcard: false` option.
+
 #### `allowedPath`
 
 Default: `(pathName, root, request) => true`

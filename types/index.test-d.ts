@@ -50,6 +50,7 @@ const options: FastifyStaticOptions = {
   schemaHide: true,
   serve: true,
   wildcard: true,
+  globIgnore: ['**/*.private'],
   list: false,
   setHeaders: (res, path, stat) => {
     expectType<string>(res.filename)
