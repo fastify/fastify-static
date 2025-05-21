@@ -1,4 +1,4 @@
-'unse strict'
+'use strict'
 
 const path = require('node:path')
 const { fileURLToPath } = require('node:url')
