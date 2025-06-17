@@ -278,7 +278,7 @@ Example:
 fastify.register(require('@fastify/static'), {
   root: path.join(__dirname, 'public'),
   prefix: '/public/',
-  index: false
+  index: false,
   list: true
 })
 ```
