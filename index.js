@@ -19,7 +19,7 @@ send.mime.default_type = 'application/octet-stream'
 
 async function fastifyStatic (fastify, opts) {
   opts.root = normalizeRoot(opts.root)
-  checkRootPathForErrors(fastify, opts.root)
+  checkRootPathForErrors(fastify, opts.root, opts.getPathNotFoundWarning)
 
   const setHeaders = opts.setHeaders
   if (setHeaders !== undefined && typeof setHeaders !== 'function') {
@@ -417,7 +417,7 @@ function normalizeRoot (root) {
   return root
 }
 
-function checkRootPathForErrors (fastify, rootPath) {
+function checkRootPathForErrors (fastify, rootPath, getPathNotFoundWarning) {
   if (rootPath === undefined) {
     throw new Error('"root" option is required')
   }
@@ -434,18 +434,18 @@ function checkRootPathForErrors (fastify, rootPath) {
     }
 
     // check each path and fail at first invalid
-    rootPath.map((path) => checkPath(fastify, path))
+    rootPath.map((path) => checkPath(fastify, path, getPathNotFoundWarning))
     return
   }
 
   if (typeof rootPath === 'string') {
-    return checkPath(fastify, rootPath)
+    return checkPath(fastify, rootPath, getPathNotFoundWarning)
   }
 
   throw new Error('"root" option must be a string or array of strings')
 }
 
-function checkPath (fastify, rootPath) {
+function checkPath (fastify, rootPath, getPathNotFoundWarning) {
   if (typeof rootPath !== 'string') {
     throw new TypeError('"root" option must be a string')
   }
@@ -459,7 +459,11 @@ function checkPath (fastify, rootPath) {
     pathStat = statSync(rootPath)
   } catch (e) {
     if (e.code === 'ENOENT') {
-      fastify.log.warn(`"root" path "${rootPath}" must exist`)
+      const warningMessage =
+        getPathNotFoundWarning
+          ? getPathNotFoundWarning(rootPath)
+          : `"root" path "${rootPath}" must exist`
+      fastify.log.warn(warningMessage)
       return
     }
 
