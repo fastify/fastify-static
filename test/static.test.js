@@ -1936,8 +1936,6 @@ test('register /static with wildcard false and alternative index', async t => {
 
     const { promise, resolve } = Promise.withResolvers()
 
-    // simple-get doesn't tell us about redirects so use http.request directly
-    // to verify we do not get a redirect when not requested
     const testurl = 'http://localhost:' + fastify.server.address().port + '/static'
     const req = http.request(url.parse(testurl), res => {
       t.assert.deepStrictEqual(res.statusCode, 200)
@@ -2042,7 +2040,6 @@ test('register /static with redirect true', async t => {
 
     const { promise, resolve } = Promise.withResolvers()
 
-    // simple-get doesn't tell us about redirects so use http.request directly
     const testurl = 'http://localhost:' + fastify.server.address().port + '/static?a=b'
     const req = http.request(url.parse(testurl), res => {
       t.assert.deepStrictEqual(res.statusCode, 301)
@@ -2066,7 +2063,6 @@ test('register /static with redirect true', async t => {
 
     const { promise, resolve } = Promise.withResolvers()
 
-    // simple-get doesn't tell us about redirects so use http.request directly
     const testurl = 'http://localhost:' + fastify.server.address().port + '/static'
     const req = http.request(url.parse(testurl), res => {
       t.assert.deepStrictEqual(res.statusCode, 301)
@@ -2104,7 +2100,6 @@ test('register /static with redirect true', async t => {
 
     const { promise, resolve } = Promise.withResolvers()
 
-    // simple-get doesn't tell us about redirects so use http.request directly
     const testurl = 'http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test?a=b'
     const req = http.request(url.parse(testurl), res => {
       t.assert.deepStrictEqual(res.statusCode, 301)
@@ -2161,7 +2156,6 @@ test('register /static with redirect true and wildcard false', async t => {
 
     const { promise, resolve } = Promise.withResolvers()
 
-    // simple-get doesn't tell us about redirects so use http.request directly
     const testurl = 'http://localhost:' + fastify.server.address().port + '/static?a=b'
     const req = http.request(url.parse(testurl), res => {
       t.assert.deepStrictEqual(res.statusCode, 301)
@@ -2213,7 +2207,6 @@ test('register /static with redirect true and wildcard false', async t => {
 
     const { promise, resolve } = Promise.withResolvers()
 
-    // simple-get doesn't tell us about redirects so use http.request directly
     const testurl = 'http://localhost:' + fastify.server.address().port + '/static/deep/path/for/test?a=b'
     const req = http.request(url.parse(testurl), res => {
       t.assert.deepStrictEqual(res.statusCode, 301)
