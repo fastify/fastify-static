@@ -19,7 +19,7 @@ send.mime.default_type = 'application/octet-stream'
 
 async function fastifyStatic (fastify, opts) {
   opts.root = normalizeRoot(opts.root)
-  checkRootPathForErrors(fastify, opts.root, opts.getPathNotFoundWarning)
+  checkRootPathForErrors(fastify, opts.root, opts.getPathNotFoundWarning, opts.suppressPathNotFoundWarning)
 
   const setHeaders = opts.setHeaders
   if (setHeaders !== undefined && typeof setHeaders !== 'function') {
@@ -417,7 +417,7 @@ function normalizeRoot (root) {
   return root
 }
 
-function checkRootPathForErrors (fastify, rootPath, getPathNotFoundWarning) {
+function checkRootPathForErrors (fastify, rootPath, getPathNotFoundWarning, suppressPathNotFoundWarning) {
   if (rootPath === undefined) {
     throw new Error('"root" option is required')
   }
@@ -434,18 +434,18 @@ function checkRootPathForErrors (fastify, rootPath, getPathNotFoundWarning) {
     }
 
     // check each path and fail at first invalid
-    rootPath.map((path) => checkPath(fastify, path, getPathNotFoundWarning))
+    rootPath.map((path) => checkPath(fastify, path, getPathNotFoundWarning, suppressPathNotFoundWarning))
     return
   }
 
   if (typeof rootPath === 'string') {
-    return checkPath(fastify, rootPath, getPathNotFoundWarning)
+    return checkPath(fastify, rootPath, getPathNotFoundWarning, suppressPathNotFoundWarning)
   }
 
   throw new Error('"root" option must be a string or array of strings')
 }
 
-function checkPath (fastify, rootPath, getPathNotFoundWarning) {
+function checkPath (fastify, rootPath, getPathNotFoundWarning, suppressPathNotFoundWarning) {
   if (typeof rootPath !== 'string') {
     throw new TypeError('"root" option must be a string')
   }
@@ -459,6 +459,9 @@ function checkPath (fastify, rootPath, getPathNotFoundWarning) {
     pathStat = statSync(rootPath)
   } catch (e) {
     if (e.code === 'ENOENT') {
+      if (suppressPathNotFoundWarning) {
+        return
+      }
       const warningMessage =
         getPathNotFoundWarning
           ? getPathNotFoundWarning(rootPath)

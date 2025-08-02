@@ -1123,6 +1123,30 @@ test('root not found warning', async (t) => {
   destination.end()
 })
 
+test('suppressing root not found warning', async (t) => {
+  t.plan(1)
+  const rootPath = path.join(__dirname, 'does-not-exist')
+  const pluginOptions = {
+    root: rootPath,
+    suppressPathNotFoundWarning: true
+  }
+  const destination = concat((data) => {
+    t.assert.deepStrictEqual(data, [])
+  })
+  const loggerInstance = pino(
+    {
+      level: 'warn'
+    },
+    destination
+  )
+  const fastify = Fastify({ loggerInstance })
+  fastify.register(fastifyStatic, pluginOptions)
+
+  await fastify.listen({ port: 0 })
+  fastify.server.unref()
+  destination.end()
+})
+
 test('custom root not found warning', async (t) => {
   t.plan(1)
   const rootPath = path.join(__dirname, 'does-not-exist')

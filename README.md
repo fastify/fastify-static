@@ -154,6 +154,10 @@ A custom function that returns a warning message to log when a specified root di
 It receives a single argument: the path of the missing root directory.
 The function should return a string describing the missing path.
 
+#### `suppressPathNotFoundWarning`
+
+If set to `true`, this option disables the warning message when a specified root directory is not found.
+
 #### `prefix`
 
 Default: `'/'`
