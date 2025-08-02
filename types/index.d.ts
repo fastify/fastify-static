@@ -86,6 +86,8 @@ declare namespace fastifyStatic {
 
   export interface FastifyStaticOptions extends SendOptions {
     root: string | string[] | URL | URL[];
+    getPathNotFoundWarning?: (path: string) => string;
+    suppressPathNotFoundWarning?: boolean;
     prefix?: string;
     prefixAvoidTrailingSlash?: boolean;
     serve?: boolean;

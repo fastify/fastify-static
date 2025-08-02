@@ -148,6 +148,16 @@ An array of directories can be provided to serve multiple static directories
 under a single prefix. Files are served in a "first found, first served" manner,
 so list directories in order of priority. Duplicate paths will raise an error.
 
+#### `getPathNotFoundWarning`
+
+A custom function that returns a warning message to log when a specified root directory is not found.
+It receives a single argument: the path of the missing root directory.
+The function should return a string describing the missing path.
+
+#### `suppressPathNotFoundWarning`
+
+If set to `true`, this option disables the warning message when a specified root directory is not found.
+
 #### `prefix`
 
 Default: `'/'`
