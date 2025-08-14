@@ -67,7 +67,7 @@ const options: FastifyStaticOptions = {
     return true
   },
   constraints: {
-    host: /.*\.example\.com/,
+    host: /^.*\.example\.com$/,
     version: '1.0.2'
   },
   logLevel: 'warn'
