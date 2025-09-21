@@ -17,6 +17,7 @@ const asteriskRegex = /\*/gu
 const supportedEncodings = ['br', 'gzip', 'deflate']
 send.mime.default_type = 'application/octet-stream'
 
+/** @type {import("fastify").FastifyPluginAsync<import("./types").FastifyStaticOptions>} */
 async function fastifyStatic (fastify, opts) {
   opts.root = normalizeRoot(opts.root)
   checkRootPathForErrors(fastify, opts.root)
@@ -171,6 +172,15 @@ async function fastifyStatic (fastify, opts) {
 
   const allowedPath = opts.allowedPath
 
+  /**
+   * @param {import("fastify").FastifyRequest} request
+   * @param {import("fastify").FastifyReply} reply
+   * @param {string} pathname
+   * @param {import("./types").FastifyStaticOptions['root']} rootPath
+   * @param {number} [rootPathOffset]
+   * @param {import("@fastify/send").SendOptions} [pumpOptions]
+   * @param {Set<string>} [checkedEncodings]
+   */
   async function pumpSendToReply (
     request,
     reply,
@@ -391,7 +401,7 @@ async function fastifyStatic (fastify, opts) {
     return pumpSendToReply(req, reply, routeConfig.file, routeConfig.rootPath)
   }
 }
-
+/** @param {import("./types").FastifyStaticOptions['root']} root */
 function normalizeRoot (root) {
   if (root === undefined) {
     return root
@@ -415,6 +425,10 @@ function normalizeRoot (root) {
   return root
 }
 
+/**
+ * @param {import("fastify").FastifyInstance} fastify
+ * @param {import("./types").FastifyStaticOptions['root']} rootPath
+ */
 function checkRootPathForErrors (fastify, rootPath) {
   if (rootPath === undefined) {
     throw new Error('"root" option is required')
@@ -443,6 +457,10 @@ function checkRootPathForErrors (fastify, rootPath) {
   throw new Error('"root" option must be a string or array of strings')
 }
 
+/**
+ * @param {import("fastify").FastifyInstance} fastify
+ * @param {import("./types").FastifyStaticOptions['root']} rootPath
+ */
 function checkPath (fastify, rootPath) {
   if (typeof rootPath !== 'string') {
     throw new TypeError('"root" option must be a string')
@@ -469,6 +487,7 @@ function checkPath (fastify, rootPath) {
   }
 }
 
+/** @param {string} path */
 function getContentType (path) {
   const type = send.mime.getType(path) || send.mime.default_type
 
@@ -494,7 +513,11 @@ function findIndexFile (pathname, root, indexFiles = ['index.html']) {
   return false
 }
 
-// Adapted from https://github.com/fastify/fastify-compress/blob/665e132fa63d3bf05ad37df3c20346660b71a857/index.js#L451
+/**
+ * Adapted from https://github.com/fastify/fastify-compress/blob/665e132fa63d3bf05ad37df3c20346660b71a857/index.js#L451
+ * @param {import('fastify').FastifyRequest['headers']} headers
+ * @param {Set<string>} checked
+ */
 function getEncodingHeader (headers, checked) {
   if (!('accept-encoding' in headers)) return
 
@@ -507,6 +530,7 @@ function getEncodingHeader (headers, checked) {
   )
 }
 
+/** @param {string} encoding */
 function getEncodingExtension (encoding) {
   switch (encoding) {
     case 'br':
@@ -517,6 +541,7 @@ function getEncodingExtension (encoding) {
   }
 }
 
+/** @param {string} url */
 function getRedirectUrl (url) {
   let i = 0
   // we detect how many slash before a valid path
