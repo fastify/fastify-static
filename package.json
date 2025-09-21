@@ -67,7 +67,6 @@
   },
   "devDependencies": {
     "@fastify/compress": "^8.0.0",
-    "@fastify/pre-commit": "^2.1.0",
     "@types/node": "^24.0.13",
     "borp": "^0.20.0",
     "c8": "^10.1.3",
