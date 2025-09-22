@@ -396,12 +396,17 @@ async function fastifyStatic (fastify, opts) {
     fastify.route(toSetUp)
   }
 
+  /** @type {import("fastify").RouteHandlerMethod} */
   async function serveFileHandler (req, reply) {
     const routeConfig = req.routeOptions?.config
     return pumpSendToReply(req, reply, routeConfig.file, routeConfig.rootPath)
   }
 }
-/** @param {import("./types").FastifyStaticOptions['root']} root */
+
+/**
+ * @param {import("./types").FastifyStaticOptions['root']} root
+ * @returns {import("./types").FastifyStaticOptions['root']}
+ */
 function normalizeRoot (root) {
   if (root === undefined) {
     return root
@@ -428,6 +433,7 @@ function normalizeRoot (root) {
 /**
  * @param {import("fastify").FastifyInstance} fastify
  * @param {import("./types").FastifyStaticOptions['root']} rootPath
+ * @returns {void}
  */
 function checkRootPathForErrors (fastify, rootPath) {
   if (rootPath === undefined) {
@@ -460,6 +466,7 @@ function checkRootPathForErrors (fastify, rootPath) {
 /**
  * @param {import("fastify").FastifyInstance} fastify
  * @param {import("./types").FastifyStaticOptions['root']} rootPath
+ * @returns {void}
  */
 function checkPath (fastify, rootPath) {
   if (typeof rootPath !== 'string') {
@@ -487,7 +494,10 @@ function checkPath (fastify, rootPath) {
   }
 }
 
-/** @param {string} path */
+/**
+ * @param {string} path
+ * @return {string}
+ */
 function getContentType (path) {
   const type = send.mime.getType(path) || send.mime.default_type
 
@@ -497,6 +507,12 @@ function getContentType (path) {
   return `${type}; charset=utf-8`
 }
 
+/**
+ * @param {string} pathname
+ * @param {*} root
+ * @param {import("./types").FastifyStaticOptions['index']} [indexFiles]
+ * @return {string|boolean}
+ */
 function findIndexFile (pathname, root, indexFiles = ['index.html']) {
   if (Array.isArray(indexFiles)) {
     return indexFiles.find(filename => {
@@ -530,7 +546,10 @@ function getEncodingHeader (headers, checked) {
   )
 }
 
-/** @param {string} encoding */
+/**
+ * @param {string} encoding
+ * @returns {string}
+ */
 function getEncodingExtension (encoding) {
   switch (encoding) {
     case 'br':
@@ -541,7 +560,10 @@ function getEncodingExtension (encoding) {
   }
 }
 
-/** @param {string} url */
+/**
+ * @param {string} url
+ * @return {string}
+ */
 function getRedirectUrl (url) {
   let i = 0
   // we detect how many slash before a valid path
