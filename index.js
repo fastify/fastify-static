@@ -16,6 +16,10 @@ const asteriskRegex = /\*/gu
 
 const supportedEncodings = ['br', 'gzip', 'deflate']
 send.mime.default_type = 'application/octet-stream'
+const encodingExtensionMap = {
+  br: 'br',
+  gzip: 'gz'
+}
 
 /** @type {import("fastify").FastifyPluginAsync<import("./types").FastifyStaticOptions>} */
 async function fastifyStatic (fastify, opts) {
@@ -225,9 +229,9 @@ async function fastifyStatic (fastify, opts) {
           if (!pathname) {
             return reply.callNotFound()
           }
-          pathnameForSend = pathnameForSend + pathname + '.' + getEncodingExtension(encoding)
+          pathnameForSend = pathnameForSend + pathname + '.' + encodingExtensionMap[encoding]
         } else {
-          pathnameForSend = pathname + '.' + getEncodingExtension(encoding)
+          pathnameForSend = pathname + '.' + encodingExtensionMap[encoding]
         }
       }
     }
@@ -547,27 +551,13 @@ function getEncodingHeader (headers, checked) {
 }
 
 /**
- * @param {string} encoding
- * @returns {string}
- */
-function getEncodingExtension (encoding) {
-  switch (encoding) {
-    case 'br':
-      return 'br'
-
-    case 'gzip':
-      return 'gz'
-  }
-}
-
-/**
  * @param {string} url
  * @return {string}
  */
 function getRedirectUrl (url) {
   let i = 0
   // we detect how many slash before a valid path
-  for (; i < url.length; ++i) {
+  for (let ul = url.length; i < ul; ++i) {
     if (url[i] !== '/' && url[i] !== '\\') break
   }
   // turns all leading / or \ into a single /
