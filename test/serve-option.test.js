@@ -18,7 +18,7 @@ test('should not serve static files when serve is false', async t => {
   fastify.server.unref()
 
   const res = await fetch('http://localhost:' + fastify.server.address().port + '/public/example.html')
-  assert.strictEqual(res.status, 404);
+  assert.strictEqual(res.status, 404)
 })
 
 test('should serve static files when serve is true', async t => {
@@ -33,8 +33,8 @@ test('should serve static files when serve is true', async t => {
   fastify.server.unref()
 
   const res = await fetch('http://localhost:' + fastify.server.address().port + '/public/example.html')
-  assert.strictEqual(res.status, 200);
+  assert.strictEqual(res.status, 200)
 
   const content = await res.text()
-  assert.ok(content.includes('hello'), 'File content should contain "hello"');
+  assert.ok(content.includes('hello'), 'File content should contain "hello"')
 })
