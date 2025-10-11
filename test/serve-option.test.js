@@ -14,7 +14,6 @@ test('should not serve static files when serve is false', async t => {
 
   t.after(() => fastify.close())
   await fastify.listen({ port: 0 })
-  console.log('Server running at http://localhost:0')
   fastify.server.unref()
 
   const res = await fetch('http://localhost:' + fastify.server.address().port + '/public/example.html')
