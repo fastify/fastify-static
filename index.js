@@ -129,7 +129,7 @@ async function fastifyStatic (fastify, opts) {
         })
       }
     } else {
-      const indexes = opts.index === undefined ? ['index.html'] : [].concat(opts.index)
+      const indexes = new Set(opts.index === undefined ? ['index.html'] : [].concat(opts.index))
       const indexDirs = new Map()
       const routes = new Set()
 
@@ -154,7 +154,7 @@ async function fastifyStatic (fastify, opts) {
           setUpHeadAndGet(routeOpts, route, `/${file}`, rootPath)
 
           const key = path.posix.basename(route)
-          if (indexes.includes(key) && !indexDirs.has(key)) {
+          if (indexes.has(key) && !indexDirs.has(key)) {
             indexDirs.set(path.posix.dirname(route), rootPath)
           }
         }
