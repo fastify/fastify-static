@@ -52,7 +52,7 @@ async function fastifyStatic (fastify, opts) {
     maxAge: opts.maxAge
   }
 
-  let prefix = opts.prefix ?? (opts.prefix = '/')
+  let prefix = opts.prefix ??= '/'
 
   if (!opts.prefixAvoidTrailingSlash) {
     prefix =
