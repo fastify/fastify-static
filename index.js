@@ -36,9 +36,7 @@ async function fastifyStatic (fastify, opts) {
     throw invalidDirListOpts
   }
 
-  if (opts.dotfiles === undefined) {
-    opts.dotfiles = 'allow'
-  }
+  opts.dotfiles ??= 'allow'
 
   const sendOptions = {
     root: opts.root,
