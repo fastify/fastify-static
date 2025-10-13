@@ -65,7 +65,7 @@ async function fastifyStatic (fastify, opts) {
   const routeOpts = {
     constraints: opts.constraints,
     schema: {
-      hide: opts.schemaHide !== undefined ? opts.schemaHide : true
+      hide: opts.schemaHide ?? true
     },
     logLevel: opts.logLevel,
     errorHandler (error, request, reply) {
