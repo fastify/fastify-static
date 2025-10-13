@@ -551,7 +551,7 @@ function getEncodingHeader (headers, checked) {
 function getRedirectUrl (url) {
   let i = 0
   // we detect how many slash before a valid path
-  for (let ul = url.length; i < ul; ++i) {
+  for (const ul = url.length; i < ul; ++i) {
     if (url[i] !== '/' && url[i] !== '\\') break
   }
   // turns all leading / or \ into a single /
