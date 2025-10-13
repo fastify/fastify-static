@@ -215,9 +215,7 @@ async function fastifyStatic (fastify, opts) {
        * We conditionally create this structure to track our attempts
        * at sending pre-compressed assets
        */
-      if (!checkedEncodings) {
-        checkedEncodings = new Set()
-      }
+      checkedEncodings ??= new Set()
 
       encoding = getEncodingHeader(request.headers, checkedEncodings)
 
