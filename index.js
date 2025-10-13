@@ -17,8 +17,8 @@ const asteriskRegex = /\*/gu
 const supportedEncodings = ['br', 'gzip', 'deflate']
 send.mime.default_type = 'application/octet-stream'
 const encodingExtensionMap = {
-  br: 'br',
-  gzip: 'gz'
+  br: '.br',
+  gzip: '.gz'
 }
 
 /** @type {import("fastify").FastifyPluginAsync<import("./types").FastifyStaticOptions>} */
@@ -229,9 +229,9 @@ async function fastifyStatic (fastify, opts) {
           if (!pathname) {
             return reply.callNotFound()
           }
-          pathnameForSend = pathnameForSend + pathname + '.' + encodingExtensionMap[encoding]
+          pathnameForSend = pathnameForSend + pathname + (encodingExtensionMap[encoding] || '')
         } else {
-          pathnameForSend = pathname + '.' + encodingExtensionMap[encoding]
+          pathnameForSend = pathname + (encodingExtensionMap[encoding] || '')
         }
       }
     }
