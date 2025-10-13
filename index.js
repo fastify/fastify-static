@@ -388,7 +388,7 @@ async function fastifyStatic (fastify, opts) {
       url: route,
       handler: serveFileHandler
     })
-    toSetUp.config = toSetUp.config || {}
+    toSetUp.config ??= {}
     toSetUp.config.file = file
     toSetUp.config.rootPath = rootPath
     fastify.route(toSetUp)
