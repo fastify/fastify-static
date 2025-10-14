@@ -573,7 +573,7 @@ function getRedirectUrl (url) {
     if (url[i] !== '/' && url[i] !== '\\') break
   }
   // turns all leading / or \ into a single /
-  url = '/' + url.substr(i)
+  url = '/' + url.slice(i)
   try {
     const parsed = new URL(url, 'http://localhost.com/')
     const parsedPathname = parsed.pathname
