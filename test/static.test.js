@@ -753,6 +753,51 @@ test('serving disabled', async (t) => {
   })
 })
 
+test('serving disabled without root', async (t) => {
+  t.plan(2)
+
+  const pluginOptions = {
+    prefix: '/static/',
+    serve: false
+  }
+  const fastify = Fastify()
+  fastify.register(fastifyStatic, pluginOptions)
+
+  t.after(() => fastify.close())
+
+  fastify.get('/foo/bar/r', (_request, reply) => {
+    reply.sendFile('index.html')
+  })
+
+  fastify.get('/foo/bar/a', (_request, reply) => {
+    reply.sendFile(path.join(__dirname, pluginOptions.prefix, 'index.html'))
+  })
+
+  t.after(() => fastify.close())
+
+  await fastify.listen({ port: 0 })
+
+  fastify.server.unref()
+
+  await t.test('/static/index.html via sendFile not found', async (t) => {
+    t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/foo/bar/a')
+    t.assert.ok(response.ok)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), indexContent)
+    genericResponseChecks(t, response)
+  })
+
+  await t.test('/static/index.html via sendFile with relative path not found', async (t) => {
+    t.plan(2)
+
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/foo/bar/r')
+    t.assert.ok(!response.ok)
+    t.assert.deepStrictEqual(response.status, 404)
+  })
+})
+
 test('sendFile', async (t) => {
   t.plan(4)
 

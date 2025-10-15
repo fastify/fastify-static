@@ -84,39 +84,49 @@ declare namespace fastifyStatic {
     serveDotFiles?: boolean;
   }
 
-  export interface FastifyStaticOptions extends SendOptions {
+  type Root = {
+    serve: true;
     root: string | string[] | URL | URL[];
-    prefix?: string;
-    prefixAvoidTrailingSlash?: boolean;
-    serve?: boolean;
-    decorateReply?: boolean;
-    schemaHide?: boolean;
-    setHeaders?: (res: SetHeadersResponse, path: string, stat: Stats) => void;
-    redirect?: boolean;
-    wildcard?: boolean;
-    globIgnore?: string[];
-    list?: boolean | ListOptionsJsonFormat | ListOptionsHtmlFormat;
-    allowedPath?: (pathName: string, root: string, request: FastifyRequest) => boolean;
-    /**
-     * @description
-     * Opt-in to looking for pre-compressed files
-     */
-    preCompressed?: boolean;
-
-    // Passed on to `send`
-    acceptRanges?: boolean;
-    contentType?: boolean;
-    cacheControl?: boolean;
-    dotfiles?: 'allow' | 'deny' | 'ignore';
-    etag?: boolean;
-    extensions?: string[];
-    immutable?: boolean;
-    index?: string[] | string | false;
-    lastModified?: boolean;
-    maxAge?: string | number;
-    constraints?: RouteOptions['constraints'];
-    logLevel?: RouteOptions['logLevel'];
+  } | {
+    serve?: false;
+    root?: string | string[] | URL | URL[];
   }
+
+  export type FastifyStaticOptions =
+    SendOptions
+    & Root
+    & {
+      // Added by this plugin
+      prefix?: string;
+      prefixAvoidTrailingSlash?: boolean;
+      decorateReply?: boolean;
+      schemaHide?: boolean;
+      setHeaders?: (res: SetHeadersResponse, path: string, stat: Stats) => void;
+      redirect?: boolean;
+      wildcard?: boolean;
+      globIgnore?: string[];
+      list?: boolean | ListOptionsJsonFormat | ListOptionsHtmlFormat;
+      allowedPath?: (pathName: string, root: string, request: FastifyRequest) => boolean;
+      /**
+       * @description
+       * Opt-in to looking for pre-compressed files
+       */
+      preCompressed?: boolean;
+
+      // Passed on to `send`
+      acceptRanges?: boolean;
+      contentType?: boolean;
+      cacheControl?: boolean;
+      dotfiles?: 'allow' | 'deny' | 'ignore';
+      etag?: boolean;
+      extensions?: string[];
+      immutable?: boolean;
+      index?: string[] | string | false;
+      lastModified?: boolean;
+      maxAge?: string | number;
+      constraints?: RouteOptions['constraints'];
+      logLevel?: RouteOptions['logLevel'];
+    }
 
   export const fastifyStatic: FastifyStaticPlugin
 

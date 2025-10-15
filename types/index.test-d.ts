@@ -120,6 +120,19 @@ expectAssignable<FastifyStaticOptions>({
   root: [new URL('')]
 })
 
+expectError<FastifyStaticOptions>({
+  serve: true
+})
+
+expectAssignable<FastifyStaticOptions>({
+  serve: true,
+  root: ''
+})
+
+expectAssignable<FastifyStaticOptions>({
+  serve: false
+})
+
 appWithImplicitHttp
   .register(fastifyStatic, options)
   .after(() => {

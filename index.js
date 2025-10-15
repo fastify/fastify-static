@@ -19,8 +19,10 @@ send.mime.default_type = 'application/octet-stream'
 
 /** @type {import("fastify").FastifyPluginAsync<import("./types").FastifyStaticOptions>} */
 async function fastifyStatic (fastify, opts) {
-  opts.root = normalizeRoot(opts.root)
-  checkRootPathForErrors(fastify, opts.root)
+  if (opts.serve !== false) {
+    opts.root = normalizeRoot(opts.root)
+    checkRootPathForErrors(fastify, opts.root)
+  }
 
   const setHeaders = opts.setHeaders
   if (setHeaders !== undefined && typeof setHeaders !== 'function') {
@@ -199,6 +201,8 @@ async function fastifyStatic (fastify, opts) {
       } else {
         options.root = rootPath
       }
+    } else if (path.isAbsolute(pathname) === false) {
+      return reply.callNotFound()
     }
 
     if (allowedPath && !allowedPath(pathname, options.root, request)) {
