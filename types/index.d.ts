@@ -84,17 +84,19 @@ declare namespace fastifyStatic {
     serveDotFiles?: boolean;
   }
 
-  type Root = {
+  type Root = string | string[] | URL | URL[]
+
+  type RootOptions = {
     serve: true;
-    root: string | string[] | URL | URL[];
+    root: Root;
   } | {
     serve?: false;
-    root?: string | string[] | URL | URL[];
+    root?: Root;
   }
 
   export type FastifyStaticOptions =
     SendOptions
-    & Root
+    & RootOptions
     & {
       // Added by this plugin
       prefix?: string;
