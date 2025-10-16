@@ -138,7 +138,12 @@ fastify.get('/favicon.ico', function (req, reply) {
 
 ### Options
 
-#### `root` (required)
+#### `serve`
+Default: `true`
+
+If set to `false`, the plugin will not serve files from the `root` directory.
+
+#### `root` (required if `serve` is not false)
 
 The absolute path of the directory containing the files to serve.
 The file to serve is determined by combining `req.url` with the
