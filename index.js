@@ -19,7 +19,7 @@ send.mime.default_type = 'application/octet-stream'
 
 /** @type {import("fastify").FastifyPluginAsync<import("./types").FastifyStaticOptions>} */
 async function fastifyStatic (fastify, opts) {
-  if (opts.serve !== false) {
+  if (opts.serve !== false || opts.root !== undefined) {
     opts.root = normalizeRoot(opts.root)
     checkRootPathForErrors(fastify, opts.root)
   }

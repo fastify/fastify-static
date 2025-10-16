@@ -1260,7 +1260,7 @@ test('maxAge option', async (t) => {
 })
 
 test('errors', async (t) => {
-  t.plan(11)
+  t.plan(12)
 
   await t.test('no root', async (t) => {
     t.plan(1)
@@ -1321,6 +1321,16 @@ test('errors', async (t) => {
   await t.test('all root array paths must be valid', async (t) => {
     t.plan(1)
     const pluginOptions = { root: [path.join(__dirname, '/static'), 1] }
+    const fastify = Fastify({ logger: false })
+    await t.assert.rejects(async () => await fastify.register(fastifyStatic, pluginOptions))
+  })
+
+  await t.test('no root and serve: false', async (t) => {
+    t.plan(1)
+    const pluginOptions = {
+      serve: false,
+      root: []
+    }
     const fastify = Fastify({ logger: false })
     await t.assert.rejects(async () => await fastify.register(fastifyStatic, pluginOptions))
   })
