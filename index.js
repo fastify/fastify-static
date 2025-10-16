@@ -16,6 +16,10 @@ const asteriskRegex = /\*/gu
 
 const supportedEncodings = ['br', 'gzip', 'deflate']
 send.mime.default_type = 'application/octet-stream'
+const encodingExtensionMap = {
+  br: '.br',
+  gzip: '.gz'
+}
 
 /** @type {import("fastify").FastifyPluginAsync<import("./types").FastifyStaticOptions>} */
 async function fastifyStatic (fastify, opts) {
@@ -32,9 +36,7 @@ async function fastifyStatic (fastify, opts) {
     throw invalidDirListOpts
   }
 
-  if (opts.dotfiles === undefined) {
-    opts.dotfiles = 'allow'
-  }
+  opts.dotfiles ??= 'allow'
 
   const sendOptions = {
     root: opts.root,
@@ -50,7 +52,7 @@ async function fastifyStatic (fastify, opts) {
     maxAge: opts.maxAge
   }
 
-  let prefix = opts.prefix ?? (opts.prefix = '/')
+  let prefix = opts.prefix ??= '/'
 
   if (!opts.prefixAvoidTrailingSlash) {
     prefix =
@@ -63,7 +65,7 @@ async function fastifyStatic (fastify, opts) {
   const routeOpts = {
     constraints: opts.constraints,
     schema: {
-      hide: opts.schemaHide !== undefined ? opts.schemaHide : true
+      hide: opts.schemaHide ?? true
     },
     logLevel: opts.logLevel,
     errorHandler (error, request, reply) {
@@ -127,7 +129,7 @@ async function fastifyStatic (fastify, opts) {
         })
       }
     } else {
-      const indexes = opts.index === undefined ? ['index.html'] : [].concat(opts.index)
+      const indexes = new Set(opts.index === undefined ? ['index.html'] : [].concat(opts.index))
       const indexDirs = new Map()
       const routes = new Set()
 
@@ -152,7 +154,7 @@ async function fastifyStatic (fastify, opts) {
           setUpHeadAndGet(routeOpts, route, `/${file}`, rootPath)
 
           const key = path.posix.basename(route)
-          if (indexes.includes(key) && !indexDirs.has(key)) {
+          if (indexes.has(key) && !indexDirs.has(key)) {
             indexDirs.set(path.posix.dirname(route), rootPath)
           }
         }
@@ -213,9 +215,7 @@ async function fastifyStatic (fastify, opts) {
        * We conditionally create this structure to track our attempts
        * at sending pre-compressed assets
        */
-      if (!checkedEncodings) {
-        checkedEncodings = new Set()
-      }
+      checkedEncodings ??= new Set()
 
       encoding = getEncodingHeader(request.headers, checkedEncodings)
 
@@ -225,9 +225,9 @@ async function fastifyStatic (fastify, opts) {
           if (!pathname) {
             return reply.callNotFound()
           }
-          pathnameForSend = pathnameForSend + pathname + '.' + getEncodingExtension(encoding)
+          pathnameForSend = pathnameForSend + pathname + encodingExtensionMap[encoding]
         } else {
-          pathnameForSend = pathname + '.' + getEncodingExtension(encoding)
+          pathnameForSend = pathname + encodingExtensionMap[encoding]
         }
       }
     }
@@ -370,9 +370,7 @@ async function fastifyStatic (fastify, opts) {
         // otherwise use send provided status code
         const newStatusCode = reply.statusCode !== 200 ? reply.statusCode : statusCode
         reply.code(newStatusCode)
-        if (setHeaders !== undefined) {
-          setHeaders(reply.raw, metadata.path, metadata.stat)
-        }
+        setHeaders?.(reply.raw, metadata.path, metadata.stat)
         reply.headers(headers)
         if (encoding) {
           reply.header('content-type', getContentType(pathname))
@@ -390,7 +388,7 @@ async function fastifyStatic (fastify, opts) {
       url: route,
       handler: serveFileHandler
     })
-    toSetUp.config = toSetUp.config || {}
+    toSetUp.config ??= {}
     toSetUp.config.file = file
     toSetUp.config.rootPath = rootPath
     fastify.route(toSetUp)
@@ -547,27 +545,13 @@ function getEncodingHeader (headers, checked) {
 }
 
 /**
- * @param {string} encoding
- * @returns {string}
- */
-function getEncodingExtension (encoding) {
-  switch (encoding) {
-    case 'br':
-      return 'br'
-
-    case 'gzip':
-      return 'gz'
-  }
-}
-
-/**
  * @param {string} url
  * @return {string}
  */
 function getRedirectUrl (url) {
   let i = 0
   // we detect how many slash before a valid path
-  for (; i < url.length; ++i) {
+  for (const ul = url.length; i < ul; ++i) {
     if (url[i] !== '/' && url[i] !== '\\') break
   }
   // turns all leading / or \ into a single /
