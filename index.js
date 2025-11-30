@@ -142,7 +142,7 @@ async function fastifyStatic (fastify, opts) {
 
         const files = await Array.fromAsync(glob('**/**', {
           cwd: rootPath, absolute: false, follow: true, nodir: true, dot: opts.serveDotFiles, ignore: opts.globIgnore
-        }).map(dirent => dirent.name))
+        }))
 
         for (let file of files) {
           file = file.split(path.win32.sep).join(path.posix.sep)
