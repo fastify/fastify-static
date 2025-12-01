@@ -3,7 +3,7 @@
 const path = require('node:path')
 const { fileURLToPath } = require('node:url')
 const { statSync } = require('node:fs')
-const { glob } = require('glob')
+const { glob } = require('node:fs/promises')
 const fp = require('fastify-plugin')
 const send = require('@fastify/send')
 const encodingNegotiator = require('@fastify/accept-negotiator')
@@ -139,9 +139,10 @@ async function fastifyStatic (fastify, opts) {
       for (let rootPath of roots) {
         rootPath = rootPath.split(path.win32.sep).join(path.posix.sep)
         !rootPath.endsWith('/') && (rootPath += '/')
-        const files = await glob('**/**', {
+
+        const files = await Array.fromAsync(glob('**/**', {
           cwd: rootPath, absolute: false, follow: true, nodir: true, dot: opts.serveDotFiles, ignore: opts.globIgnore
-        })
+        }))
 
         for (let file of files) {
           file = file.split(path.win32.sep).join(path.posix.sep)
