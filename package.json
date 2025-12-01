@@ -63,7 +63,7 @@
     "content-disposition": "^1.0.1",
     "fastify-plugin": "^5.0.0",
     "fastq": "^1.17.1",
-    "glob": "^11.0.0"
+    "glob": "^13.0.0"
   },
   "devDependencies": {
     "@fastify/compress": "^8.0.0",
