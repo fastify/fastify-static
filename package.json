@@ -60,7 +60,7 @@
   "dependencies": {
     "@fastify/accept-negotiator": "^2.0.0",
     "@fastify/send": "^4.0.0",
-    "content-disposition": "^0.5.4",
+    "content-disposition": "^1.0.1",
     "fastify-plugin": "^5.0.0",
     "fastq": "^1.17.1",
     "glob": "^11.0.0"
