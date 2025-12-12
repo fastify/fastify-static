@@ -2437,13 +2437,18 @@ test('if dotfiles are properly served according to plugin options', async (t) =>
 
 test('register with failing glob handler', async (t) => {
   const fastifyStatic = proxyquire.noCallThru()('../', {
-    glob: function globStub (_pattern, _options, cb) {
-      process.nextTick(function () {
-        return cb(new Error('mock glob error'))
-      })
+    'node:fs/promises': {
+      glob: function globStub (_pattern, _options) {
+        return {
+          [Symbol.asyncIterator] () {
+            return {
+              next: async () => { throw new Error('mock glob error') }
+            }
+          }
+        }
+      }
     }
   })
-
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
     serve: true,
