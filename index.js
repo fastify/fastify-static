@@ -3,7 +3,7 @@
 const path = require('node:path')
 const { fileURLToPath } = require('node:url')
 const { statSync } = require('node:fs')
-const { glob } = require('glob')
+const { glob, stat } = require('node:fs/promises')
 const fp = require('fastify-plugin')
 const send = require('@fastify/send')
 const encodingNegotiator = require('@fastify/accept-negotiator')
@@ -139,11 +139,23 @@ async function fastifyStatic (fastify, opts) {
       for (let rootPath of roots) {
         rootPath = rootPath.split(path.win32.sep).join(path.posix.sep)
         !rootPath.endsWith('/') && (rootPath += '/')
-        const files = await glob('**/**', {
-          cwd: rootPath, absolute: false, follow: true, nodir: true, dot: opts.serveDotFiles, ignore: opts.globIgnore
+
+        const patterns = ['**/**']
+        if (opts.serveDotFiles) {
+          patterns.push('**/.*/**')
+        }
+
+        const globStream = glob(patterns, {
+          cwd: rootPath, withFileTypes: true, exclude: opts.globIgnore
         })
 
-        for (let file of files) {
+        for await (const entry of globStream) {
+          const isFile = entry.isFile()
+          if (!isFile) { continue }
+          if (!opts.serveDotFiles && entry.name.startsWith('.')) { continue }
+          const fullPath = path.join(entry.parentPath, entry.name)
+          let file = path.relative(rootPath, fullPath)
+
           file = file.split(path.win32.sep).join(path.posix.sep)
           const route = prefix + file
 
