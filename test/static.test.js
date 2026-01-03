@@ -1712,7 +1712,9 @@ test('register with wildcard false (trailing slash in the root)', async t => {
     wildcard: false
   }
   const fastify = Fastify({
-    ignoreTrailingSlash: true
+    routerOptions: {
+      ignoreTrailingSlash: true
+    }
   })
   fastify.register(fastifyStatic, pluginOptions)
 
