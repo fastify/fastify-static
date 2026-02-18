@@ -1,7 +1,3 @@
-// Definitions by: Jannik <https://github.com/jannikkeye>
-//                 Leo <https://github.com/leomelzer>
-/// <reference types="node" />
-
 import { FastifyPluginAsync, FastifyReply, FastifyRequest, RouteOptions } from 'fastify'
 import { Stats } from 'node:fs'
 
