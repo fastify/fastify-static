@@ -1452,6 +1452,8 @@ test('with fastify-compress', async t => {
 
   await fastify.listen({ port: 0 })
 
+  fastify.server.unref()
+
   await t.test('deflate', async function (t) {
     t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
 
