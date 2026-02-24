@@ -274,7 +274,7 @@ async function fastifyStatic (fastify, opts) {
               pathname + '/',
               rootPath,
               undefined,
-              undefined,
+              pumpOptions,
               checkedEncodings
             )
           }
@@ -314,7 +314,7 @@ async function fastifyStatic (fastify, opts) {
                   pathname + '/',
                   rootPath,
                   undefined,
-                  undefined,
+                  pumpOptions,
                   checkedEncodings
                 )
               }
@@ -336,7 +336,15 @@ async function fastifyStatic (fastify, opts) {
 
           // root paths left to try?
           if (Array.isArray(rootPath) && rootPathOffset < (rootPath.length - 1)) {
-            return pumpSendToReply(request, reply, pathname, rootPath, rootPathOffset + 1)
+            return pumpSendToReply(
+              request,
+              reply,
+              pathname,
+              rootPath,
+              rootPathOffset + 1,
+              pumpOptions,
+              undefined
+            )
           }
 
           if (opts.preCompressed && !checkedEncodings.has(encoding)) {
@@ -347,7 +355,7 @@ async function fastifyStatic (fastify, opts) {
               pathnameOrig,
               rootPath,
               rootPathOffset,
-              undefined,
+              pumpOptions,
               checkedEncodings
             )
           }
