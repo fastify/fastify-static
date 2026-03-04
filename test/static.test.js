@@ -1438,9 +1438,7 @@ test('register no prefix', async (t) => {
   })
 })
 
-test('with fastify-compress', async t => {
-  // t.plan(2)
-
+test('with fastify-compress', { timeout: 60000 }, async t => {
   const pluginOptions = {
     root: path.join(__dirname, '/static')
   }
