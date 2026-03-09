@@ -870,6 +870,83 @@ test('sendFile', async (t) => {
   })
 })
 
+test('sendFile with multiple roots', async (t) => {
+  t.plan(4)
+
+  const pluginOptions = {
+    root: [path.join(__dirname, '/static'), path.join(__dirname, '/static2')],
+    prefix: '/static'
+  }
+  const fastify = Fastify()
+  const maxAge = Math.round(Math.random() * 10) * 10000
+  fastify.register(fastifyStatic, pluginOptions)
+
+  t.after(() => fastify.close())
+
+  fastify.get('/foo', function (_req, rep) {
+    rep.sendFile('foo.html')
+  })
+
+  fastify.get('/foo-with-options', function (_req, rep) {
+    rep.sendFile('foo.html', { maxAge })
+  })
+
+  fastify.get('/bar', function (_req, rep) {
+    rep.sendFile('bar.html')
+  })
+
+  fastify.get('/bar-with-options', function (_req, rep) {
+    rep.sendFile('bar.html', { maxAge })
+  })
+
+  await fastify.listen({ port: 0 })
+  fastify.server.unref()
+
+  await t.test('reply.sendFile() first root', async (t) => {
+    t.plan(4 + GENERIC_RESPONSE_CHECK_COUNT)
+
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/foo')
+    t.assert.ok(response.ok)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), fooContent)
+    t.assert.deepStrictEqual(response.headers.get('cache-control'), 'public, max-age=0')
+    genericResponseChecks(t, response)
+  })
+
+  await t.test('reply.sendFile() first root with options', async (t) => {
+    t.plan(4 + GENERIC_RESPONSE_CHECK_COUNT)
+
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/foo-with-options')
+    t.assert.ok(response.ok)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), fooContent)
+    t.assert.deepStrictEqual(response.headers.get('cache-control'), `public, max-age=${maxAge / 1000}`)
+    genericResponseChecks(t, response)
+  })
+
+  await t.test('reply.sendFile() second root', async (t) => {
+    t.plan(4 + GENERIC_RESPONSE_CHECK_COUNT)
+
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/bar')
+    t.assert.ok(response.ok)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), barContent)
+    t.assert.deepStrictEqual(response.headers.get('cache-control'), 'public, max-age=0')
+    genericResponseChecks(t, response)
+  })
+
+  await t.test('reply.sendFile() second root with options', async (t) => {
+    t.plan(4 + GENERIC_RESPONSE_CHECK_COUNT)
+
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/bar-with-options')
+    t.assert.ok(response.ok)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), barContent)
+    t.assert.deepStrictEqual(response.headers.get('cache-control'), `public, max-age=${maxAge / 1000}`)
+    genericResponseChecks(t, response)
+  })
+})
+
 test('sendFile disabled', async (t) => {
   t.plan(1)
 
