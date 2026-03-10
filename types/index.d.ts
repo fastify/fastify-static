@@ -1,20 +1,34 @@
-import { FastifyPluginAsync, FastifyReply, FastifyRequest, RouteOptions } from 'fastify'
+import {
+  AnyFastifyInstance,
+  ApplyDecorators,
+  FastifyPluginAsync,
+  FastifyReply,
+  FastifyRequest,
+  RouteOptions,
+  UnEncapsulatedPlugin
+} from 'fastify'
 import { Stats } from 'node:fs'
 
-declare module 'fastify' {
-  interface FastifyReply {
-    sendFile(filename: string, rootPath?: string): FastifyReply;
-    sendFile(filename: string, options?: fastifyStatic.SendOptions): FastifyReply;
-    sendFile(filename: string, rootPath?: string, options?: fastifyStatic.SendOptions): FastifyReply;
-    download(filepath: string, options?: fastifyStatic.SendOptions): FastifyReply;
-    download(filepath: string, filename?: string): FastifyReply;
-    download(filepath: string, filename?: string, options?: fastifyStatic.SendOptions): FastifyReply;
-  }
-}
-
-type FastifyStaticPlugin = FastifyPluginAsync<NonNullable<fastifyStatic.FastifyStaticOptions>>
-
 declare namespace fastifyStatic {
+  export type FastifyStaticPluginDecorators = {
+    reply: {
+      sendFile(filename: string, rootPath?: string): FastifyReply;
+      sendFile(filename: string, options?: fastifyStatic.SendOptions): FastifyReply;
+      sendFile(filename: string, rootPath?: string, options?: fastifyStatic.SendOptions): FastifyReply;
+      download(filepath: string, options?: fastifyStatic.SendOptions): FastifyReply;
+      download(filepath: string, filename?: string): FastifyReply;
+      download(filepath: string, filename?: string, options?: fastifyStatic.SendOptions): FastifyReply;
+    }
+  }
+
+  export type FastifyStaticPlugin<TInstance extends AnyFastifyInstance = AnyFastifyInstance> = UnEncapsulatedPlugin<
+    FastifyPluginAsync<
+      NonNullable<fastifyStatic.FastifyStaticOptions>,
+      TInstance,
+      ApplyDecorators<TInstance, FastifyStaticPluginDecorators>
+    >
+  >
+
   export interface SetHeadersResponse {
     getHeader: FastifyReply['getHeader'];
     setHeader: FastifyReply['header'];
@@ -56,7 +70,6 @@ declare namespace fastifyStatic {
 
   export interface ListOptionsJsonFormat extends ListOptions {
     format: 'json';
-    // Required when the URL parameter `format=html` exists
     render?: ListRender;
   }
 
@@ -65,7 +78,6 @@ declare namespace fastifyStatic {
     render: ListRender;
   }
 
-  // Passed on to `send`
   export interface SendOptions {
     acceptRanges?: boolean;
     contentType?: boolean;
@@ -94,7 +106,6 @@ declare namespace fastifyStatic {
     SendOptions
     & RootOptions
     & {
-      // Added by this plugin
       prefix?: string;
       prefixAvoidTrailingSlash?: boolean;
       decorateReply?: boolean;
@@ -105,13 +116,7 @@ declare namespace fastifyStatic {
       globIgnore?: string[];
       list?: boolean | ListOptionsJsonFormat | ListOptionsHtmlFormat;
       allowedPath?: (pathName: string, root: string, request: FastifyRequest) => boolean;
-      /**
-       * @description
-       * Opt-in to looking for pre-compressed files
-       */
       preCompressed?: boolean;
-
-      // Passed on to `send`
       acceptRanges?: boolean;
       contentType?: boolean;
       cacheControl?: boolean;
@@ -127,10 +132,9 @@ declare namespace fastifyStatic {
     }
 
   export const fastifyStatic: FastifyStaticPlugin
-
   export { fastifyStatic as default }
 }
 
-declare function fastifyStatic (...params: Parameters<FastifyStaticPlugin>): ReturnType<FastifyStaticPlugin>
+declare function fastifyStatic (...params: Parameters<fastifyStatic.FastifyStaticPlugin>): ReturnType<fastifyStatic.FastifyStaticPlugin>
 
 export = fastifyStatic

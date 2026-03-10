@@ -11,6 +11,10 @@ Plugin for serving static files as fast as possible.
 npm i @fastify/static
 ```
 
+TypeScript users get `reply.sendFile()` and `reply.download()` from the plugin
+registration itself, so those reply decorators are only available on instances
+where `@fastify/static` has actually been registered.
+
 ### Compatibility
 
 | Plugin version | Fastify version |
