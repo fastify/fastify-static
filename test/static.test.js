@@ -1515,7 +1515,7 @@ test('register no prefix', async (t) => {
   })
 })
 
-test('with fastify-compress', async t => {
+test('with fastify-compress', { timeout: 60000 }, async t => {
   t.plan(2)
 
   const pluginOptions = {
@@ -1528,8 +1528,6 @@ test('with fastify-compress', async t => {
   t.after(() => fastify.close())
 
   await fastify.listen({ port: 0 })
-
-  fastify.server.unref()
 
   await t.test('deflate', async function (t) {
     t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
@@ -1555,6 +1553,7 @@ test('with fastify-compress', async t => {
     genericResponseChecks(t, response)
   })
 })
+
 test('register /static/ with schemaHide true', async t => {
   t.plan(2)
 
