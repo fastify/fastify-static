@@ -2517,10 +2517,8 @@ test('if dotfiles are properly served according to plugin options', async (t) =>
 
 test('register with failing glob handler', async (t) => {
   const fastifyStatic = proxyquire.noCallThru()('../', {
-    glob: function globStub (_pattern, _options, cb) {
-      process.nextTick(function () {
-        return cb(new Error('mock glob error'))
-      })
+    'node:fs/promises': {
+      glob: async function * globStub () { throw new Error('mock glob error') }
     }
   })
 
@@ -3351,6 +3349,43 @@ test('should follow symbolic link without wildcard', async (t) => {
   const response2 = await fetch('http://localhost:' + fastify.server.address().port + '/dir/symlink/subdir/subdir/index.html')
   t.assert.ok(response2.ok)
   t.assert.deepStrictEqual(response2.status, 200)
+})
+
+test('should not infinite-loop on circular symlinks with wildcard false', async (t) => {
+  const base = path.join(__dirname, '/static-symbolic-link')
+  const dirA = path.join(base, 'circular-a')
+  const linkB = path.join(base, 'circular-b')
+  // clean up any leftovers from a previous failed run
+  try { fs.unlinkSync(path.join(dirA, 'link-to-b')) } catch { /* not there */ }
+  try { fs.unlinkSync(linkB) } catch { /* not there */ }
+  fs.rmSync(dirA, { recursive: true, force: true })
+  fs.mkdirSync(dirA)
+  fs.symlinkSync(path.join(dirA, 'link-to-b'), linkB, 'dir')   // circular-b → circular-a/link-to-b
+  fs.symlinkSync(linkB, path.join(dirA, 'link-to-b'), 'dir')   // circular-a/link-to-b → circular-b
+
+  t.after(() => {
+    try { fs.unlinkSync(path.join(dirA, 'link-to-b')) } catch { /* already gone */ }
+    try { fs.unlinkSync(linkB) } catch { /* already gone */ }
+    try { fs.rmdirSync(dirA) } catch { /* already gone */ }
+  })
+
+  const fastify = Fastify()
+  fastify.register(fastifyStatic, {
+    root: base,
+    wildcard: false
+  })
+  t.after(() => fastify.close())
+
+  // fastify.listen must complete (not hang/crash) — that is the assertion
+  await fastify.listen({ port: 0 })
+  fastify.server.unref()
+
+  // Original non-circular files still served correctly
+  const response = await fetch(
+    'http://localhost:' + fastify.server.address().port + '/origin/subdir/subdir/index.html'
+  )
+  t.assert.ok(response.ok)
+  t.assert.deepStrictEqual(response.status, 200)
 })
 
 test('should serve files into hidden dir with wildcard `false`', async (t) => {
