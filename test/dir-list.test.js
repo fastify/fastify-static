@@ -3,6 +3,7 @@
 /* eslint n/no-deprecated-api: "off" */
 
 const fs = require('node:fs')
+const http = require('node:http')
 const path = require('node:path')
 const { test } = require('node:test')
 const Fastify = require('fastify')
@@ -18,6 +19,31 @@ const helper = {
     await fastify.listen({ port: 0 })
     fastify.server.unref()
     await f('http://localhost:' + fastify.server.address().port)
+  },
+  rawRequest: async function (baseUrl, route) {
+    const url = new URL(baseUrl)
+
+    return await new Promise((resolve, reject) => {
+      const request = http.request({
+        hostname: url.hostname,
+        port: url.port,
+        path: route,
+        method: 'GET'
+      }, (response) => {
+        let body = ''
+        response.setEncoding('utf8')
+        response.on('data', chunk => { body += chunk })
+        response.on('end', () => {
+          resolve({
+            statusCode: response.statusCode,
+            body
+          })
+        })
+      })
+
+      request.on('error', reject)
+      request.end()
+    })
   }
 }
 
@@ -63,6 +89,16 @@ test('throws when `list.format` is html and `list render` is not a function', t 
   const err = dirList.validateOptions({ list: { format: 'html', render: 'hello' } })
   t.assert.ok(err instanceof TypeError)
   t.assert.deepStrictEqual(err.message, 'The `list.render` option must be a function and is required with html format')
+})
+
+test('dir list path stays within the configured root', t => {
+  t.plan(3)
+
+  const root = path.join(__dirname, '/static')
+
+  t.assert.deepStrictEqual(dirList.path(root, '/'), root)
+  t.assert.deepStrictEqual(dirList.path(root, '/deep/path/'), path.join(root, 'deep/path'))
+  t.assert.deepStrictEqual(dirList.path(root, '/../'), null)
 })
 
 test('dir list wrong options', async t => {
@@ -177,6 +213,52 @@ test('dir list, custom options with empty array index', async t => {
       t.assert.ok(response.ok)
       t.assert.deepStrictEqual(response.status, 200)
       t.assert.deepStrictEqual(await response.json(), content)
+    })
+  })
+})
+
+test('dir list blocks path traversal when index is false', async t => {
+  t.plan(2)
+
+  const options = {
+    root: path.join(__dirname, '/static'),
+    prefix: '/public',
+    index: false,
+    list: true
+  }
+  const routes = ['/public/../', '/public/../static2/']
+
+  await helper.arrange(t, options, async (url) => {
+    for (const route of routes) {
+      await t.test(route, async t => {
+        t.plan(2)
+
+        const response = await helper.rawRequest(url, route)
+        t.assert.deepStrictEqual(response.statusCode, 403)
+        t.assert.match(response.body, /Forbidden/u)
+      })
+    }
+  })
+})
+
+test('dir list blocks path traversal when index is an empty array', async t => {
+  t.plan(1)
+
+  const options = {
+    root: path.join(__dirname, '/static'),
+    prefix: '/public',
+    index: [],
+    list: true
+  }
+  const route = '/public/../'
+
+  await helper.arrange(t, options, async (url) => {
+    await t.test(route, async t => {
+      t.plan(2)
+
+      const response = await helper.rawRequest(url, route)
+      t.assert.deepStrictEqual(response.statusCode, 403)
+      t.assert.match(response.body, /Forbidden/u)
     })
   })
 })
