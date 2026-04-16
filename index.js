@@ -123,9 +123,13 @@ async function fastifyStatic (fastify, opts) {
         path: prefix + '*',
         handler (req, reply) {
           const pathname = getPathnameForSend(req.raw.url, prefix)
+
+          /* c8 ignore start */
+          // pathname should always be defined, but we keep the check for safety
           if (!pathname) {
             return reply.callNotFound()
           }
+          /* c8 ignore stop */
 
           pumpSendToReply(req, reply, pathname, sendOptions.root)
         }
@@ -323,7 +327,7 @@ async function fastifyStatic (fastify, opts) {
         }
 
         if (metadata.error.code === 'ENOENT') {
-        // when preCompress is enabled and the path is a directory without a trailing slash
+          // when preCompress is enabled and the path is a directory without a trailing slash
           if (opts.preCompressed && encoding) {
             if (opts.redirect !== true) {
               const indexPathname = findIndexFile(pathname, options.root, options.index)
@@ -582,24 +586,31 @@ function getPathnameForSend (url, prefix) {
       ? prefix.slice(0, -1)
       : prefix
 
+    /* c8 ignore start */
+    // route prefix is guarded by find-my-way's prefix check
+    // so this is actually unreachable code but we keep it for safety
     if (!pathname.startsWith(routePrefix)) {
       return
     }
+    /* c8 ignore stop */
 
     pathname = pathname.slice(routePrefix.length)
   }
 
   if (pathname === '') {
     pathname = '/'
-  } else if (!pathname.startsWith('/')) {
+  } /* c8 ignore start */ else if (!pathname.startsWith('/')) {
+    // the pathname should always start with a forward slash or nothing
+    // but we keep this check for safety
     pathname = '/' + pathname
   }
+  /* c8 ignore stop */
 
   try {
     return decodeURI(pathname)
-  } catch {
-
-  }
+  } /* c8 ignore start */ catch {
+    // the catch here is actually unreachable, but we keep it for safety
+  } /* c8 ignore stop */
 }
 
 /**
