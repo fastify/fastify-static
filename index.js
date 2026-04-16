@@ -122,7 +122,12 @@ async function fastifyStatic (fastify, opts) {
         method: ['HEAD', 'GET'],
         path: prefix + '*',
         handler (req, reply) {
-          pumpSendToReply(req, reply, '/' + req.params['*'], sendOptions.root)
+          const pathname = getPathnameForSend(req.raw.url, prefix)
+          if (!pathname) {
+            return reply.callNotFound()
+          }
+
+          pumpSendToReply(req, reply, pathname, sendOptions.root)
         }
       })
       if (opts.redirect === true && prefix !== opts.prefix) {
@@ -561,6 +566,40 @@ function getEncodingHeader (headers, checked) {
     header,
     supportedEncodings.filter((enc) => !checked.has(enc))
   )
+}
+
+/**
+ * @param {string} url
+ * @param {string} prefix
+ * @returns {string|undefined}
+ */
+function getPathnameForSend (url, prefix) {
+  const questionMark = url.indexOf('?')
+  let pathname = questionMark === -1 ? url : url.slice(0, questionMark)
+
+  if (prefix !== '/') {
+    const routePrefix = prefix.endsWith('/')
+      ? prefix.slice(0, -1)
+      : prefix
+
+    if (!pathname.startsWith(routePrefix)) {
+      return
+    }
+
+    pathname = pathname.slice(routePrefix.length)
+  }
+
+  if (pathname === '') {
+    pathname = '/'
+  } else if (!pathname.startsWith('/')) {
+    pathname = '/' + pathname
+  }
+
+  try {
+    return decodeURI(pathname)
+  } catch {
+
+  }
 }
 
 /**

@@ -3254,8 +3254,8 @@ test('should not redirect to protocol-relative locations', async (t) => {
     ['//^/..', '/', 301],
     ['//^/.', null, 404], // it is NOT recognized as a directory by pillarjs/send
     ['//:/..', '/', 301],
-    ['/\\\\a//google.com/%2e%2e%2f%2e%2e', '/a//google.com/%2e%2e%2f%2e%2e/', 301],
-    ['//a//youtube.com/%2e%2e%2f%2e%2e', '/a//youtube.com/%2e%2e%2f%2e%2e/', 301],
+    ['/\\\\a//google.com/%2e%2e%2f%2e%2e', null, 404],
+    ['//a//youtube.com/%2e%2e%2f%2e%2e', null, 404],
     ['/^', null, 404], // it is NOT recognized as a directory by pillarjs/send
     ['//google.com/%2e%2e', '/', 301],
     ['//users/%2e%2e', '/', 301],
@@ -3589,6 +3589,36 @@ test(
     t.assert.deepStrictEqual(response.body, txtContent)
   }
 )
+
+test('does not serve static files with encoded path separators', async (t) => {
+  t.plan(4)
+
+  const fastify = Fastify()
+
+  t.after(() => fastify.close())
+
+  fastify.all('/deep/*', async (_request, reply) => {
+    reply.code(401).send('Unauthorized')
+  })
+
+  fastify.register(fastifyStatic, {
+    root: path.join(__dirname, '/static')
+  })
+
+  const response = await fastify.inject({
+    method: 'GET',
+    url: '/deep/path/for/test/purpose/foo.html'
+  })
+  t.assert.deepStrictEqual(response.statusCode, 401)
+  t.assert.deepStrictEqual(response.body, 'Unauthorized')
+
+  const encodedPathResponse = await fastify.inject({
+    method: 'GET',
+    url: '/deep%2Fpath/for/test/purpose/foo.html'
+  })
+  t.assert.deepStrictEqual(encodedPathResponse.statusCode, 404)
+  t.assert.deepStrictEqual(encodedPathResponse.json().message, 'Route GET:/deep%2Fpath/for/test/purpose/foo.html not found')
+})
 
 test('content-length in head route should not return zero when using wildcard', async t => {
   t.plan(5)
