@@ -122,7 +122,7 @@ async function fastifyStatic (fastify, opts) {
         method: ['HEAD', 'GET'],
         path: prefix + '*',
         handler (req, reply) {
-          const pathname = getPathnameForSend(req.raw.url, prefix)
+          const pathname = getPathnameForSend(req.raw.url, req.routeOptions.url)
           if (!pathname) {
             return reply.callNotFound()
           }
@@ -570,24 +570,22 @@ function getEncodingHeader (headers, checked) {
 
 /**
  * @param {string} url
- * @param {string} prefix
+ * @param {string} route
  * @returns {string|undefined}
  */
-function getPathnameForSend (url, prefix) {
+function getPathnameForSend (url, route) {
   const questionMark = url.indexOf('?')
   let pathname = questionMark === -1 ? url : url.slice(0, questionMark)
 
-  if (prefix !== '/') {
-    const routePrefix = prefix.endsWith('/')
-      ? prefix.slice(0, -1)
-      : prefix
+  const routePrefix = route.endsWith('*')
+    ? route.slice(0, -1)
+    : route
 
-    if (!pathname.startsWith(routePrefix)) {
-      return
-    }
-
-    pathname = pathname.slice(routePrefix.length)
+  if (routePrefix !== '/' && !pathname.startsWith(routePrefix)) {
+    return
   }
+
+  pathname = pathname.slice(routePrefix.length)
 
   if (pathname === '') {
     pathname = '/'

@@ -6,6 +6,7 @@ const path = require('node:path')
 const fs = require('node:fs')
 const url = require('node:url')
 const http = require('node:http')
+const Module = require('node:module')
 const { test } = require('node:test')
 const Fastify = require('fastify')
 const compress = require('@fastify/compress')
@@ -79,6 +80,16 @@ if (typeof Promise.withResolvers === 'undefined') {
     })
     return { promise, resolve: promiseResolve, reject: promiseReject }
   }
+}
+
+function loadInternalPathnameForSend () {
+  const modulePath = require.resolve('../index.js')
+  const source = fs.readFileSync(modulePath, 'utf8') + '\nmodule.exports.__getPathnameForSend = getPathnameForSend\n'
+  const testModule = new Module(modulePath)
+  testModule.filename = modulePath
+  testModule.paths = module.paths
+  testModule._compile(source, modulePath)
+  return testModule.exports.__getPathnameForSend
 }
 
 test('register /static prefixAvoidTrailingSlash', async t => {
@@ -3590,6 +3601,51 @@ test(
   }
 )
 
+test('getPathnameForSend returns undefined for mismatched and malformed routes', (t) => {
+  t.plan(3)
+
+  const getPathnameForSend = loadInternalPathnameForSend()
+
+  t.assert.deepStrictEqual(getPathnameForSend('/nested/public/index.css', '/public/*'), undefined)
+  t.assert.deepStrictEqual(getPathnameForSend('/static/%E0%A4%A', '/static/*'), undefined)
+  t.assert.deepStrictEqual(getPathnameForSend('/static/index.css', '/static'), '/index.css')
+})
+
+test('wildcard handler falls back to not found when the raw url does not match the route prefix', async (t) => {
+  t.plan(2)
+
+  const fastify = Fastify()
+  let wildcardHandler
+
+  fastify.addHook('onRoute', (route) => {
+    if (route.url === '/static/*') {
+      wildcardHandler = route.handler
+    }
+  })
+
+  fastify.register(fastifyStatic, {
+    root: path.join(__dirname, '/static'),
+    prefix: '/static'
+  })
+
+  t.after(() => fastify.close())
+
+  await fastify.ready()
+  t.assert.ok(wildcardHandler)
+
+  let notFoundCalled = false
+  wildcardHandler({
+    raw: { url: '/nested/static/index.css' },
+    routeOptions: { url: '/static/*' }
+  }, {
+    callNotFound () {
+      notFoundCalled = true
+    }
+  })
+
+  t.assert.deepStrictEqual(notFoundCalled, true)
+})
+
 test('does not serve static files with encoded path separators', async (t) => {
   t.plan(4)
 
@@ -3618,6 +3674,31 @@ test('does not serve static files with encoded path separators', async (t) => {
   })
   t.assert.deepStrictEqual(encodedPathResponse.statusCode, 404)
   t.assert.deepStrictEqual(encodedPathResponse.json().message, 'Route GET:/deep%2Fpath/for/test/purpose/foo.html not found')
+})
+
+test('serves wildcard files when registered in an encapsulated context', async (t) => {
+  t.plan(3)
+
+  const fastify = Fastify()
+
+  t.after(() => fastify.close())
+
+  fastify.register(async function (childContext) {
+    childContext.register(fastifyStatic, {
+      root: path.join(__dirname, '/static'),
+      prefix: '/public',
+      decorateReply: false
+    })
+  }, { prefix: '/nested' })
+
+  const response = await fastify.inject({
+    method: 'GET',
+    url: '/nested/public/index.css'
+  })
+
+  t.assert.deepStrictEqual(response.statusCode, 200)
+  t.assert.deepStrictEqual(response.headers['content-type'], 'text/css; charset=utf-8')
+  t.assert.deepStrictEqual(response.body, fs.readFileSync(path.join(__dirname, '/static/index.css'), 'utf8'))
 })
 
 test('content-length in head route should not return zero when using wildcard', async t => {
