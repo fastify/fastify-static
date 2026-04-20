@@ -3602,13 +3602,15 @@ test(
 )
 
 test('getPathnameForSend returns undefined for mismatched and malformed routes', (t) => {
-  t.plan(3)
+  t.plan(5)
 
   const getPathnameForSend = loadInternalPathnameForSend()
 
   t.assert.deepStrictEqual(getPathnameForSend('/nested/public/index.css', '/public/*'), undefined)
   t.assert.deepStrictEqual(getPathnameForSend('/static/%E0%A4%A', '/static/*'), undefined)
   t.assert.deepStrictEqual(getPathnameForSend('/static/index.css', '/static'), '/index.css')
+  t.assert.deepStrictEqual(getPathnameForSend('/app/1.2.3/index.css', '/app/:version/*'), '/index.css')
+  t.assert.deepStrictEqual(getPathnameForSend('/app//index.css', '/app/:version/*'), undefined)
 })
 
 test('wildcard handler falls back to not found when the raw url does not match the route prefix', async (t) => {
@@ -3694,6 +3696,29 @@ test('serves wildcard files when registered in an encapsulated context', async (
   const response = await fastify.inject({
     method: 'GET',
     url: '/nested/public/index.css'
+  })
+
+  t.assert.deepStrictEqual(response.statusCode, 200)
+  t.assert.deepStrictEqual(response.headers['content-type'], 'text/css; charset=utf-8')
+  t.assert.deepStrictEqual(response.body, fs.readFileSync(path.join(__dirname, '/static/index.css'), 'utf8'))
+})
+
+test('serves wildcard files when prefix contains a route param', async (t) => {
+  t.plan(3)
+
+  const fastify = Fastify()
+
+  t.after(() => fastify.close())
+
+  fastify.register(fastifyStatic, {
+    root: path.join(__dirname, '/static'),
+    prefix: '/app/:version',
+    decorateReply: false
+  })
+
+  const response = await fastify.inject({
+    method: 'GET',
+    url: '/app/1.2.3/index.css'
   })
 
   t.assert.deepStrictEqual(response.statusCode, 200)

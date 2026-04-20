@@ -569,6 +569,52 @@ function getEncodingHeader (headers, checked) {
 }
 
 /**
+ * @param {string} pathname
+ * @param {string} routePrefix
+ * @returns {number|undefined}
+ */
+function getRoutePrefixMatchLength (pathname, routePrefix) {
+  if (routePrefix === '/') {
+    return 0
+  }
+
+  let pathnameIndex = 0
+  let routeIndex = 0
+
+  while (routeIndex < routePrefix.length) {
+    const routeChar = routePrefix[routeIndex]
+
+    if (routeChar === ':') {
+      routeIndex++
+
+      while (routeIndex < routePrefix.length && routePrefix[routeIndex] !== '/') {
+        routeIndex++
+      }
+
+      const segmentStart = pathnameIndex
+      while (pathnameIndex < pathname.length && pathname[pathnameIndex] !== '/') {
+        pathnameIndex++
+      }
+
+      if (pathnameIndex === segmentStart) {
+        return
+      }
+
+      continue
+    }
+
+    if (pathnameIndex >= pathname.length || pathname[pathnameIndex] !== routeChar) {
+      return
+    }
+
+    pathnameIndex++
+    routeIndex++
+  }
+
+  return pathnameIndex
+}
+
+/**
  * @param {string} url
  * @param {string} route
  * @returns {string|undefined}
@@ -581,11 +627,12 @@ function getPathnameForSend (url, route) {
     ? route.slice(0, -1)
     : route
 
-  if (routePrefix !== '/' && !pathname.startsWith(routePrefix)) {
+  const prefixLength = getRoutePrefixMatchLength(pathname, routePrefix)
+  if (prefixLength === undefined) {
     return
   }
 
-  pathname = pathname.slice(routePrefix.length)
+  pathname = pathname.slice(prefixLength)
 
   if (pathname === '') {
     pathname = '/'
