@@ -609,10 +609,11 @@ function createRoutePrefixTokens (routePrefix) {
 
 /**
  * @param {string} pathname
+ * @param {number} pathnameEnd
  * @param {Array<string|undefined>} tokens
  * @returns {number|undefined}
  */
-function getRoutePrefixMatchLength (pathname, tokens) {
+function getRoutePrefixMatchLength (pathname, pathnameEnd, tokens) {
   let pathnameIndex = 0
 
   for (const token of tokens) {
@@ -620,8 +621,8 @@ function getRoutePrefixMatchLength (pathname, tokens) {
       const segmentStart = pathnameIndex
       const slashIndex = pathname.indexOf('/', pathnameIndex)
 
-      pathnameIndex = slashIndex === -1
-        ? pathname.length
+      pathnameIndex = slashIndex === -1 || slashIndex > pathnameEnd
+        ? pathnameEnd
         : slashIndex
 
       if (pathnameIndex === segmentStart) {
@@ -631,11 +632,12 @@ function getRoutePrefixMatchLength (pathname, tokens) {
       continue
     }
 
-    if (!pathname.startsWith(token, pathnameIndex)) {
+    const tokenEnd = pathnameIndex + token.length
+    if (tokenEnd > pathnameEnd || !pathname.startsWith(token, pathnameIndex)) {
       return
     }
 
-    pathnameIndex += token.length
+    pathnameIndex = tokenEnd
   }
 
   return pathnameIndex
@@ -643,40 +645,41 @@ function getRoutePrefixMatchLength (pathname, tokens) {
 
 /**
  * @param {string} route
- * @returns {(pathname: string) => number|undefined}
+ * @returns {(pathname: string, pathnameEnd: number) => number|undefined}
  */
 function createRoutePrefixMatcher (route) {
   const routePrefix = route.replace(/\*$/u, '')
+  const routePrefixLength = routePrefix.length
 
   if (routePrefix === '/') {
     return () => 0
   }
 
   if (routePrefix.includes(':') === false) {
-    return (pathname) => pathname.startsWith(routePrefix)
-      ? routePrefix.length
+    return (pathname, pathnameEnd) => routePrefixLength <= pathnameEnd && pathname.startsWith(routePrefix)
+      ? routePrefixLength
       : undefined
   }
 
   const tokens = createRoutePrefixTokens(routePrefix)
-  return (pathname) => getRoutePrefixMatchLength(pathname, tokens)
+  return (pathname, pathnameEnd) => getRoutePrefixMatchLength(pathname, pathnameEnd, tokens)
 }
 
 /**
  * @param {string} url
- * @param {(pathname: string) => number|undefined} matchRoutePrefix
+ * @param {(pathname: string, pathnameEnd: number) => number|undefined} matchRoutePrefix
  * @returns {string|undefined}
  */
 function getPathnameForSend (url, matchRoutePrefix) {
   const questionMark = url.indexOf('?')
-  let pathname = questionMark === -1 ? url : url.slice(0, questionMark)
+  const pathnameEnd = questionMark === -1 ? url.length : questionMark
 
-  const prefixLength = matchRoutePrefix(pathname)
+  const prefixLength = matchRoutePrefix(url, pathnameEnd)
   if (prefixLength === undefined) {
     return
   }
 
-  pathname = pathname.slice(prefixLength)
+  let pathname = url.slice(prefixLength, pathnameEnd)
 
   if (pathname === '') {
     pathname = '/'
