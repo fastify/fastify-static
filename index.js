@@ -623,9 +623,7 @@ function getPathnameForSend (url, route) {
   const questionMark = url.indexOf('?')
   let pathname = questionMark === -1 ? url : url.slice(0, questionMark)
 
-  const routePrefix = route.endsWith('*')
-    ? route.slice(0, -1)
-    : route
+  const routePrefix = route.replace(/\*$/u, '')
 
   const prefixLength = getRoutePrefixMatchLength(pathname, routePrefix)
   if (prefixLength === undefined) {
