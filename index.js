@@ -117,12 +117,16 @@ async function fastifyStatic (fastify, opts) {
       throw new TypeError('"wildcard" option must be a boolean')
     }
     if (opts.wildcard === undefined || opts.wildcard === true) {
+      let matchRoutePrefix
+
       fastify.route({
         ...routeOpts,
         method: ['HEAD', 'GET'],
         path: prefix + '*',
         handler (req, reply) {
-          const pathname = getPathnameForSend(req.raw.url, req.routeOptions.url)
+          matchRoutePrefix ??= createRoutePrefixMatcher(req.routeOptions.url)
+
+          const pathname = getPathnameForSend(req.raw.url, matchRoutePrefix)
           if (!pathname) {
             return reply.callNotFound()
           }
@@ -569,32 +573,56 @@ function getEncodingHeader (headers, checked) {
 }
 
 /**
- * @param {string} pathname
  * @param {string} routePrefix
- * @returns {number|undefined}
+ * @returns {Array<string|undefined>}
  */
-function getRoutePrefixMatchLength (pathname, routePrefix) {
-  if (routePrefix === '/') {
-    return 0
-  }
-
-  let pathnameIndex = 0
+function createRoutePrefixTokens (routePrefix) {
+  const tokens = []
   let routeIndex = 0
+  let segmentStart = 0
 
   while (routeIndex < routePrefix.length) {
-    const routeChar = routePrefix[routeIndex]
-
-    if (routeChar === ':') {
+    if (routePrefix[routeIndex] !== ':') {
       routeIndex++
+      continue
+    }
 
-      while (routeIndex < routePrefix.length && routePrefix[routeIndex] !== '/') {
-        routeIndex++
-      }
+    if (segmentStart !== routeIndex) {
+      tokens.push(routePrefix.slice(segmentStart, routeIndex))
+    }
 
+    routeIndex++
+    while (routeIndex < routePrefix.length && routePrefix[routeIndex] !== '/') {
+      routeIndex++
+    }
+
+    tokens.push(undefined)
+    segmentStart = routeIndex
+  }
+
+  if (segmentStart !== routePrefix.length) {
+    tokens.push(routePrefix.slice(segmentStart))
+  }
+
+  return tokens
+}
+
+/**
+ * @param {string} pathname
+ * @param {Array<string|undefined>} tokens
+ * @returns {number|undefined}
+ */
+function getRoutePrefixMatchLength (pathname, tokens) {
+  let pathnameIndex = 0
+
+  for (const token of tokens) {
+    if (token === undefined) {
       const segmentStart = pathnameIndex
-      while (pathnameIndex < pathname.length && pathname[pathnameIndex] !== '/') {
-        pathnameIndex++
-      }
+      const slashIndex = pathname.indexOf('/', pathnameIndex)
+
+      pathnameIndex = slashIndex === -1
+        ? pathname.length
+        : slashIndex
 
       if (pathnameIndex === segmentStart) {
         return
@@ -603,29 +631,47 @@ function getRoutePrefixMatchLength (pathname, routePrefix) {
       continue
     }
 
-    if (pathnameIndex >= pathname.length || pathname[pathnameIndex] !== routeChar) {
+    if (!pathname.startsWith(token, pathnameIndex)) {
       return
     }
 
-    pathnameIndex++
-    routeIndex++
+    pathnameIndex += token.length
   }
 
   return pathnameIndex
 }
 
 /**
- * @param {string} url
  * @param {string} route
+ * @returns {(pathname: string) => number|undefined}
+ */
+function createRoutePrefixMatcher (route) {
+  const routePrefix = route.replace(/\*$/u, '')
+
+  if (routePrefix === '/') {
+    return () => 0
+  }
+
+  if (routePrefix.includes(':') === false) {
+    return (pathname) => pathname.startsWith(routePrefix)
+      ? routePrefix.length
+      : undefined
+  }
+
+  const tokens = createRoutePrefixTokens(routePrefix)
+  return (pathname) => getRoutePrefixMatchLength(pathname, tokens)
+}
+
+/**
+ * @param {string} url
+ * @param {(pathname: string) => number|undefined} matchRoutePrefix
  * @returns {string|undefined}
  */
-function getPathnameForSend (url, route) {
+function getPathnameForSend (url, matchRoutePrefix) {
   const questionMark = url.indexOf('?')
   let pathname = questionMark === -1 ? url : url.slice(0, questionMark)
 
-  const routePrefix = route.replace(/\*$/u, '')
-
-  const prefixLength = getRoutePrefixMatchLength(pathname, routePrefix)
+  const prefixLength = matchRoutePrefix(pathname)
   if (prefixLength === undefined) {
     return
   }
