@@ -6,7 +6,6 @@ const path = require('node:path')
 const fs = require('node:fs')
 const url = require('node:url')
 const http = require('node:http')
-const Module = require('node:module')
 const { test } = require('node:test')
 const Fastify = require('fastify')
 const compress = require('@fastify/compress')
@@ -80,16 +79,6 @@ if (typeof Promise.withResolvers === 'undefined') {
     })
     return { promise, resolve: promiseResolve, reject: promiseReject }
   }
-}
-
-function loadInternalPathnameForSend () {
-  const modulePath = require.resolve('../index.js')
-  const source = fs.readFileSync(modulePath, 'utf8') + '\nmodule.exports.__getPathnameForSend = getPathnameForSend\n'
-  const testModule = new Module(modulePath)
-  testModule.filename = modulePath
-  testModule.paths = module.paths
-  testModule._compile(source, modulePath)
-  return testModule.exports.__getPathnameForSend
 }
 
 test('register /static prefixAvoidTrailingSlash', async t => {
@@ -3601,16 +3590,6 @@ test(
   }
 )
 
-test('getPathnameForSend returns undefined for mismatched and malformed routes', (t) => {
-  t.plan(3)
-
-  const getPathnameForSend = loadInternalPathnameForSend()
-
-  t.assert.deepStrictEqual(getPathnameForSend('/nested/public/index.css', '/public/*'), undefined)
-  t.assert.deepStrictEqual(getPathnameForSend('/static/%E0%A4%A', '/static/*'), undefined)
-  t.assert.deepStrictEqual(getPathnameForSend('/static/index.css', '/static'), '/index.css')
-})
-
 test('wildcard handler falls back to not found when the raw url does not match the route prefix', async (t) => {
   t.plan(2)
 
@@ -3634,9 +3613,114 @@ test('wildcard handler falls back to not found when the raw url does not match t
   t.assert.ok(wildcardHandler)
 
   let notFoundCalled = false
-  wildcardHandler({
+  await wildcardHandler({
     raw: { url: '/nested/static/index.css' },
     routeOptions: { url: '/static/*' }
+  }, {
+    callNotFound () {
+      notFoundCalled = true
+    }
+  })
+
+  t.assert.deepStrictEqual(notFoundCalled, true)
+})
+
+test('wildcard handler falls back to not found when a param segment is empty', async (t) => {
+  t.plan(2)
+
+  const fastify = Fastify()
+  let wildcardHandler
+
+  fastify.addHook('onRoute', (route) => {
+    if (route.url === '/app/:version/*') {
+      wildcardHandler = route.handler
+    }
+  })
+
+  fastify.register(fastifyStatic, {
+    root: path.join(__dirname, '/static'),
+    prefix: '/app/:version'
+  })
+
+  t.after(() => fastify.close())
+
+  await fastify.ready()
+  t.assert.ok(wildcardHandler)
+
+  let notFoundCalled = false
+  await wildcardHandler({
+    raw: { url: '/app//index.css' },
+    routeOptions: { url: '/app/:version/*' }
+  }, {
+    callNotFound () {
+      notFoundCalled = true
+    }
+  })
+
+  t.assert.deepStrictEqual(notFoundCalled, true)
+})
+
+test('wildcard handler falls back to not found when the wildcard remainder is malformed', async (t) => {
+  t.plan(2)
+
+  const fastify = Fastify()
+  let wildcardHandler
+
+  fastify.addHook('onRoute', (route) => {
+    if (route.url === '/app/:version/*') {
+      wildcardHandler = route.handler
+    }
+  })
+
+  fastify.register(fastifyStatic, {
+    root: path.join(__dirname, '/static'),
+    prefix: '/app/:version'
+  })
+
+  t.after(() => fastify.close())
+
+  await fastify.ready()
+  t.assert.ok(wildcardHandler)
+
+  let notFoundCalled = false
+  await wildcardHandler({
+    raw: { url: '/app/1.2.3/%E0%A4%A' },
+    routeOptions: { url: '/app/:version/*' }
+  }, {
+    callNotFound () {
+      notFoundCalled = true
+    }
+  })
+
+  t.assert.deepStrictEqual(notFoundCalled, true)
+})
+
+test('wildcard handler falls back to not found when a literal segment after a param does not match', async (t) => {
+  t.plan(2)
+
+  const fastify = Fastify()
+  let wildcardHandler
+
+  fastify.addHook('onRoute', (route) => {
+    if (route.url === '/app/:version/public/*') {
+      wildcardHandler = route.handler
+    }
+  })
+
+  fastify.register(fastifyStatic, {
+    root: path.join(__dirname, '/static'),
+    prefix: '/app/:version/public'
+  })
+
+  t.after(() => fastify.close())
+
+  await fastify.ready()
+  t.assert.ok(wildcardHandler)
+
+  let notFoundCalled = false
+  await wildcardHandler({
+    raw: { url: '/app/1.2.3/private/index.css' },
+    routeOptions: { url: '/app/:version/public/*' }
   }, {
     callNotFound () {
       notFoundCalled = true
@@ -3699,6 +3783,53 @@ test('serves wildcard files when registered in an encapsulated context', async (
   t.assert.deepStrictEqual(response.statusCode, 200)
   t.assert.deepStrictEqual(response.headers['content-type'], 'text/css; charset=utf-8')
   t.assert.deepStrictEqual(response.body, fs.readFileSync(path.join(__dirname, '/static/index.css'), 'utf8'))
+})
+
+test('serves wildcard files when prefix contains a route param', async (t) => {
+  t.plan(3)
+
+  const fastify = Fastify()
+
+  t.after(() => fastify.close())
+
+  fastify.register(fastifyStatic, {
+    root: path.join(__dirname, '/static'),
+    prefix: '/app/:version',
+    decorateReply: false
+  })
+
+  const response = await fastify.inject({
+    method: 'GET',
+    url: '/app/1.2.3/index.css'
+  })
+
+  t.assert.deepStrictEqual(response.statusCode, 200)
+  t.assert.deepStrictEqual(response.headers['content-type'], 'text/css; charset=utf-8')
+  t.assert.deepStrictEqual(response.body, fs.readFileSync(path.join(__dirname, '/static/index.css'), 'utf8'))
+})
+
+test('serves wildcard index files when a param prefix uses prefixAvoidTrailingSlash', async (t) => {
+  t.plan(3)
+
+  const fastify = Fastify()
+
+  t.after(() => fastify.close())
+
+  fastify.register(fastifyStatic, {
+    root: path.join(__dirname, '/static'),
+    prefix: '/app/:version',
+    prefixAvoidTrailingSlash: true,
+    decorateReply: false
+  })
+
+  const response = await fastify.inject({
+    method: 'GET',
+    url: '/app/1.2.3'
+  })
+
+  t.assert.deepStrictEqual(response.statusCode, 200)
+  t.assert.deepStrictEqual(response.headers['content-type'], 'text/html; charset=utf-8')
+  t.assert.deepStrictEqual(response.body, fs.readFileSync(path.join(__dirname, '/static/index.html'), 'utf8'))
 })
 
 test('content-length in head route should not return zero when using wildcard', async t => {
