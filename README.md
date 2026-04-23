@@ -29,14 +29,26 @@ See [Fastify's LTS policy](https://github.com/fastify/fastify/blob/main/docs/Ref
 ## Usage
 
 ```js
-const fastify = require('fastify')({logger: true})
-const path = require('node:path')
+// ESM
+import path from "path";
+import Fastify from "fastify";
+const fastify = Fastify({ logger: true });
 
-fastify.register(require('@fastify/static'), {
-  root: path.join(__dirname, 'public'),
-  prefix: '/public/', // optional: default '/'
-  constraints: { host: 'example.com' } // optional: default {}
-})
+fastify.register(import("@fastify/static"), {
+  root: path.join(__dirname, "public"),
+  prefix: "/public/", // optional: default '/'
+  constraints: { host: "example.com" }, // optional: default {}
+});
+
+// CommonJs
+const fastify = require("fastify")({ logger: true });
+const path = require("node:path");
+
+fastify.register(require("@fastify/static"), {
+  root: path.join(__dirname, "public"),
+  prefix: "/public/", // optional: default '/'
+  constraints: { host: "example.com" }, // optional: default {}
+});
 
 fastify.get('/another/path', function (req, reply) {
   reply.sendFile('myHtml.html') // serving path.join(__dirname, 'public', 'myHtml.html') directly
