@@ -2517,10 +2517,8 @@ test('if dotfiles are properly served according to plugin options', async (t) =>
 
 test('register with failing glob handler', async (t) => {
   const fastifyStatic = proxyquire.noCallThru()('../', {
-    glob: function globStub (_pattern, _options, cb) {
-      process.nextTick(function () {
-        return cb(new Error('mock glob error'))
-      })
+    'node:fs/promises': {
+      glob: async function * globStub () { throw new Error('mock glob error') }
     }
   })
 
@@ -3353,6 +3351,43 @@ test('should follow symbolic link without wildcard', async (t) => {
   t.assert.deepStrictEqual(response2.status, 200)
 })
 
+test('should not infinite-loop on circular symlinks with wildcard false', async (t) => {
+  const base = path.join(__dirname, '/static-symbolic-link')
+  const dirA = path.join(base, 'circular-a')
+  const linkB = path.join(base, 'circular-b')
+  // clean up any leftovers from a previous failed run
+  try { fs.unlinkSync(path.join(dirA, 'link-to-b')) } catch { /* not there */ }
+  try { fs.unlinkSync(linkB) } catch { /* not there */ }
+  fs.rmSync(dirA, { recursive: true, force: true })
+  fs.mkdirSync(dirA)
+  fs.symlinkSync(path.join(dirA, 'link-to-b'), linkB, 'dir')   // circular-b → circular-a/link-to-b
+  fs.symlinkSync(linkB, path.join(dirA, 'link-to-b'), 'dir')   // circular-a/link-to-b → circular-b
+
+  t.after(() => {
+    try { fs.unlinkSync(path.join(dirA, 'link-to-b')) } catch { /* already gone */ }
+    try { fs.unlinkSync(linkB) } catch { /* already gone */ }
+    try { fs.rmdirSync(dirA) } catch { /* already gone */ }
+  })
+
+  const fastify = Fastify()
+  fastify.register(fastifyStatic, {
+    root: base,
+    wildcard: false
+  })
+  t.after(() => fastify.close())
+
+  // fastify.listen must complete (not hang/crash) — that is the assertion
+  await fastify.listen({ port: 0 })
+  fastify.server.unref()
+
+  // Original non-circular files still served correctly
+  const response = await fetch(
+    'http://localhost:' + fastify.server.address().port + '/origin/subdir/subdir/index.html'
+  )
+  t.assert.ok(response.ok)
+  t.assert.deepStrictEqual(response.status, 200)
+})
+
 test('should serve files into hidden dir with wildcard `false`', async (t) => {
   t.plan(8)
 
@@ -4111,5 +4146,80 @@ test('register with wildcard false and globIgnore', async t => {
     t.assert.ok(!response.ok)
     t.assert.deepStrictEqual(response.status, 404)
     await response.text()
+  })
+})
+
+test('should serve file from a symlinked directory', async (t) => {
+  t.plan(1)
+
+  const tempDir = fs.mkdtempSync(path.join(__dirname, 'symlink-test-'))
+  const realDir = path.join(tempDir, 'real')
+  const symlinkedDir = path.join(tempDir, 'symlinked')
+  const testFilePath = path.join(realDir, 'test.txt')
+  const fileContent = 'symlink test file'
+
+  fs.mkdirSync(realDir)
+  fs.writeFileSync(testFilePath, fileContent)
+  fs.symlinkSync(realDir, symlinkedDir, 'dir')
+
+  const fastify = Fastify()
+  fastify.register(fastifyStatic, {
+    root: tempDir,
+    prefix: '/',
+    followSymlinks: true
+  })
+
+  t.after(async () => {
+    await fastify.close()
+    fs.rmSync(tempDir, { recursive: true, force: true })
+  })
+
+  await fastify.listen({ port: 0 })
+  fastify.server.unref()
+
+  await t.test('request file via symlink', async (t) => {
+    t.plan(3)
+    const response = await fetch(`http://localhost:${fastify.server.address().port}/symlinked/test.txt`)
+    t.assert.ok(response.ok)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), fileContent)
+  })
+})
+
+test('should serve file with user-defined wildcard route', async (t) => {
+  t.plan(1)
+
+  const tempDir = fs.mkdtempSync(path.join(__dirname, 'wildcard-sendFile-test-'))
+  const testFilePath = path.join(tempDir, 'foo', 'bar.txt')
+  const fileContent = 'wildcard sendFile test'
+
+  fs.mkdirSync(path.dirname(testFilePath), { recursive: true })
+  fs.writeFileSync(testFilePath, fileContent)
+
+  const fastify = Fastify()
+  // The root needs to be specified for reply.sendFile to resolve relative paths
+  fastify.register(fastifyStatic, {
+    root: tempDir,
+    serve: false // We don't want the plugin to serve files, just decorate reply.sendFile
+  })
+
+  fastify.get('/files/*', (req, reply) => {
+    reply.sendFile(req.params['*'])
+  })
+
+  t.after(async () => {
+    await fastify.close()
+    fs.rmSync(tempDir, { recursive: true, force: true })
+  })
+
+  await fastify.listen({ port: 0 })
+  fastify.server.unref()
+
+  await t.test('request file via wildcard route', async (t) => {
+    t.plan(3)
+    const response = await fetch(`http://localhost:${fastify.server.address().port}/files/foo/bar.txt`)
+    t.assert.ok(response.ok)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), fileContent)
   })
 })
