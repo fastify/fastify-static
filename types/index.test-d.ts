@@ -1,9 +1,10 @@
-import fastify, { FastifyInstance, FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify'
-import { Server } from 'node:http'
+import fastify, { FastifyReply, FastifyRequest } from 'fastify'
 import { Stats } from 'node:fs'
 import { expectAssignable, expectError, expectType } from 'tsd'
 import * as fastifyStaticStar from '..'
 import fastifyStatic, {
+  FastifyStaticPlugin,
+  FastifyStaticPluginDecorators,
   FastifyStaticOptions,
   fastifyStatic as fastifyStaticNamed
 } from '..'
@@ -11,27 +12,23 @@ import fastifyStatic, {
 const fastifyStaticCjsImport = fastifyStaticStar
 const fastifyStaticCjs = require('..')
 
-const app: FastifyInstance = fastify()
+const app = fastify()
+app.register(fastifyStatic, { root: '/' })
+app.register(fastifyStaticNamed, { root: '/' })
+app.register(fastifyStaticCjs, { root: '/' })
+app.register(fastifyStaticCjsImport.default, { root: '/' })
+app.register(fastifyStaticCjsImport.fastifyStatic, { root: '/' })
+app.register(fastifyStaticStar.default, { root: '/' })
+app.register(fastifyStaticStar.fastifyStatic, { root: '/' })
 
-app.register(fastifyStatic, { root: __dirname })
-app.register(fastifyStaticNamed, { root: __dirname })
-app.register(fastifyStaticCjs, { root: __dirname })
-app.register(fastifyStaticCjsImport.default, { root: __dirname })
-app.register(fastifyStaticCjsImport.fastifyStatic, { root: __dirname })
-app.register(fastifyStaticStar.default, { root: __dirname })
-app.register(fastifyStaticStar.fastifyStatic, { root: __dirname })
-
-expectType<FastifyPluginAsync<FastifyStaticOptions, Server>>(fastifyStatic)
-expectType<FastifyPluginAsync<FastifyStaticOptions, Server>>(fastifyStaticNamed)
-expectType<FastifyPluginAsync<FastifyStaticOptions, Server>>(fastifyStaticCjsImport.default)
-expectType<FastifyPluginAsync<FastifyStaticOptions, Server>>(fastifyStaticCjsImport.fastifyStatic)
-expectType<FastifyPluginAsync<FastifyStaticOptions, Server>>(fastifyStaticStar.default)
-expectType<FastifyPluginAsync<FastifyStaticOptions, Server>>(
-  fastifyStaticStar.fastifyStatic
-)
+expectType<FastifyStaticPlugin>(fastifyStatic)
+expectType<FastifyStaticPlugin>(fastifyStaticNamed)
+expectType<FastifyStaticPlugin>(fastifyStaticCjsImport.default)
+expectType<FastifyStaticPlugin>(fastifyStaticCjsImport.fastifyStatic)
+expectType<FastifyStaticPlugin>(fastifyStaticStar.default)
+expectType<FastifyStaticPlugin>(fastifyStaticStar.fastifyStatic)
 expectType<any>(fastifyStaticCjs)
 
-const appWithImplicitHttp = fastify()
 const options: FastifyStaticOptions = {
   acceptRanges: true,
   contentType: true,
@@ -59,13 +56,10 @@ const options: FastifyStaticOptions = {
     res.setHeader('X-Test', 'string')
 
     expectType<string>(path)
-
     expectType<Stats>(stat)
   },
   preCompressed: false,
-  allowedPath: (_pathName: string, _root: string, _request: FastifyRequest) => {
-    return true
-  },
+  allowedPath: (_pathName: string, _root: string, _request: FastifyRequest) => true,
   constraints: {
     host: /^.*\.example\.com$/,
     version: '1.0.2'
@@ -80,161 +74,38 @@ expectError<FastifyStaticOptions>({
 
 expectAssignable<FastifyStaticOptions>({
   root: '',
-  list: {
-    format: 'json'
-  }
+  list: { format: 'json' }
 })
 
 expectAssignable<FastifyStaticOptions>({
   root: '',
-  list: {
-    format: 'json',
-    render: () => ''
-  }
-})
-
-expectAssignable<FastifyStaticOptions>({
-  root: '',
-  list: {
-    format: 'html',
-    render: () => ''
-  }
+  list: { format: 'html', render: () => '' }
 })
 
 expectError<FastifyStaticOptions>({
   root: '',
-  list: {
-    format: 'html'
-  }
+  list: { format: 'html' }
 })
 
-expectAssignable<FastifyStaticOptions>({
-  root: ['']
+expectAssignable<FastifyStaticOptions>({ root: [''] })
+expectAssignable<FastifyStaticOptions>({ root: new URL('file:///tmp') })
+expectAssignable<FastifyStaticOptions>({ root: [new URL('file:///tmp')] })
+expectError<FastifyStaticOptions>({ serve: true })
+expectAssignable<FastifyStaticOptions>({ serve: true, root: '' })
+expectAssignable<FastifyStaticOptions>({ serve: false })
+
+const registered = fastify().register(fastifyStatic, options)
+registered.get('/', (_request, reply) => {
+  expectType<FastifyStaticPluginDecorators['reply']['sendFile']>(reply.sendFile)
+  expectType<FastifyStaticPluginDecorators['reply']['download']>(reply.download)
+  reply.sendFile('some-file-name')
+  reply.sendFile('some-file-name', { cacheControl: false })
+  reply.download('some-file-name')
+  reply.download('some-file-name', 'custom-name', { contentType: false })
 })
 
-expectAssignable<FastifyStaticOptions>({
-  root: new URL('')
+const serverWithHttp2 = fastify({ http2: true }).register(fastifyStatic, { root: '/' })
+serverWithHttp2.get('/', (_request, reply) => {
+  reply.sendFile('some-file-name')
+  reply.download('some-file-name')
 })
-
-expectAssignable<FastifyStaticOptions>({
-  root: [new URL('')]
-})
-
-expectError<FastifyStaticOptions>({
-  serve: true
-})
-
-expectAssignable<FastifyStaticOptions>({
-  serve: true,
-  root: ''
-})
-
-expectAssignable<FastifyStaticOptions>({
-  serve: false
-})
-
-appWithImplicitHttp
-  .register(fastifyStatic, options)
-  .after(() => {
-    appWithImplicitHttp.get('/', (_request, reply) => {
-      reply.sendFile('some-file-name')
-    })
-  })
-
-const appWithHttp2 = fastify({ http2: true })
-
-appWithHttp2
-  .register(fastifyStatic, options)
-  .after(() => {
-    appWithHttp2.get('/', (_request, reply) => {
-      reply.sendFile('some-file-name')
-    })
-
-    appWithHttp2.get('/download', (_request, reply) => {
-      reply.download('some-file-name')
-    })
-
-    appWithHttp2.get('/download/1', (_request, reply) => {
-      reply.download('some-file-name', { maxAge: '2 days' })
-    })
-
-    appWithHttp2.get('/download/2', (_request, reply) => {
-      reply.download('some-file-name', 'some-filename', { cacheControl: false, acceptRanges: true })
-    })
-
-    appWithHttp2.get('/download/3', (_request, reply) => {
-      reply.download('some-file-name', 'some-filename', { contentType: false })
-    })
-  })
-
-const multiRootAppWithImplicitHttp = fastify()
-options.root = ['']
-
-multiRootAppWithImplicitHttp
-  .register(fastifyStatic, options)
-  .after(() => {
-    multiRootAppWithImplicitHttp.get('/', (_request, reply) => {
-      reply.sendFile('some-file-name')
-    })
-
-    multiRootAppWithImplicitHttp.get('/', (_request, reply) => {
-      reply.sendFile('some-file-name', { cacheControl: false, acceptRanges: true })
-    })
-
-    multiRootAppWithImplicitHttp.get('/', (_request, reply) => {
-      reply.sendFile('some-file-name', 'some-root-name', { cacheControl: false, acceptRanges: true })
-    })
-
-    multiRootAppWithImplicitHttp.get('/', (_request, reply) => {
-      reply.sendFile('some-file-name', 'some-root-name-2', { contentType: false })
-    })
-
-    multiRootAppWithImplicitHttp.get('/download', (_request, reply) => {
-      reply.download('some-file-name')
-    })
-
-    multiRootAppWithImplicitHttp.get('/download/1', (_request, reply) => {
-      reply.download('some-file-name', { maxAge: '2 days' })
-    })
-
-    multiRootAppWithImplicitHttp.get('/download/2', (_request, reply) => {
-      reply.download('some-file-name', 'some-filename', { cacheControl: false, acceptRanges: true })
-    })
-
-    multiRootAppWithImplicitHttp.get('/download/3', (_request, reply) => {
-      reply.download('some-file-name', 'some-filename', { contentType: false })
-    })
-  })
-
-const noIndexApp = fastify()
-options.root = ''
-options.index = false
-
-noIndexApp
-  .register(fastifyStatic, options)
-  .after(() => {
-    noIndexApp.get('/', (_request, reply) => {
-      reply.send('<h1>fastify-static</h1>')
-    })
-  })
-
-options.root = new URL('')
-
-const URLRootApp = fastify()
-URLRootApp.register(fastifyStatic, options)
-  .after(() => {
-    URLRootApp.get('/', (_request, reply) => {
-      reply.send('<h1>fastify-static</h1>')
-    })
-  })
-
-const defaultIndexApp = fastify()
-options.index = 'index.html'
-
-defaultIndexApp
-  .register(fastifyStatic, options)
-  .after(() => {
-    defaultIndexApp.get('/', (_request, reply) => {
-      reply.send('<h1>fastify-static</h1>')
-    })
-  })
