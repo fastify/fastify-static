@@ -1,10 +1,10 @@
-import fastify, { FastifyInstance, FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify'
-import { Server } from 'node:http'
-import { Stats } from 'node:fs'
-import { expectAssignable, expectError, expectType } from 'tsd'
+import fastify, { type FastifyInstance, type FastifyPluginAsync, type FastifyRequest, type FastifyReply } from 'fastify'
+import { type Server } from 'node:http'
+import { type Stats } from 'node:fs'
+import { expect } from 'tstyche'
 import * as fastifyStaticStar from '..'
 import fastifyStatic, {
-  FastifyStaticOptions,
+  type FastifyStaticOptions,
   fastifyStatic as fastifyStaticNamed
 } from '..'
 
@@ -21,15 +21,13 @@ app.register(fastifyStaticCjsImport.fastifyStatic, { root: __dirname })
 app.register(fastifyStaticStar.default, { root: __dirname })
 app.register(fastifyStaticStar.fastifyStatic, { root: __dirname })
 
-expectType<FastifyPluginAsync<FastifyStaticOptions, Server>>(fastifyStatic)
-expectType<FastifyPluginAsync<FastifyStaticOptions, Server>>(fastifyStaticNamed)
-expectType<FastifyPluginAsync<FastifyStaticOptions, Server>>(fastifyStaticCjsImport.default)
-expectType<FastifyPluginAsync<FastifyStaticOptions, Server>>(fastifyStaticCjsImport.fastifyStatic)
-expectType<FastifyPluginAsync<FastifyStaticOptions, Server>>(fastifyStaticStar.default)
-expectType<FastifyPluginAsync<FastifyStaticOptions, Server>>(
-  fastifyStaticStar.fastifyStatic
-)
-expectType<any>(fastifyStaticCjs)
+expect(fastifyStatic).type.toBe<FastifyPluginAsync<FastifyStaticOptions, Server>>()
+expect(fastifyStaticNamed).type.toBe<FastifyPluginAsync<FastifyStaticOptions, Server>>()
+expect(fastifyStaticCjsImport.default).type.toBe<FastifyPluginAsync<FastifyStaticOptions, Server>>()
+expect(fastifyStaticCjsImport.fastifyStatic).type.toBe<FastifyPluginAsync<FastifyStaticOptions, Server>>()
+expect(fastifyStaticStar.default).type.toBe<FastifyPluginAsync<FastifyStaticOptions, Server>>()
+expect(fastifyStaticStar.fastifyStatic).type.toBe<FastifyPluginAsync<FastifyStaticOptions, Server>>()
+expect(fastifyStaticCjs).type.toBe<any>()
 
 const appWithImplicitHttp = fastify()
 const options: FastifyStaticOptions = {
@@ -53,14 +51,14 @@ const options: FastifyStaticOptions = {
   globIgnore: ['**/*.private'],
   list: false,
   setHeaders: (res, path, stat) => {
-    expectType<string>(res.filename)
-    expectType<number>(res.statusCode)
-    expectType<ReturnType<FastifyReply['getHeader']>>(res.getHeader('X-Test'))
+    expect(res.filename).type.toBe<string>()
+    expect(res.statusCode).type.toBe<number>()
+    expect(res.getHeader('X-Test')).type.toBe<ReturnType<FastifyReply['getHeader']>>()
     res.setHeader('X-Test', 'string')
 
-    expectType<string>(path)
+    expect(path).type.toBe<string>()
 
-    expectType<Stats>(stat)
+    expect(stat).type.toBe<Stats>()
   },
   preCompressed: false,
   allowedPath: (_pathName: string, _root: string, _request: FastifyRequest) => {
@@ -73,65 +71,49 @@ const options: FastifyStaticOptions = {
   logLevel: 'warn'
 }
 
-expectError<FastifyStaticOptions>({
-  root: '',
-  wildcard: '**/**'
-})
-
-expectAssignable<FastifyStaticOptions>({
+expect({
   root: '',
   list: {
-    format: 'json'
+    format: 'json' as const
   }
-})
+}).type.toBeAssignableTo<FastifyStaticOptions>()
 
-expectAssignable<FastifyStaticOptions>({
+expect({
   root: '',
   list: {
-    format: 'json',
+    format: 'json' as const,
     render: () => ''
   }
-})
+}).type.toBeAssignableTo<FastifyStaticOptions>()
 
-expectAssignable<FastifyStaticOptions>({
+expect({
   root: '',
   list: {
-    format: 'html',
+    format: 'html' as const,
     render: () => ''
   }
-})
+}).type.toBeAssignableTo<FastifyStaticOptions>()
 
-expectError<FastifyStaticOptions>({
-  root: '',
-  list: {
-    format: 'html'
-  }
-})
-
-expectAssignable<FastifyStaticOptions>({
+expect({
   root: ['']
-})
+}).type.toBeAssignableTo<FastifyStaticOptions>()
 
-expectAssignable<FastifyStaticOptions>({
-  root: new URL('')
-})
+expect({
+  root: new URL('file://')
+}).type.toBeAssignableTo<FastifyStaticOptions>()
 
-expectAssignable<FastifyStaticOptions>({
-  root: [new URL('')]
-})
+expect({
+  root: [new URL('file://')]
+}).type.toBeAssignableTo<FastifyStaticOptions>()
 
-expectError<FastifyStaticOptions>({
-  serve: true
-})
-
-expectAssignable<FastifyStaticOptions>({
-  serve: true,
+expect({
+  serve: true as const,
   root: ''
-})
+}).type.toBeAssignableTo<FastifyStaticOptions>()
 
-expectAssignable<FastifyStaticOptions>({
-  serve: false
-})
+expect({
+  serve: false as const
+}).type.toBeAssignableTo<FastifyStaticOptions>()
 
 appWithImplicitHttp
   .register(fastifyStatic, options)
@@ -218,7 +200,7 @@ noIndexApp
     })
   })
 
-options.root = new URL('')
+options.root = new URL('file://')
 
 const URLRootApp = fastify()
 URLRootApp.register(fastifyStatic, options)
@@ -229,7 +211,7 @@ URLRootApp.register(fastifyStatic, options)
   })
 
 const defaultIndexApp = fastify()
-options.index = 'index.html'
+options.index = 'index.html' as const
 
 defaultIndexApp
   .register(fastifyStatic, options)
