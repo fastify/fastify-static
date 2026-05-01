@@ -71,49 +71,55 @@ const options: FastifyStaticOptions = {
   logLevel: 'warn'
 }
 
-expect({
-  root: '',
-  list: {
-    format: 'json' as const
-  }
-}).type.toBeAssignableTo<FastifyStaticOptions>()
+expect<FastifyStaticOptions>()
+  .type.toBeAssignableFrom({
+    root: '',
+    list: {
+      format: 'json' as const
+    }
+  })
 
-expect({
-  root: '',
-  list: {
-    format: 'json' as const,
-    render: () => ''
-  }
-}).type.toBeAssignableTo<FastifyStaticOptions>()
+expect<FastifyStaticOptions>()
+  .type.toBeAssignableFrom({
+    root: '',
+    list: {
+      format: 'json' as const,
+      render: () => ''
+    }
+  })
 
-expect({
-  root: '',
-  list: {
-    format: 'html' as const,
-    render: () => ''
-  }
-}).type.toBeAssignableTo<FastifyStaticOptions>()
+expect<FastifyStaticOptions>()
+  .type.toBeAssignableFrom({
+    root: '',
+    list: {
+      format: 'html' as const,
+      render: () => ''
+    }
+  })
 
-expect({
-  root: ['']
-}).type.toBeAssignableTo<FastifyStaticOptions>()
+expect<FastifyStaticOptions>()
+  .type.toBeAssignableFrom({
+    root: ['']
+  })
 
-expect({
-  root: new URL('file://')
-}).type.toBeAssignableTo<FastifyStaticOptions>()
+expect<FastifyStaticOptions>()
+  .type.toBeAssignableFrom({
+    root: new URL('file://')
+  })
 
-expect({
-  root: [new URL('file://')]
-}).type.toBeAssignableTo<FastifyStaticOptions>()
+expect<FastifyStaticOptions>()
+  .type.toBeAssignableFrom({ root: [new URL('file://')] })
 
-expect({
-  serve: true as const,
-  root: ''
-}).type.toBeAssignableTo<FastifyStaticOptions>()
+expect<FastifyStaticOptions>()
+  .type.toBeAssignableFrom({
+    serve: true as const,
+    root: ''
+  })
 
-expect({
-  serve: false as const
-}).type.toBeAssignableTo<FastifyStaticOptions>()
+expect<FastifyStaticOptions>()
+  .type.toBeAssignableFrom({
+    serve: false as const
+  })
 
 appWithImplicitHttp
   .register(fastifyStatic, options)
