@@ -91,10 +91,6 @@ declare namespace fastifyStatic {
       serve?: false;
       root?: Root;
     }
-    | {
-      serve?: boolean;
-      root?: Root;
-    }
 
   export type FastifyStaticOptions = SendOptions &
     RootOptions &

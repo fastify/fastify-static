@@ -116,10 +116,9 @@ expect<FastifyStaticOptions>()
     root: ''
   })
 
-expect<FastifyStaticOptions>()
-  .type.toBeAssignableFrom({
-    serve: false as const
-  })
+expect<FastifyStaticOptions>().type.not.toBeAssignableFrom({
+  serve: true as const,
+})
 
 appWithImplicitHttp
   .register(fastifyStatic, options)
