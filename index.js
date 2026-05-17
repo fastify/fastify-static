@@ -76,7 +76,7 @@ async function fastifyStatic (fastify, opts) {
         return
       }
 
-      fastify.errorHandler(error, request, reply)
+      return fastify.errorHandler(error, request, reply)
     }
   }
 
