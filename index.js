@@ -2,8 +2,8 @@
 
 const path = require('node:path')
 const { fileURLToPath } = require('node:url')
-const { statSync } = require('node:fs')
-const { glob } = require('glob')
+const { statSync, lstatSync, realpathSync } = require('node:fs')
+const { glob } = require('node:fs/promises')
 const fp = require('fastify-plugin')
 const send = require('@fastify/send')
 const encodingNegotiator = require('@fastify/accept-negotiator')
@@ -63,7 +63,6 @@ async function fastifyStatic (fastify, opts) {
         : prefix + '/'
   }
 
-  // Set the schema hide property if defined in opts or true by default
   const routeOpts = {
     constraints: opts.constraints,
     schema: {
@@ -148,25 +147,55 @@ async function fastifyStatic (fastify, opts) {
       for (let rootPath of roots) {
         rootPath = rootPath.split(path.win32.sep).join(path.posix.sep)
         !rootPath.endsWith('/') && (rootPath += '/')
-        const files = await glob('**/**', {
-          cwd: rootPath, absolute: false, follow: true, nodir: true, dot: opts.serveDotFiles, ignore: opts.globIgnore
-        })
 
-        for (let file of files) {
-          file = file.split(path.win32.sep).join(path.posix.sep)
-          const route = prefix + file
+        const globPattern = opts.serveDotFiles ? '{**/**,.**/**}' : '**/**'
+        const globExclude = opts.globIgnore?.length
+          ? (f) => opts.globIgnore.some(p => path.matchesGlob(f, p))
+          : undefined
 
-          if (routes.has(route)) {
-            continue
-          }
+        const scanQueue = [{ cwd: rootPath.slice(0, -1), relPrefix: '' }]
+        const visitedDirs = new Set([realpathSync(rootPath.slice(0, -1))])
 
-          routes.add(route)
+        const toUnixPath = (p) => p.split(path.win32.sep).join(path.posix.sep)
+        const tryFsSync = (fn, p) => { try { return fn(p) } catch { return null } }
 
-          setUpHeadAndGet(routeOpts, route, `/${file}`, rootPath)
+        while (scanQueue.length > 0) {
+          const { cwd: scanCwd, relPrefix } = scanQueue.shift()
+          for await (const f of glob(globPattern, { cwd: scanCwd, exclude: globExclude })) {
+            if (f === '.') continue
 
-          const key = path.posix.basename(route)
-          if (indexes.has(key) && !indexDirs.has(key)) {
-            indexDirs.set(path.posix.dirname(route), rootPath)
+            const file = toUnixPath(f)
+            const fullPath = path.join(scanCwd, file)
+            const lstat = tryFsSync(lstatSync, fullPath)
+            if (!lstat || lstat.isDirectory()) continue
+
+            const relFile = relPrefix ? `${relPrefix}/${file}` : file
+
+            if (lstat.isSymbolicLink()) {
+              const stat = tryFsSync(statSync, fullPath)
+              if (!stat) continue
+
+              if (stat.isDirectory()) {
+                const realPath = tryFsSync(realpathSync, fullPath)
+                /* c8 ignore next */
+                if (!realPath) continue
+                if (!visitedDirs.has(realPath)) {
+                  visitedDirs.add(realPath)
+                  scanQueue.push({ cwd: fullPath, relPrefix: relFile })
+                }
+                continue
+              }
+            }
+
+            const route = prefix + relFile
+            if (routes.has(route)) continue
+            routes.add(route)
+            setUpHeadAndGet(routeOpts, route, `/${relFile}`, rootPath)
+
+            const key = path.posix.basename(route)
+            if (indexes.has(key) && !indexDirs.has(key)) {
+              indexDirs.set(path.posix.dirname(route), rootPath)
+            }
           }
         }
       }
