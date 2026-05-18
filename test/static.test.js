@@ -2637,6 +2637,43 @@ test('routes should fallback to default errorHandler', async t => {
   })
 })
 
+test('routes should propagate return value from async custom errorHandler', async t => {
+  t.plan(3)
+
+  const pluginOptions = {
+    root: path.join(__dirname, '/static'),
+    prefix: '/static/'
+  }
+
+  const fastify = Fastify()
+
+  // An async error handler that returns its payload (without an explicit
+  // reply.send) relies on Fastify awaiting the returned promise. If
+  // @fastify/static does not propagate the return value of
+  // fastify.errorHandler(), the promise is dropped and the reply never
+  // resolves with the customized body.
+  fastify.setErrorHandler(async function (_error, _request, reply) {
+    reply.code(418).type('text/plain')
+    return 'handled by return value'
+  })
+
+  fastify.addHook('onRoute', function (routeOptions) {
+    routeOptions.preHandler = (_request, _reply, done) => {
+      const fakeError = new Error()
+      fakeError.code = 'SOMETHING_ELSE'
+      done(fakeError)
+    }
+  })
+
+  fastify.register(fastifyStatic, pluginOptions)
+  t.after(() => fastify.close())
+
+  const response = await fastify.inject({ method: 'GET', url: '/static/index.html' })
+  t.assert.deepStrictEqual(response.statusCode, 418)
+  t.assert.ok(response.headers['content-type'].startsWith('text/plain'))
+  t.assert.deepStrictEqual(response.body, 'handled by return value')
+})
+
 test('percent encoded URLs in glob mode', async (t) => {
   t.plan(3)
 
