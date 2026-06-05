@@ -582,12 +582,11 @@ function getEncodingHeader (headers, checked) {
 
 /**
  * Appends `accept-encoding` to the `Vary` response header without creating
- * duplicates. Reads the current value from the raw response so any header
- * already set by a `setHeaders` callback is preserved.
+ * duplicates. Any header already set by a `setHeaders` callback is preserved.
  * @param {import('fastify').FastifyReply} reply
  */
 function addVaryAcceptEncoding (reply) {
-  const current = reply.raw.getHeader('vary')
+  const current = reply.getHeader('vary')
 
   if (current === undefined) {
     reply.header('vary', 'accept-encoding')
@@ -596,17 +595,20 @@ function addVaryAcceptEncoding (reply) {
 
   const value = Array.isArray(current) ? current.join(', ') : String(current)
 
-  const exists = value
-    .split(',')
-    .some((token) => {
-      const normalized = token.trim().toLowerCase()
+  // Walk the comma-separated tokens without splitting the string.
+  let start = 0
+  for (let i = 0; i <= value.length; i++) {
+    if (i === value.length || value[i] === ',') {
+      const token = value.slice(start, i).trim().toLowerCase()
       // A `Vary: *` already covers every request header.
-      return normalized === 'accept-encoding' || normalized === '*'
-    })
-
-  if (!exists) {
-    reply.header('vary', value + ', accept-encoding')
+      if (token === 'accept-encoding' || token === '*') {
+        return
+      }
+      start = i + 1
+    }
   }
+
+  reply.header('vary', value + ', accept-encoding')
 }
 
 /**
