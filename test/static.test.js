@@ -2517,10 +2517,16 @@ test('if dotfiles are properly served according to plugin options', async (t) =>
 
 test('register with failing glob handler', async (t) => {
   const fastifyStatic = proxyquire.noCallThru()('../', {
-    glob: function globStub (_pattern, _options, cb) {
-      process.nextTick(function () {
-        return cb(new Error('mock glob error'))
-      })
+    './lib/glob': {
+      glob: function globStub (_pattern, _options, cb) {
+        if (typeof cb === 'function') {
+          process.nextTick(function () {
+            cb(new Error('mock glob error'))
+          })
+          return
+        }
+        return Promise.reject(new Error('mock glob error'))
+      }
     }
   })
 
@@ -4148,5 +4154,34 @@ test('register with wildcard false and globIgnore', async t => {
     t.assert.ok(!response.ok)
     t.assert.deepStrictEqual(response.status, 404)
     await response.text()
+  })
+})
+
+test('custom glob helper coverage', async (t) => {
+  const { glob } = require('../lib/glob')
+
+  await t.test('glob with non-existent directory returns empty array', async (t) => {
+    const files = await glob('**/**', { cwd: './non-existent-directory' })
+    t.assert.deepStrictEqual(files, [])
+  })
+
+  await t.test('glob with callback and options', async (t) => {
+    await new Promise((resolve, reject) => {
+      glob('**/**', { cwd: './non-existent-directory' }, (err, files) => {
+        if (err) return reject(err)
+        t.assert.deepStrictEqual(files, [])
+        resolve()
+      })
+    })
+  })
+
+  await t.test('glob with callback and no options', async (t) => {
+    await new Promise((resolve, reject) => {
+      glob('**/**', (err, files) => {
+        if (err) return reject(err)
+        t.assert.deepStrictEqual(files, [])
+        resolve()
+      })
+    })
   })
 })
