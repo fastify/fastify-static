@@ -44,8 +44,14 @@ declare namespace fastifyStatic {
     stats: Stats;
   }
 
+  export type ListFormat = 'html' | 'json'
+
   export interface ListRender {
-    (dirs: ListDir[], files: ListFile[]): string;
+    (dirs: ListDir[], files: ListFile[], format?: ListFormat): string;
+  }
+
+  export interface ListJsonRender {
+    (dirs: ListDir[], files: ListFile[], format?: ListFormat): unknown;
   }
 
   export interface ListOptions {
@@ -57,7 +63,7 @@ declare namespace fastifyStatic {
   export interface ListOptionsJsonFormat extends ListOptions {
     format: 'json';
     // Required when the URL parameter `format=html` exists
-    render?: ListRender;
+    render?: ListJsonRender;
   }
 
   export interface ListOptionsHtmlFormat extends ListOptions {

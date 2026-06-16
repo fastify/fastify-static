@@ -307,6 +307,9 @@ Default: `json`
 Options: `html`, `json`
 
 Directory list can be in `html` format; in that case, `list.render` function is required.
+Directory list in `json` format can also use `list.render` to customize the JSON response.
+When `list.render` is omitted, the JSON response is controlled by `list.jsonFormat`.
+The `list.render` function receives `(dirs, files, format)`, where `format` is `html` or `json`.
 
 This option can be overridden by the URL parameter `format`. Options are `html` and `json`.
 
@@ -336,6 +339,26 @@ fastify.register(require('@fastify/static'), {
 </body></html>
 `
       },
+  }
+})
+```
+
+JSON render example:
+
+```js
+fastify.register(require('@fastify/static'), {
+  root: path.join(__dirname, 'public'),
+  prefix: '/public/',
+  list: {
+    format: 'json',
+    render: (dirs, files) => {
+      return {
+        dirs: dirs.map(dir => dir.name),
+        images: files
+          .filter(file => file.name.endsWith('.png'))
+          .map(file => ({ name: file.name, href: file.href }))
+      }
+    }
   }
 })
 ```
