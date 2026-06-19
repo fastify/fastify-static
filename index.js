@@ -400,6 +400,14 @@ async function fastifyStatic (fastify, opts) {
         reply.code(newStatusCode)
         setHeaders?.(reply.raw, metadata.path, metadata.stat)
         reply.headers(headers)
+        if (opts.preCompressed) {
+          // The response was selected based on the request `Accept-Encoding`
+          // header, so it must advertise that it varies on it. This holds even
+          // when the uncompressed file is served as a fallback, otherwise a
+          // shared cache could return that fallback to a client that does
+          // accept a compressed encoding (or the other way around).
+          addVaryAcceptEncoding(reply)
+        }
         if (encoding) {
           reply.header('content-type', getContentType(pathname))
           reply.header('content-encoding', encoding)
@@ -570,6 +578,37 @@ function getEncodingHeader (headers, checked) {
     header,
     supportedEncodings.filter((enc) => !checked.has(enc))
   )
+}
+
+/**
+ * Appends `accept-encoding` to the `Vary` response header without creating
+ * duplicates. Any header already set by a `setHeaders` callback is preserved.
+ * @param {import('fastify').FastifyReply} reply
+ */
+function addVaryAcceptEncoding (reply) {
+  const current = reply.getHeader('vary')
+
+  if (current === undefined) {
+    reply.header('vary', 'accept-encoding')
+    return
+  }
+
+  const value = Array.isArray(current) ? current.join(', ') : String(current)
+
+  // Walk the comma-separated tokens without splitting the string.
+  let start = 0
+  for (let i = 0; i <= value.length; i++) {
+    if (i === value.length || value[i] === ',') {
+      const token = value.slice(start, i).trim().toLowerCase()
+      // A `Vary: *` already covers every request header.
+      if (token === 'accept-encoding' || token === '*') {
+        return
+      }
+      start = i + 1
+    }
+  }
+
+  reply.header('vary', value + ', accept-encoding')
 }
 
 /**
