@@ -67,7 +67,7 @@
     "glob": "^13.0.0"
   },
   "devDependencies": {
-    "@fastify/compress": "^8.0.0",
+    "@fastify/compress": "^9.0.0",
     "@types/node": "^25.0.3",
     "autocannon": "^8.0.0",
     "borp": "^1.0.0",
