@@ -114,7 +114,7 @@ fastify.get('/path/without/cache/control', function (req, reply) {
 ### Managing cache-control headers
 
 Production sites should use a reverse-proxy to manage caching headers.
-However, here is an example of using fastify-static to host a Single Page Application (for example a [vite.js](https://vite.dev/) build) with sane caching.
+However, here is an example of using fastify-static to host a Single Page Application (for example a [vite.js](https://vite.dev) build) with sane caching.
 
 ```js
 fastify.register(require('@fastify/static'), {
