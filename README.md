@@ -253,6 +253,8 @@ Default: `(pathName, root, request) => true`
 This function filters served files. Using the request object, complex path authentication is possible.
 Returning `true` serves the file; returning `false` calls Fastify's 404 handler.
 
+When using `preCompressed: true`, `allowedPath` receives the requested path before `.br` or `.gz` variants are selected; see the `preCompressed` note below before using extension-based access rules.
+
 #### `index`
 
 Default: `undefined`
@@ -469,6 +471,8 @@ Determines the output format when `json` is selected.
 Default: `false`
 
 First, try to send the brotli encoded asset (if supported by `Accept-Encoding` headers), then gzip, and finally the original `pathname`. Skip compression for smaller files that do not benefit from it.
+
+> ⚠ Warning: `allowedPath` is evaluated against the requested path before pre-compressed variants are selected. A request for `/file.txt` can serve `/file.txt.gz` or `/file.txt.br` when the client accepts that encoding, even if direct requests to `.gz` or `.br` files are denied by `allowedPath`. Treat pre-compressed files as public alternate encodings of the same asset: keep restricted compressed files outside the served root, disable `preCompressed`, or deny the base path too.
 
 Assume this structure with the compressed asset as a sibling of the uncompressed counterpart:
 
