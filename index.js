@@ -14,7 +14,7 @@ const dirList = require('./lib/dirList')
 const endForwardSlashRegex = /\/$/u
 const asteriskRegex = /\*/gu
 
-const supportedEncodings = ['br', 'gzip', 'deflate']
+const supportedEncodings = ['br', 'gzip']
 send.mime.default_type = 'application/octet-stream'
 const encodingExtensionMap = {
   br: '.br',

@@ -2854,6 +2854,35 @@ test(
 )
 
 test(
+  'will ignore unsupported deflate when preCompressed is enabled',
+  async (t) => {
+    const pluginOptions = {
+      root: path.join(__dirname, '/static-pre-compressed'),
+      prefix: '/static-pre-compressed/',
+      preCompressed: true
+    }
+
+    const fastify = Fastify()
+
+    fastify.register(fastifyStatic, pluginOptions)
+    t.after(() => fastify.close())
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '/static-pre-compressed/all-three.html',
+      headers: {
+        'accept-encoding': 'deflate;q=1, gzip;q=0.5'
+      }
+    })
+
+    genericResponseChecks(t, response)
+    t.assert.deepStrictEqual(response.headers['content-encoding'], 'gzip')
+    t.assert.deepStrictEqual(response.statusCode, 200)
+    t.assert.deepStrictEqual(response.rawPayload, allThreeGzip)
+  }
+)
+
+test(
   'will serve uncompressed files if there are no compressed variants on disk',
   async (t) => {
     const pluginOptions = {
