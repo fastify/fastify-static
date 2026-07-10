@@ -14,11 +14,12 @@ const dirList = require('./lib/dirList')
 const endForwardSlashRegex = /\/$/u
 const asteriskRegex = /\*/gu
 
-const supportedEncodings = ['br', 'gzip']
+const supportedEncodings = ['br', 'gzip', 'deflate']
 send.mime.default_type = 'application/octet-stream'
 const encodingExtensionMap = {
   br: '.br',
-  gzip: '.gz'
+  gzip: '.gz',
+  deflate: '.deflate'
 }
 
 /** @type {import("fastify").FastifyPluginAsync<import("./types").FastifyStaticOptions>} */

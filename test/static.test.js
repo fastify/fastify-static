@@ -36,6 +36,9 @@ const allThreeBr = fs.readFileSync(
 const allThreeGzip = fs.readFileSync(
   './test/static-pre-compressed/all-three.html.gz'
 )
+const allThreeDeflate = fs.readFileSync(
+  './test/static-pre-compressed/all-three.html.deflate'
+)
 const gzipOnly = fs.readFileSync(
   './test/static-pre-compressed/gzip-only.html.gz'
 )
@@ -2854,7 +2857,7 @@ test(
 )
 
 test(
-  'will ignore unsupported deflate when preCompressed is enabled',
+  'will negotiate deflate when preCompressed is enabled',
   async (t) => {
     const pluginOptions = {
       root: path.join(__dirname, '/static-pre-compressed'),
@@ -2876,9 +2879,9 @@ test(
     })
 
     genericResponseChecks(t, response)
-    t.assert.deepStrictEqual(response.headers['content-encoding'], 'gzip')
+    t.assert.deepStrictEqual(response.headers['content-encoding'], 'deflate')
     t.assert.deepStrictEqual(response.statusCode, 200)
-    t.assert.deepStrictEqual(response.rawPayload, allThreeGzip)
+    t.assert.deepStrictEqual(response.rawPayload, allThreeDeflate)
   }
 )
 
