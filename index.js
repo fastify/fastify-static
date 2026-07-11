@@ -404,8 +404,8 @@ async function fastifyStatic (fastify, opts) {
         // otherwise use send provided status code
         const newStatusCode = reply.statusCode !== 200 ? reply.statusCode : statusCode
         reply.code(newStatusCode)
-        setHeaders?.(reply.raw, metadata.path, metadata.stat)
         reply.headers(headers)
+        setHeaders?.(reply, metadata.path, metadata.stat)
         if (encoding) {
           reply.header('content-type', getContentType(pathname))
           reply.header('content-encoding', encoding)
