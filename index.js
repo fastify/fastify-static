@@ -35,9 +35,10 @@ function contentDisposition (filename) {
 
 /** @type {import("fastify").FastifyPluginAsync<import("./types").FastifyStaticOptions>} */
 async function fastifyStatic (fastify, opts) {
+  const suppressWarning = opts.suppressWarning ?? false
   if (opts.serve !== false || opts.root !== undefined) {
     opts.root = normalizeRoot(opts.root)
-    checkRootPathForErrors(fastify, opts.root)
+    checkRootPathForErrors(fastify, opts.root, suppressWarning)
   }
 
   const setHeaders = opts.setHeaders
@@ -473,7 +474,7 @@ function normalizeRoot (root) {
  * @param {import("./types").FastifyStaticOptions['root']} rootPath
  * @returns {void}
  */
-function checkRootPathForErrors (fastify, rootPath) {
+function checkRootPathForErrors (fastify, rootPath, suppressWarning) {
   if (rootPath === undefined) {
     throw FST_STATIC_INVALID_OPTION('root', 'is required')
   }
@@ -488,12 +489,12 @@ function checkRootPathForErrors (fastify, rootPath) {
     }
 
     // check each path and fail at first invalid
-    rootPath.map((path) => checkPath(fastify, path))
+    rootPath.map((path) => checkPath(fastify, path, suppressWarning))
     return
   }
 
   if (typeof rootPath === 'string') {
-    return checkPath(fastify, rootPath)
+    return checkPath(fastify, rootPath, suppressWarning)
   }
 
   throw FST_STATIC_INVALID_OPTION_VALUE('root', 'must be a string or array of strings')
@@ -502,9 +503,10 @@ function checkRootPathForErrors (fastify, rootPath) {
 /**
  * @param {import("fastify").FastifyInstance} fastify
  * @param {import("./types").FastifyStaticOptions['root']} rootPath
+ * @param {boolean} suppressWarning
  * @returns {void}
  */
-function checkPath (fastify, rootPath) {
+function checkPath (fastify, rootPath, suppressWarning) {
   if (typeof rootPath !== 'string') {
     throw FST_STATIC_INVALID_OPTION_VALUE('root', 'must be a string')
   }
@@ -518,7 +520,7 @@ function checkPath (fastify, rootPath) {
     pathStat = statSync(rootPath)
   } catch (e) {
     if (e.code === 'ENOENT') {
-      fastify.log.warn(`"root" path "${rootPath}" must exist`)
+      !suppressWarning && fastify.log.warn(`"root" path "${rootPath}" must exist`)
       return
     }
 

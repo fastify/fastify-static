@@ -486,6 +486,12 @@ Assume this structure with the compressed asset as a sibling of the uncompressed
 └── index.html
 ```
 
+#### `suppressWarning`
+
+Default: `false`
+
+If set to `true`, the plugin will not log any warning.
+
 #### Disable serving
 
 To use only the reply decorator without serving directories, pass `{ serve: false }`.
