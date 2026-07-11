@@ -602,9 +602,10 @@ function addVaryAcceptEncoding (reply) {
   const value = Array.isArray(current) ? current.join(', ') : String(current)
 
   // Walk the comma-separated tokens without splitting the string.
+  const headerLength = value.length
   let start = 0
-  for (let i = 0; i <= value.length; i++) {
-    if (i === value.length || value[i] === ',') {
+  for (let i = 0; i <= headerLength; i++) {
+    if (i === headerLength || value[i] === ',') {
       const token = value.slice(start, i).trim().toLowerCase()
       // A `Vary: *` already covers every request header.
       if (token === 'accept-encoding' || token === '*') {
