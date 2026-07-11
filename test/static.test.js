@@ -2836,8 +2836,8 @@ test(
       root: path.join(__dirname, '/static-pre-compressed'),
       prefix: '/static-pre-compressed/',
       preCompressed: true,
-      setHeaders: (res) => {
-        res.setHeader('vary', 'Accept-Language')
+      setHeaders: (reply) => {
+        reply.header('vary', 'Accept-Language')
       }
     }
 
@@ -2868,8 +2868,8 @@ test(
       root: path.join(__dirname, '/static-pre-compressed'),
       prefix: '/static-pre-compressed/',
       preCompressed: true,
-      setHeaders: (res) => {
-        res.setHeader('vary', 'Accept-Encoding')
+      setHeaders: (reply) => {
+        reply.header('vary', 'Accept-Encoding')
       }
     }
 
@@ -2899,8 +2899,8 @@ test(
       root: path.join(__dirname, '/static-pre-compressed'),
       prefix: '/static-pre-compressed/',
       preCompressed: true,
-      setHeaders: (res) => {
-        res.setHeader('vary', ['Accept-Language', 'Cookie'])
+      setHeaders: (reply) => {
+        reply.header('vary', ['Accept-Language', 'Cookie'])
       }
     }
 
@@ -2930,8 +2930,8 @@ test(
       root: path.join(__dirname, '/static-pre-compressed'),
       prefix: '/static-pre-compressed/',
       preCompressed: true,
-      setHeaders: (res) => {
-        res.setHeader('vary', '*')
+      setHeaders: (reply) => {
+        reply.header('vary', '*')
       }
     }
 
