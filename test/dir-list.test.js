@@ -119,7 +119,7 @@ test('dir list wrong options', async t => {
           format: 'no-json,no-html'
         }
       },
-      error: FST_STATIC_INVALID_OPTION_VALUE('list.format', 'must be json or html')
+      error: new FST_STATIC_INVALID_OPTION_VALUE('list.format', 'must be json or html')
     },
     {
       options: {
@@ -129,7 +129,7 @@ test('dir list wrong options', async t => {
           // no render function
         }
       },
-      error: FST_STATIC_INVALID_OPTION_VALUE('list.render', 'must be a function and is required with html format')
+      error: new FST_STATIC_INVALID_OPTION_VALUE('list.render', 'must be a function and is required with html format')
     },
     {
       options: {
@@ -138,7 +138,7 @@ test('dir list wrong options', async t => {
           names: 'not-an-array'
         }
       },
-      error: FST_STATIC_INVALID_OPTION_VALUE('list.names', 'must be an array')
+      error: new FST_STATIC_INVALID_OPTION_VALUE('list.names', 'must be an array')
     }
   ]
 

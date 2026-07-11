@@ -43,7 +43,7 @@ async function fastifyStatic (fastify, opts) {
 
   const setHeaders = opts.setHeaders
   if (setHeaders !== undefined && typeof setHeaders !== 'function') {
-    throw FST_STATIC_INVALID_OPTION_VALUE('setHeaders', 'must be a function')
+    throw new FST_STATIC_INVALID_OPTION_VALUE('setHeaders', 'must be a function')
   }
 
   const invalidDirListOpts = dirList.validateOptions(opts)
@@ -127,7 +127,7 @@ async function fastifyStatic (fastify, opts) {
 
   if (opts.serve !== false) {
     if (opts.wildcard && typeof opts.wildcard !== 'boolean') {
-      throw FST_STATIC_INVALID_OPTION_VALUE('wildcard', 'must be a boolean')
+      throw new FST_STATIC_INVALID_OPTION_VALUE('wildcard', 'must be a boolean')
     }
     if (opts.wildcard === undefined || opts.wildcard === true) {
       let matchRoutePrefix
@@ -476,16 +476,16 @@ function normalizeRoot (root) {
  */
 function checkRootPathForErrors (fastify, rootPath, suppressWarning) {
   if (rootPath === undefined) {
-    throw FST_STATIC_INVALID_OPTION('root', 'is required')
+    throw new FST_STATIC_INVALID_OPTION('root', 'is required')
   }
 
   if (Array.isArray(rootPath)) {
     if (!rootPath.length) {
-      throw FST_STATIC_INVALID_OPTION('root', 'array requires one or more paths')
+      throw new FST_STATIC_INVALID_OPTION('root', 'array requires one or more paths')
     }
 
     if (new Set(rootPath).size !== rootPath.length) {
-      throw FST_STATIC_INVALID_OPTION('root', 'array contains duplicate paths')
+      throw new FST_STATIC_INVALID_OPTION('root', 'array contains duplicate paths')
     }
 
     // check each path and fail at first invalid
@@ -497,7 +497,7 @@ function checkRootPathForErrors (fastify, rootPath, suppressWarning) {
     return checkPath(fastify, rootPath, suppressWarning)
   }
 
-  throw FST_STATIC_INVALID_OPTION_VALUE('root', 'must be a string or array of strings')
+  throw new FST_STATIC_INVALID_OPTION_VALUE('root', 'must be a string or array of strings')
 }
 
 /**
@@ -508,10 +508,10 @@ function checkRootPathForErrors (fastify, rootPath, suppressWarning) {
  */
 function checkPath (fastify, rootPath, suppressWarning) {
   if (typeof rootPath !== 'string') {
-    throw FST_STATIC_INVALID_OPTION_VALUE('root', 'must be a string')
+    throw new FST_STATIC_INVALID_OPTION_VALUE('root', 'must be a string')
   }
   if (path.isAbsolute(rootPath) === false) {
-    throw FST_STATIC_INVALID_OPTION('root', 'must be an absolute path')
+    throw new FST_STATIC_INVALID_OPTION('root', 'must be an absolute path')
   }
 
   let pathStat
@@ -528,7 +528,7 @@ function checkPath (fastify, rootPath, suppressWarning) {
   }
 
   if (pathStat.isDirectory() === false) {
-    throw FST_STATIC_INVALID_OPTION('root', 'must be a directory')
+    throw new FST_STATIC_INVALID_OPTION('root', 'must be a directory')
   }
 }
 
@@ -724,7 +724,7 @@ function getRedirectUrl (url) {
     return parsedPathname + (parsedPathname[parsedPathname.length - 1] !== '/' ? '/' : '') + (parsed.search || '')
   } /* c8 ignore start */ catch {
     // the try-catch here is actually unreachable, but we keep it for safety and prevent DoS attack
-    throw FST_STATIC_INVALID_REDIRECT_URL(url)
+    throw new FST_STATIC_INVALID_REDIRECT_URL(url)
   } /* c8 ignore stop */
 }
 
