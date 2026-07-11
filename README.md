@@ -189,10 +189,10 @@ A flag that defines if the fastify route hide-schema attribute is hidden or not.
 Default: `undefined`
 
 A function to set custom headers on the response. Alterations to the headers
-must be done synchronously. The function is called as `fn(res, path, stat)`,
+must be done synchronously. The function is called as `fn(reply, path, stat)`,
 with the arguments:
 
-- `res` The response object.
+- `reply` The fastify Reply object.
 - `path` The path of the file that is being sent.
 - `stat` The stat object of the file that is being sent.
 

@@ -1,6 +1,6 @@
 {
   "name": "@fastify/static",
-  "version": "9.2.0",
+  "version": "10.0.0",
   "description": "Plugin for serving static files as fast as possible.",
   "main": "index.js",
   "type": "commonjs",
@@ -61,8 +61,8 @@
   "dependencies": {
     "@fastify/accept-negotiator": "^2.0.0",
     "@fastify/send": "^4.0.0",
-    "content-disposition": "^1.0.1",
-    "fastify-plugin": "^5.0.0",
+    "content-disposition": "^2.0.1",
+    "fastify-plugin": "^6.0.0",
     "fastq": "^1.17.1",
     "glob": "^13.0.0"
   },

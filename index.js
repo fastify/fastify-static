@@ -3,11 +3,12 @@
 const path = require('node:path')
 const { fileURLToPath } = require('node:url')
 const { statSync } = require('node:fs')
+const { basename } = require('node:path')
 const { glob } = require('glob')
 const fp = require('fastify-plugin')
 const send = require('@fastify/send')
 const encodingNegotiator = require('@fastify/accept-negotiator')
-const contentDisposition = require('content-disposition')
+const { create } = require('content-disposition')
 
 const dirList = require('./lib/dirList')
 
@@ -18,7 +19,12 @@ const supportedEncodings = ['br', 'gzip', 'deflate']
 send.mime.default_type = 'application/octet-stream'
 const encodingExtensionMap = {
   br: '.br',
-  gzip: '.gz'
+  gzip: '.gz',
+  deflate: '.deflate'
+}
+
+function contentDisposition (filename) {
+  return create(basename(filename))
 }
 
 /** @type {import("fastify").FastifyPluginAsync<import("./types").FastifyStaticOptions>} */
@@ -327,7 +333,7 @@ async function fastifyStatic (fastify, opts) {
         }
 
         if (metadata.error.code === 'ENOENT') {
-        // when preCompress is enabled and the path is a directory without a trailing slash
+          // when preCompress is enabled and the path is a directory without a trailing slash
           if (opts.preCompressed && encoding) {
             if (opts.redirect !== true) {
               const indexPathname = findIndexFile(pathname, options.root, options.index)
@@ -398,8 +404,8 @@ async function fastifyStatic (fastify, opts) {
         // otherwise use send provided status code
         const newStatusCode = reply.statusCode !== 200 ? reply.statusCode : statusCode
         reply.code(newStatusCode)
-        setHeaders?.(reply.raw, metadata.path, metadata.stat)
         reply.headers(headers)
+        setHeaders?.(reply, metadata.path, metadata.stat)
         if (opts.preCompressed) {
           // The response was selected based on the request `Accept-Encoding`
           // header, so it must advertise that it varies on it. This holds even
