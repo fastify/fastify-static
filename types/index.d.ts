@@ -15,13 +15,6 @@ declare module 'fastify' {
 type FastifyStaticPlugin = FastifyPluginAsync<NonNullable<fastifyStatic.FastifyStaticOptions>>
 
 declare namespace fastifyStatic {
-  export interface SetHeadersResponse {
-    getHeader: FastifyReply['getHeader'];
-    setHeader: FastifyReply['header'];
-    readonly filename: string;
-    statusCode: number;
-  }
-
   export interface ExtendedInformation {
     fileCount: number;
     totalFileCount: number;
@@ -100,7 +93,7 @@ declare namespace fastifyStatic {
       prefixAvoidTrailingSlash?: boolean;
       decorateReply?: boolean;
       schemaHide?: boolean;
-      setHeaders?: (res: SetHeadersResponse, path: string, stat: Stats) => void;
+      setHeaders?: (reply: FastifyReply, path: string, stat: Stats) => void;
       redirect?: boolean;
       wildcard?: boolean;
       globIgnore?: string[];

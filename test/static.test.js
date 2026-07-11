@@ -1290,13 +1290,14 @@ test('send options', (t) => {
 })
 
 test('setHeaders option', async (t) => {
-  t.plan(5 + GENERIC_RESPONSE_CHECK_COUNT)
+  t.plan(6 + GENERIC_RESPONSE_CHECK_COUNT)
 
   const pluginOptions = {
     root: path.join(__dirname, 'static'),
-    setHeaders: function (res, pathName) {
+    setHeaders: function (reply, pathName) {
       t.assert.deepStrictEqual(pathName, path.join(__dirname, 'static/index.html'))
-      res.setHeader('X-Test-Header', 'test')
+      reply.header('X-Test-Header', 'test')
+      reply.header('Cache-Control', 'public, immutable, max-age=2592000')
     }
   }
   const fastify = Fastify()
@@ -1312,6 +1313,7 @@ test('setHeaders option', async (t) => {
   t.assert.ok(response.ok)
   t.assert.deepStrictEqual(response.status, 200)
   t.assert.deepStrictEqual(response.headers.get('x-test-header'), 'test')
+  t.assert.deepStrictEqual(response.headers.get('cache-control'), 'public, immutable, max-age=2592000')
   t.assert.deepStrictEqual(await response.text(), indexContent)
   genericResponseChecks(t, response)
 })

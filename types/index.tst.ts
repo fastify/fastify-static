@@ -1,6 +1,6 @@
-import fastify, { type FastifyInstance, type FastifyPluginAsync, type FastifyRequest, type FastifyReply } from 'fastify'
-import { type Server } from 'node:http'
+import fastify, { type FastifyInstance, type FastifyPluginAsync, type FastifyReply, type FastifyRequest } from 'fastify'
 import { type Stats } from 'node:fs'
+import { type Server } from 'node:http'
 import { expect } from 'tstyche'
 import * as fastifyStaticStar from '..'
 import fastifyStatic, {
@@ -50,11 +50,11 @@ const options: FastifyStaticOptions = {
   wildcard: true,
   globIgnore: ['**/*.private'],
   list: false,
-  setHeaders: (res, path, stat) => {
-    expect(res.filename).type.toBe<string>()
-    expect(res.statusCode).type.toBe<number>()
-    expect(res.getHeader('X-Test')).type.toBe<ReturnType<FastifyReply['getHeader']>>()
-    res.setHeader('X-Test', 'string')
+  setHeaders: (reply, path, stat) => {
+    expect(reply).type.toBe<FastifyReply>()
+    expect(reply.statusCode).type.toBe<number>()
+    expect(reply.getHeader('X-Test')).type.toBe<ReturnType<FastifyReply['getHeader']>>()
+    reply.header('X-Test', 'string')
 
     expect(path).type.toBe<string>()
 
