@@ -11,6 +11,12 @@ const encodingNegotiator = require('@fastify/accept-negotiator')
 const { create } = require('content-disposition')
 
 const dirList = require('./lib/dirList')
+const errors = require('./lib/errors')
+const {
+  FST_STATIC_INVALID_OPTION,
+  FST_STATIC_INVALID_OPTION_VALUE,
+  FST_STATIC_INVALID_REDIRECT_URL
+} = errors
 
 const endForwardSlashRegex = /\/$/u
 const asteriskRegex = /\*/gu
@@ -36,7 +42,7 @@ async function fastifyStatic (fastify, opts) {
 
   const setHeaders = opts.setHeaders
   if (setHeaders !== undefined && typeof setHeaders !== 'function') {
-    throw new TypeError('The `setHeaders` option must be a function')
+    throw FST_STATIC_INVALID_OPTION_VALUE('setHeaders', 'must be a function')
   }
 
   const invalidDirListOpts = dirList.validateOptions(opts)
@@ -120,7 +126,7 @@ async function fastifyStatic (fastify, opts) {
 
   if (opts.serve !== false) {
     if (opts.wildcard && typeof opts.wildcard !== 'boolean') {
-      throw new TypeError('"wildcard" option must be a boolean')
+      throw FST_STATIC_INVALID_OPTION_VALUE('wildcard', 'must be a boolean')
     }
     if (opts.wildcard === undefined || opts.wildcard === true) {
       let matchRoutePrefix
@@ -469,18 +475,16 @@ function normalizeRoot (root) {
  */
 function checkRootPathForErrors (fastify, rootPath) {
   if (rootPath === undefined) {
-    throw new Error('"root" option is required')
+    throw FST_STATIC_INVALID_OPTION('root', 'is required')
   }
 
   if (Array.isArray(rootPath)) {
     if (!rootPath.length) {
-      throw new Error('"root" option array requires one or more paths')
+      throw FST_STATIC_INVALID_OPTION('root', 'array requires one or more paths')
     }
 
     if (new Set(rootPath).size !== rootPath.length) {
-      throw new Error(
-        '"root" option array contains one or more duplicate paths'
-      )
+      throw FST_STATIC_INVALID_OPTION('root', 'array contains duplicate paths')
     }
 
     // check each path and fail at first invalid
@@ -492,7 +496,7 @@ function checkRootPathForErrors (fastify, rootPath) {
     return checkPath(fastify, rootPath)
   }
 
-  throw new Error('"root" option must be a string or array of strings')
+  throw FST_STATIC_INVALID_OPTION_VALUE('root', 'must be a string or array of strings')
 }
 
 /**
@@ -502,10 +506,10 @@ function checkRootPathForErrors (fastify, rootPath) {
  */
 function checkPath (fastify, rootPath) {
   if (typeof rootPath !== 'string') {
-    throw new TypeError('"root" option must be a string')
+    throw FST_STATIC_INVALID_OPTION_VALUE('root', 'must be a string')
   }
   if (path.isAbsolute(rootPath) === false) {
-    throw new Error('"root" option must be an absolute path')
+    throw FST_STATIC_INVALID_OPTION('root', 'must be an absolute path')
   }
 
   let pathStat
@@ -522,7 +526,7 @@ function checkPath (fastify, rootPath) {
   }
 
   if (pathStat.isDirectory() === false) {
-    throw new Error('"root" option must point to a directory')
+    throw FST_STATIC_INVALID_OPTION('root', 'must be a directory')
   }
 }
 
@@ -718,9 +722,7 @@ function getRedirectUrl (url) {
     return parsedPathname + (parsedPathname[parsedPathname.length - 1] !== '/' ? '/' : '') + (parsed.search || '')
   } /* c8 ignore start */ catch {
     // the try-catch here is actually unreachable, but we keep it for safety and prevent DoS attack
-    const err = new Error(`Invalid redirect URL: ${url}`)
-    err.statusCode = 400
-    throw err
+    throw FST_STATIC_INVALID_REDIRECT_URL(url)
   } /* c8 ignore stop */
 }
 
@@ -730,3 +732,4 @@ module.exports = fp(fastifyStatic, {
 })
 module.exports.default = fastifyStatic
 module.exports.fastifyStatic = fastifyStatic
+module.exports.errors = errors
