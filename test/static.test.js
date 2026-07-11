@@ -2772,6 +2772,216 @@ test(
 )
 
 test(
+  'sends Vary: Accept-Encoding when serving a pre-compressed file',
+  async (t) => {
+    const pluginOptions = {
+      root: path.join(__dirname, '/static-pre-compressed'),
+      prefix: '/static-pre-compressed/',
+      preCompressed: true
+    }
+
+    const fastify = Fastify()
+
+    fastify.register(fastifyStatic, pluginOptions)
+    t.after(() => fastify.close())
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '/static-pre-compressed/all-three.html',
+      headers: {
+        'accept-encoding': 'gzip, deflate, br'
+      }
+    })
+
+    genericResponseChecks(t, response)
+    t.assert.deepStrictEqual(response.headers['content-encoding'], 'br')
+    t.assert.deepStrictEqual(response.headers.vary, 'accept-encoding')
+    t.assert.deepStrictEqual(response.statusCode, 200)
+  }
+)
+
+test(
+  'sends Vary: Accept-Encoding when falling back to the uncompressed file',
+  async (t) => {
+    const pluginOptions = {
+      root: path.join(__dirname, '/static-pre-compressed'),
+      prefix: '/static-pre-compressed/',
+      preCompressed: true
+    }
+
+    const fastify = Fastify()
+
+    fastify.register(fastifyStatic, pluginOptions)
+    t.after(() => fastify.close())
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '/static-pre-compressed/uncompressed.html',
+      headers: {
+        'accept-encoding': 'gzip, deflate, br'
+      }
+    })
+
+    genericResponseChecks(t, response)
+    t.assert.deepStrictEqual(response.headers['content-encoding'], undefined)
+    t.assert.deepStrictEqual(response.headers.vary, 'accept-encoding')
+    t.assert.deepStrictEqual(response.statusCode, 200)
+  }
+)
+
+test(
+  'appends to an existing Vary header set via setHeaders for pre-compressed files',
+  async (t) => {
+    const pluginOptions = {
+      root: path.join(__dirname, '/static-pre-compressed'),
+      prefix: '/static-pre-compressed/',
+      preCompressed: true,
+      setHeaders: (reply) => {
+        reply.header('vary', 'Accept-Language')
+      }
+    }
+
+    const fastify = Fastify()
+
+    fastify.register(fastifyStatic, pluginOptions)
+    t.after(() => fastify.close())
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '/static-pre-compressed/all-three.html',
+      headers: {
+        'accept-encoding': 'br'
+      }
+    })
+
+    genericResponseChecks(t, response)
+    t.assert.deepStrictEqual(response.headers['content-encoding'], 'br')
+    t.assert.deepStrictEqual(response.headers.vary, 'Accept-Language, accept-encoding')
+    t.assert.deepStrictEqual(response.statusCode, 200)
+  }
+)
+
+test(
+  'does not duplicate Accept-Encoding in an existing Vary header',
+  async (t) => {
+    const pluginOptions = {
+      root: path.join(__dirname, '/static-pre-compressed'),
+      prefix: '/static-pre-compressed/',
+      preCompressed: true,
+      setHeaders: (reply) => {
+        reply.header('vary', 'Accept-Encoding')
+      }
+    }
+
+    const fastify = Fastify()
+
+    fastify.register(fastifyStatic, pluginOptions)
+    t.after(() => fastify.close())
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '/static-pre-compressed/all-three.html',
+      headers: {
+        'accept-encoding': 'br'
+      }
+    })
+
+    genericResponseChecks(t, response)
+    t.assert.deepStrictEqual(response.headers.vary, 'Accept-Encoding')
+    t.assert.deepStrictEqual(response.statusCode, 200)
+  }
+)
+
+test(
+  'appends to an existing array-valued Vary header for pre-compressed files',
+  async (t) => {
+    const pluginOptions = {
+      root: path.join(__dirname, '/static-pre-compressed'),
+      prefix: '/static-pre-compressed/',
+      preCompressed: true,
+      setHeaders: (reply) => {
+        reply.header('vary', ['Accept-Language', 'Cookie'])
+      }
+    }
+
+    const fastify = Fastify()
+
+    fastify.register(fastifyStatic, pluginOptions)
+    t.after(() => fastify.close())
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '/static-pre-compressed/all-three.html',
+      headers: {
+        'accept-encoding': 'br'
+      }
+    })
+
+    genericResponseChecks(t, response)
+    t.assert.deepStrictEqual(response.headers.vary, 'Accept-Language, Cookie, accept-encoding')
+    t.assert.deepStrictEqual(response.statusCode, 200)
+  }
+)
+
+test(
+  'does not append Accept-Encoding to an existing Vary: * header',
+  async (t) => {
+    const pluginOptions = {
+      root: path.join(__dirname, '/static-pre-compressed'),
+      prefix: '/static-pre-compressed/',
+      preCompressed: true,
+      setHeaders: (reply) => {
+        reply.header('vary', '*')
+      }
+    }
+
+    const fastify = Fastify()
+
+    fastify.register(fastifyStatic, pluginOptions)
+    t.after(() => fastify.close())
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '/static-pre-compressed/all-three.html',
+      headers: {
+        'accept-encoding': 'br'
+      }
+    })
+
+    genericResponseChecks(t, response)
+    t.assert.deepStrictEqual(response.headers.vary, '*')
+    t.assert.deepStrictEqual(response.statusCode, 200)
+  }
+)
+
+test(
+  'does not send Vary: Accept-Encoding when preCompressed is disabled',
+  async (t) => {
+    const pluginOptions = {
+      root: path.join(__dirname, '/static-pre-compressed'),
+      prefix: '/static-pre-compressed/'
+    }
+
+    const fastify = Fastify()
+
+    fastify.register(fastifyStatic, pluginOptions)
+    t.after(() => fastify.close())
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '/static-pre-compressed/uncompressed.html',
+      headers: {
+        'accept-encoding': 'gzip, deflate, br'
+      }
+    })
+
+    genericResponseChecks(t, response)
+    t.assert.deepStrictEqual(response.headers.vary, undefined)
+    t.assert.deepStrictEqual(response.statusCode, 200)
+  }
+)
+
+test(
   'will serve pre-compressed files and fallback to .gz if .br is not on disk',
   async (t) => {
     const pluginOptions = {

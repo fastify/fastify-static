@@ -472,6 +472,8 @@ Default: `false`
 
 First, try to send the brotli encoded asset (if supported by `Accept-Encoding` headers), then gzip, and finally the original `pathname`. Skip compression for smaller files that do not benefit from it.
 
+When `preCompressed` is enabled the response includes `Vary: Accept-Encoding`, because the served variant is selected from the request `Accept-Encoding` header. This applies even when the uncompressed file is sent as a fallback, so that shared caches do not return the wrong variant to clients with a different `Accept-Encoding`.
+
 > ⚠ Warning: `allowedPath` is evaluated against the requested path before pre-compressed variants are selected. A request for `/file.txt` can serve `/file.txt.gz` or `/file.txt.br` when the client accepts that encoding, even if direct requests to `.gz` or `.br` files are denied by `allowedPath`. Treat pre-compressed files as public alternate encodings of the same asset: keep restricted compressed files outside the served root, disable `preCompressed`, or deny the base path too.
 
 Assume this structure with the compressed asset as a sibling of the uncompressed counterpart:
