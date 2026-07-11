@@ -19,7 +19,8 @@ const supportedEncodings = ['br', 'gzip', 'deflate']
 send.mime.default_type = 'application/octet-stream'
 const encodingExtensionMap = {
   br: '.br',
-  gzip: '.gz'
+  gzip: '.gz',
+  deflate: '.deflate'
 }
 
 function contentDisposition (filename) {
