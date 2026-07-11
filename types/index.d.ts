@@ -108,6 +108,7 @@ declare namespace fastifyStatic {
        * Opt-in to looking for pre-compressed files
        */
       preCompressed?: boolean;
+      suppressWarning?: boolean;
 
       // Passed on to `send`
       acceptRanges?: boolean;

@@ -10,6 +10,7 @@ const Fastify = require('fastify')
 
 const fastifyStatic = require('..')
 const dirList = require('../lib/dirList')
+const { FST_STATIC_INVALID_OPTION_VALUE } = require('../lib/errors.js')
 
 const helper = {
   arrange: async function (t, options, f) {
@@ -49,46 +50,51 @@ const helper = {
 
 try {
   fs.mkdirSync(path.join(__dirname, 'static/shallow/empty'))
-} catch {}
+} catch { }
 
 test('throws when `root` is an array', t => {
-  t.plan(2)
+  t.plan(3)
 
   const err = dirList.validateOptions({ root: ['hello', 'world'], list: true })
   t.assert.ok(err instanceof TypeError)
+  t.assert.deepStrictEqual(err.code, 'FST_STATIC_MULTIROOT_LIST_CONFLICT')
   t.assert.deepStrictEqual(err.message, 'multi-root with list option is not supported')
 })
 
 test('throws when `list.format` option is invalid', t => {
-  t.plan(2)
+  t.plan(3)
 
   const err = dirList.validateOptions({ list: { format: 'hello' } })
   t.assert.ok(err instanceof TypeError)
-  t.assert.deepStrictEqual(err.message, 'The `list.format` option must be json or html')
+  t.assert.deepStrictEqual(err.code, 'FST_STATIC_INVALID_OPTION_VALUE')
+  t.assert.deepStrictEqual(err.message, '"list.format" option must be json or html')
 })
 
 test('throws when `list.names option` is not an array', t => {
-  t.plan(2)
+  t.plan(3)
 
   const err = dirList.validateOptions({ list: { names: 'hello' } })
   t.assert.ok(err instanceof TypeError)
-  t.assert.deepStrictEqual(err.message, 'The `list.names` option must be an array')
+  t.assert.deepStrictEqual(err.code, 'FST_STATIC_INVALID_OPTION_VALUE')
+  t.assert.deepStrictEqual(err.message, '"list.names" option must be an array')
 })
 
 test('throws when `list.jsonFormat` option is invalid', t => {
-  t.plan(2)
+  t.plan(3)
 
   const err = dirList.validateOptions({ list: { jsonFormat: 'hello' } })
   t.assert.ok(err instanceof TypeError)
-  t.assert.deepStrictEqual(err.message, 'The `list.jsonFormat` option must be name or extended')
+  t.assert.deepStrictEqual(err.code, 'FST_STATIC_INVALID_OPTION_VALUE')
+  t.assert.deepStrictEqual(err.message, '"list.jsonFormat" option must be names or extended')
 })
 
 test('throws when `list.format` is html and `list render` is not a function', t => {
-  t.plan(2)
+  t.plan(3)
 
   const err = dirList.validateOptions({ list: { format: 'html', render: 'hello' } })
   t.assert.ok(err instanceof TypeError)
-  t.assert.deepStrictEqual(err.message, 'The `list.render` option must be a function and is required with html format')
+  t.assert.deepStrictEqual(err.code, 'FST_STATIC_INVALID_OPTION_VALUE')
+  t.assert.deepStrictEqual(err.message, '"list.render" option must be a function and is required with html format')
 })
 
 test('dir list path stays within the configured root', t => {
@@ -113,7 +119,7 @@ test('dir list wrong options', async t => {
           format: 'no-json,no-html'
         }
       },
-      error: new TypeError('The `list.format` option must be json or html')
+      error: new FST_STATIC_INVALID_OPTION_VALUE('list.format', 'must be json or html')
     },
     {
       options: {
@@ -123,7 +129,7 @@ test('dir list wrong options', async t => {
           // no render function
         }
       },
-      error: new TypeError('The `list.render` option must be a function and is required with html format')
+      error: new FST_STATIC_INVALID_OPTION_VALUE('list.render', 'must be a function and is required with html format')
     },
     {
       options: {
@@ -132,14 +138,14 @@ test('dir list wrong options', async t => {
           names: 'not-an-array'
         }
       },
-      error: new TypeError('The `list.names` option must be an array')
+      error: new FST_STATIC_INVALID_OPTION_VALUE('list.names', 'must be an array')
     }
   ]
 
   for (const case_ of cases) {
     const fastify = Fastify()
     fastify.register(fastifyStatic, case_.options)
-    await t.assert.rejects(fastify.listen({ port: 0 }), new TypeError(case_.error.message))
+    await t.assert.rejects(fastify.listen({ port: 0 }), case_.error)
     fastify.server.unref()
   }
 })
@@ -559,7 +565,7 @@ test('json format with url parameter format and without render option', async t 
     const response2 = await fetch(url + route + '?format=html')
     t.assert.ok(!response2.ok)
     t.assert.deepStrictEqual(response2.status, 500)
-    t.assert.deepStrictEqual((await response2.json()).message, 'The `list.render` option must be a function and is required with the URL parameter `format=html`')
+    t.assert.deepStrictEqual((await response2.json()).message, '"list.render" option must be a function and is required with the URL parameter `format=html`')
 
     const response3 = await fetch(url + route + '?format=json')
     t.assert.ok(response3.ok)

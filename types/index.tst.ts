@@ -68,7 +68,8 @@ const options: FastifyStaticOptions = {
     host: /^.*\.example\.com$/,
     version: '1.0.2'
   },
-  logLevel: 'warn'
+  logLevel: 'warn',
+  suppressWarning: true
 }
 
 expect<FastifyStaticOptions>()
