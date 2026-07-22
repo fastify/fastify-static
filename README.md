@@ -250,7 +250,7 @@ when using the `wildcard: false` option.
 
 Default: `(pathName, root, request) => true`
 
-This function filters served files. Using the request object, complex path authentication is possible.
+This function filters served files. `pathName` is normalized before the callback runs, so equivalent paths such as `//file`, `/./file`, and `/path//file` are evaluated consistently. Using the request object, complex path authentication is possible.
 Returning `true` serves the file; returning `false` calls Fastify's 404 handler.
 
 When using `preCompressed: true`, `allowedPath` receives the requested path before `.br` or `.gz` variants are selected; see the `preCompressed` note below before using extension-based access rules.
