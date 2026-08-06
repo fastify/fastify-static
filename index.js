@@ -210,6 +210,9 @@ async function fastifyStatic (fastify, opts) {
    */
   async function sendDirectoryList (reply, pathname) {
     const dir = dirList.path(opts.root, pathname)
+    // Defense in depth: non-canonical / ".." paths are rejected before send,
+    // so this null branch is no longer exercised via HTTP. Keep it anyway.
+    /* c8 ignore next 3 */
     if (!dir) {
       return false
     }
@@ -261,6 +264,14 @@ async function fastifyStatic (fastify, opts) {
     // @fastify/send rejects leading ".." segments, but it normalizes
     // non-leading ones away before its guard runs.
     if (dotDotSegmentRegex.test(pathname) && !leadingDotDotSegmentRegex.test(pathname)) {
+      return reply.send(forbiddenPathError())
+    }
+
+    // Fail closed on "." / empty segments ("//") and any other non-canonical
+    // form. find-my-way matches the raw URL without collapsing these, so a
+    // more-specific route guard can be skipped while @fastify/send would
+    // still normalize the path and serve the file.
+    if (isNonCanonicalPathname(pathname)) {
       return reply.send(forbiddenPathError())
     }
 
@@ -589,6 +600,31 @@ function normalizeRequestPathname (pathname) {
 
 /**
  * @param {string} pathname
+ * @returns {boolean}
+ */
+function isNonCanonicalPathname (pathname) {
+  // Empty path is used internally for the root index when wildcard:false
+  // registers a no-trailing-slash redirect route (file path becomes '').
+  if (pathname.length === 0) {
+    return false
+  }
+
+  // posix.normalize ignores "\", but @fastify/send treats it as a separator on
+  // Windows, so a "\" path could skip the guard and still be served. Reject it.
+  if (pathname.includes('\\')) {
+    return true
+  }
+
+  // Fail closed on every non-canonical form, including trailing "/." and
+  // "/%2e". find-my-way treats "/file" and "/file/." as different routes, so
+  // allowing trailing "/." would let an exact-path guard be skipped while
+  // @fastify/send still serves the file. Directory redirects should use the
+  // real directory URL (no trailing "/.") instead.
+  return path.posix.normalize(pathname) !== pathname
+}
+
+/**
+ * @param {string} pathname
  * @param {*} root
  * @param {import("./types").FastifyStaticOptions['index']} [indexFiles]
  * @return {string|boolean}
@@ -783,6 +819,14 @@ function getPathnameForSend (url, matchRoutePrefix) {
       return null
     }
 
+    // Reject "." segments, duplicate slashes, and other non-canonical forms
+    // on both the full URL path and the path suffix passed to @fastify/send.
+    // Otherwise find-my-way can miss a guarded `/deep/*` route for inputs
+    // like `//deep/x` or `/./deep/x` while send still serves the file.
+    if (isNonCanonicalPathname(decodedPathname) || isNonCanonicalPathname(decodedUrlPathname)) {
+      return null
+    }
+
     return decodedPathname
   } catch {
 
@@ -804,7 +848,11 @@ function getRedirectUrl (url) {
   try {
     const parsed = new URL(url, 'http://localhost.com/')
     const parsedPathname = parsed.pathname
-    return parsedPathname + (parsedPathname[parsedPathname.length - 1] !== '/' ? '/' : '') + (parsed.search || '')
+    // The already-trailing-slash branch was previously hit via "/dir/." forms.
+    // Those are now rejected as non-canonical before redirect runs.
+    /* c8 ignore next */
+    const trailingSlash = parsedPathname.endsWith('/') ? '' : '/'
+    return parsedPathname + trailingSlash + (parsed.search || '')
   } /* c8 ignore start */ catch {
     // the try-catch here is actually unreachable, but we keep it for safety and prevent DoS attack
     throw new FST_STATIC_INVALID_REDIRECT_URL(url)
