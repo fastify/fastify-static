@@ -271,7 +271,11 @@ async function fastifyStatic (fastify, opts) {
     // form. find-my-way matches the raw URL without collapsing these, so a
     // more-specific route guard can be skipped while @fastify/send would
     // still normalize the path and serve the file.
-    if (isNonCanonicalPathname(pathname)) {
+    // Absolute Windows filesystem paths are valid inputs for sendFile() and
+    // contain backslashes by design. URL pathnames always start with `/`, so
+    // keep rejecting those while allowing drive/UNC paths used by sendFile().
+    const isWindowsFilesystemPath = path.win32.isAbsolute(pathname) && !pathname.startsWith('/')
+    if (!isWindowsFilesystemPath && isNonCanonicalPathname(pathname)) {
       return reply.send(forbiddenPathError())
     }
 
