@@ -238,6 +238,14 @@ are applied for getting the file list.
 
 This option cannot be `false` if `redirect` is `true` and `ignoreTrailingSlash` is `true`.
 
+#### `globPattern`
+
+Default: `'**/**'`
+
+Custom glob pattern passed to [`glob`](https://www.npmjs.com/package/glob)
+when `wildcard: false` is used. This allows configuring exact matching
+patterns (such as `'**/*.{css,js}'`) when statically registering routes.
+
 #### `globIgnore`
 
 Default: `undefined`
