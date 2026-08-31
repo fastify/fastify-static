@@ -120,7 +120,7 @@ async function fastifyStatic (fastify, opts) {
         // Set content disposition header
         this.header('content-disposition', contentDisposition(fileName))
 
-        pumpSendToReply(this.request, this, filePath, root, 0, opts)
+        pumpSendToReply(this.request, this, filePath, root || sendOptions.root, 0, opts)
 
         return this
       }
