@@ -1,0 +1,8 @@
+.gitattributes
+.gitignore
+.github
+.npmrc
+eslint.config.js
+example/
+test/
+coverage/
