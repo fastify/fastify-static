@@ -4675,6 +4675,26 @@ test('fails closed when exact filesystem spelling cannot be verified', async (t)
   t.assert.deepStrictEqual(allowedPathCalls, 0)
 })
 
+test('allowedPath validates a POSIX-style absolute sendFile path without a configured root on Windows', {
+  skip: process.platform !== 'win32'
+}, async (t) => {
+  let allowedPathCalls = 0
+  const fastify = Fastify()
+  t.after(() => fastify.close())
+  fastify.register(fastifyStatic, {
+    serve: false,
+    allowedPath () {
+      allowedPathCalls++
+      return true
+    }
+  })
+  fastify.get('/send-file', (_request, reply) => reply.sendFile('/not-found.css'))
+
+  const response = await fastify.inject('/send-file')
+  t.assert.deepStrictEqual(response.statusCode, 404)
+  t.assert.deepStrictEqual(allowedPathCalls, 1)
+})
+
 test('allowedPath preserves an absolute sendFile path without a configured root', async (t) => {
   let allowedPathCalls = 0
   const fastify = Fastify()
