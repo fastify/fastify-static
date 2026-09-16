@@ -4482,11 +4482,18 @@ test('rejects emulated filesystem case aliases', async (t) => {
   })
 
   await t.test('pre-compressed alias and encoding fallback', async (t) => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'fastify-static-case-fold-compressed-'))
+    // Keep the uncompressed siblings absent so native case-insensitive filesystems
+    // exercise the same pre-compressed fallback path as the case-folding stub.
+    fs.writeFileSync(path.join(root, 'all-three.html.br'), 'brotli')
+    fs.writeFileSync(path.join(root, 'gzip-only.html.gz'), 'gzip')
+    t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+
     let allowedPathCalls = 0
     const fastify = Fastify()
     t.after(() => fastify.close())
     fastify.register(fastifyStaticWithCaseFold, {
-      root: path.join(__dirname, 'static-pre-compressed'),
+      root,
       preCompressed: true,
       allowedPath () {
         allowedPathCalls++
