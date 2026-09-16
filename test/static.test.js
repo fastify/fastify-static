@@ -4,6 +4,7 @@
 
 const path = require('node:path')
 const fs = require('node:fs')
+const os = require('node:os')
 const url = require('node:url')
 const http = require('node:http')
 const { test } = require('node:test')
@@ -4272,6 +4273,468 @@ test('does not serve static files with non-canonical path segments that bypass r
     )
     t.assert.match(bypassResponse.body, /Forbidden/u)
   }
+})
+
+test('rejects case-folded paths on a native case-insensitive filesystem', async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'fastify-static-case-fold-'))
+  fs.mkdirSync(path.join(root, 'deep'), { recursive: true })
+  fs.mkdirSync(path.join(root, 'private'), { recursive: true })
+  fs.writeFileSync(path.join(root, 'deep', 'secret.txt'), 'route secret')
+  fs.writeFileSync(path.join(root, 'private', 'secret.txt'), 'allowedPath secret')
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+
+  if (!fs.existsSync(path.join(root, 'DEEP'))) {
+    t.skip('requires a native case-insensitive filesystem')
+    return
+  }
+
+  const allowedPathCalls = []
+  const fastify = Fastify()
+  t.after(() => fastify.close())
+
+  fastify.all('/deep/*', async (_request, reply) => {
+    reply.code(401).send('Unauthorized')
+  })
+  fastify.register(fastifyStatic, {
+    root,
+    allowedPath (pathname) {
+      allowedPathCalls.push(pathname)
+      return !pathname.startsWith('/private/')
+    }
+  })
+
+  const guarded = await fastify.inject('/deep/secret.txt')
+  t.assert.deepStrictEqual(guarded.statusCode, 401)
+
+  const routeAlias = await fastify.inject('/DEEP/secret.txt')
+  t.assert.deepStrictEqual(routeAlias.statusCode, 403)
+
+  const denied = await fastify.inject('/private/secret.txt')
+  t.assert.deepStrictEqual(denied.statusCode, 404)
+
+  const allowedPathAlias = await fastify.inject('/PRIVATE/secret.txt')
+  t.assert.deepStrictEqual(allowedPathAlias.statusCode, 403)
+  t.assert.deepStrictEqual(allowedPathCalls, ['/private/secret.txt'])
+})
+
+test('serves distinct exact-case paths on a case-sensitive filesystem', async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'fastify-static-case-distinct-'))
+  fs.mkdirSync(path.join(root, 'deep'), { recursive: true })
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+
+  if (fs.existsSync(path.join(root, 'DEEP'))) {
+    t.skip('requires a case-sensitive filesystem')
+    return
+  }
+
+  fs.mkdirSync(path.join(root, 'DEEP'))
+  fs.writeFileSync(path.join(root, 'deep', 'secret.txt'), 'lowercase')
+  fs.writeFileSync(path.join(root, 'DEEP', 'secret.txt'), 'uppercase')
+
+  const fastify = Fastify()
+  t.after(() => fastify.close())
+  fastify.register(fastifyStatic, { root })
+
+  const lowercase = await fastify.inject('/deep/secret.txt')
+  t.assert.deepStrictEqual(lowercase.statusCode, 200)
+  t.assert.deepStrictEqual(lowercase.body, 'lowercase')
+
+  const uppercase = await fastify.inject('/DEEP/secret.txt')
+  t.assert.deepStrictEqual(uppercase.statusCode, 200)
+  t.assert.deepStrictEqual(uppercase.body, 'uppercase')
+})
+
+test('rejects emulated filesystem case aliases', async (t) => {
+  const realPromises = fs.promises
+  const segmentAliases = new Map([
+    ['DEEP', 'deep'],
+    ['INDEX.CSS', 'index.css'],
+    ['FOO.html', 'foo.html'],
+    ['ALL-THREE.html.br', 'all-three.html.br'],
+    ['GZIP-ONLY.html.gz', 'gzip-only.html.gz']
+  ])
+  const emulateCaseFold = (candidate) => {
+    const parsed = path.parse(candidate)
+    const segments = candidate.slice(parsed.root.length).split(path.sep)
+    return path.join(parsed.root, ...segments.map(segment => segmentAliases.get(segment) ?? segment))
+  }
+
+  // This stat stub emulates only the case-folding lookup of a
+  // case-insensitive filesystem. It is not a native platform reproduction.
+  const fastifyStaticWithCaseFold = proxyquire('../', {
+    'node:fs/promises': {
+      stat: candidate => realPromises.stat(emulateCaseFold(candidate)),
+      readdir: realPromises.readdir
+    }
+  })
+
+  await t.test('intermediate and final aliases', async (t) => {
+    let allowedPathCalls = 0
+    const fastify = Fastify()
+    t.after(() => fastify.close())
+    fastify.all('/deep/*', async (_request, reply) => reply.code(401).send('Unauthorized'))
+    fastify.register(fastifyStaticWithCaseFold, {
+      root: path.join(__dirname, 'static'),
+      allowedPath () {
+        allowedPathCalls++
+        return true
+      }
+    })
+
+    const intermediate = await fastify.inject('/DEEP/path/for/test/purpose/foo.html')
+    t.assert.deepStrictEqual(intermediate.statusCode, 403)
+
+    const final = await fastify.inject('/INDEX.CSS')
+    t.assert.deepStrictEqual(final.statusCode, 403)
+    t.assert.deepStrictEqual(allowedPathCalls, 0)
+  })
+
+  await t.test('relative sendFile alias is rejected before its allowedPath call', async (t) => {
+    let allowedPathCalls = 0
+    const fastify = Fastify()
+    t.after(() => fastify.close())
+    fastify.register(fastifyStaticWithCaseFold, {
+      root: path.join(__dirname, 'static'),
+      serve: false,
+      allowedPath () {
+        allowedPathCalls++
+        return true
+      }
+    })
+    fastify.get('/send-file', (_request, reply) => reply.sendFile('INDEX.CSS'))
+
+    const response = await fastify.inject('/send-file')
+    t.assert.deepStrictEqual(response.statusCode, 403)
+    t.assert.deepStrictEqual(allowedPathCalls, 0)
+  })
+
+  await t.test('relative download alias is rejected before its allowedPath call', async (t) => {
+    const root = path.join(__dirname, 'static')
+    let allowedPathCalls = 0
+    const fastify = Fastify()
+    t.after(() => fastify.close())
+    fastify.register(fastifyStaticWithCaseFold, {
+      root,
+      serve: false,
+      allowedPath () {
+        allowedPathCalls++
+        return true
+      }
+    })
+    fastify.get('/download', (_request, reply) => reply.download('INDEX.CSS', { root }))
+
+    const response = await fastify.inject('/download')
+    t.assert.deepStrictEqual(response.statusCode, 403)
+    t.assert.deepStrictEqual(allowedPathCalls, 0)
+  })
+
+  await t.test('extension fallback alias', async (t) => {
+    const fastify = Fastify()
+    t.after(() => fastify.close())
+    fastify.register(fastifyStaticWithCaseFold, {
+      root: path.join(__dirname, 'static'),
+      extensions: ['html']
+    })
+
+    const response = await fastify.inject('/FOO')
+    t.assert.deepStrictEqual(response.statusCode, 403)
+
+    const missing = await fastify.inject('/NOT-THERE')
+    t.assert.deepStrictEqual(missing.statusCode, 404)
+  })
+
+  await t.test('string extension fallback remains supported', async (t) => {
+    const fastify = Fastify()
+    t.after(() => fastify.close())
+    fastify.register(fastifyStaticWithCaseFold, {
+      root: path.join(__dirname, 'static'),
+      extensions: 'html'
+    })
+
+    const response = await fastify.inject('/foo')
+    t.assert.deepStrictEqual(response.statusCode, 200)
+  })
+
+  await t.test('exact base skips spelling validation for internally selected compressed siblings', async (t) => {
+    const realPromises = fs.promises
+    const fastifyStaticWithCompressedSiblingAlias = proxyquire('../', {
+      'node:fs/promises': {
+        stat: realPromises.stat,
+        async readdir (parent) {
+          const entries = await realPromises.readdir(parent)
+          return entries.map(entry => entry === 'all-three.html.br' ? 'ALL-THREE.html.br' : entry)
+        }
+      }
+    })
+    const fastify = Fastify()
+    t.after(() => fastify.close())
+    fastify.register(fastifyStaticWithCompressedSiblingAlias, {
+      root: path.join(__dirname, 'static-pre-compressed'),
+      preCompressed: true
+    })
+
+    const response = await fastify.inject({
+      url: '/all-three.html',
+      headers: { 'accept-encoding': 'br' }
+    })
+    t.assert.deepStrictEqual(response.statusCode, 200)
+    t.assert.deepStrictEqual(response.headers['content-encoding'], 'br')
+  })
+
+  await t.test('pre-compressed alias and encoding fallback', async (t) => {
+    let allowedPathCalls = 0
+    const fastify = Fastify()
+    t.after(() => fastify.close())
+    fastify.register(fastifyStaticWithCaseFold, {
+      root: path.join(__dirname, 'static-pre-compressed'),
+      preCompressed: true,
+      allowedPath () {
+        allowedPathCalls++
+        return true
+      }
+    })
+
+    const response = await fastify.inject({
+      url: '/ALL-THREE.html',
+      headers: { 'accept-encoding': 'br' }
+    })
+    t.assert.deepStrictEqual(response.statusCode, 403)
+    t.assert.deepStrictEqual(allowedPathCalls, 0)
+
+    const fallback = await fastify.inject({
+      url: '/GZIP-ONLY.html',
+      headers: { 'accept-encoding': 'br, gzip' }
+    })
+    t.assert.deepStrictEqual(fallback.statusCode, 403)
+    t.assert.deepStrictEqual(allowedPathCalls, 1)
+  })
+
+  await t.test('multi-root fallback validates the root that resolves the alias', async (t) => {
+    let allowedPathCalls = 0
+    const fastify = Fastify()
+    t.after(() => fastify.close())
+    fastify.register(fastifyStaticWithCaseFold, {
+      root: [path.join(__dirname, 'static2'), path.join(__dirname, 'static')],
+      allowedPath () {
+        allowedPathCalls++
+        return true
+      }
+    })
+
+    const response = await fastify.inject('/DEEP/path/for/test/purpose/foo.html')
+    t.assert.deepStrictEqual(response.statusCode, 403)
+    t.assert.deepStrictEqual(allowedPathCalls, 1)
+  })
+})
+
+test('extension fallback skips exact-spelled directories', async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'fastify-static-extensions-'))
+  fs.mkdirSync(path.join(root, 'asset.one'))
+  fs.writeFileSync(path.join(root, 'asset.two'), 'fallback file')
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+
+  const fastify = Fastify()
+  t.after(() => fastify.close())
+  fastify.register(fastifyStatic, {
+    root,
+    extensions: ['one', 'two']
+  })
+
+  const response = await fastify.inject('/asset')
+  t.assert.deepStrictEqual(response.statusCode, 200)
+  t.assert.deepStrictEqual(response.body, 'fallback file')
+})
+
+test('extension spelling verification handles candidate status races', async (t) => {
+  const root = path.join(__dirname, 'static')
+
+  function pluginWithExtensionStatError (code) {
+    return proxyquire('../', {
+      'node:fs/promises': {
+        async stat (candidate) {
+          if (candidate === path.join(root, 'foo.html')) {
+            const error = new Error('extension status failed')
+            error.code = code
+            throw error
+          }
+          return fs.promises.stat(candidate)
+        },
+        readdir: fs.promises.readdir
+      }
+    })
+  }
+
+  await t.test('a disappeared candidate is left for send to resolve', async (t) => {
+    const fastify = Fastify()
+    t.after(() => fastify.close())
+    fastify.register(pluginWithExtensionStatError('ENOENT'), {
+      root,
+      extensions: ['html']
+    })
+
+    const response = await fastify.inject('/foo')
+    t.assert.deepStrictEqual(response.statusCode, 200)
+  })
+
+  await t.test('an unverifiable candidate fails closed', async (t) => {
+    const fastify = Fastify()
+    t.after(() => fastify.close())
+    fastify.register(pluginWithExtensionStatError('EACCES'), {
+      root,
+      extensions: ['html']
+    })
+
+    const response = await fastify.inject('/foo')
+    t.assert.deepStrictEqual(response.statusCode, 403)
+  })
+})
+
+test('a missing static root remains not found during spelling validation', async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'fastify-static-missing-root-'))
+  fs.rmSync(root, { recursive: true, force: true })
+
+  const fastify = Fastify()
+  t.after(() => fastify.close())
+  fastify.register(fastifyStatic, {
+    root,
+    suppressWarning: true
+  })
+
+  const response = await fastify.inject('/index.css')
+  t.assert.deepStrictEqual(response.statusCode, 404)
+})
+
+test('fails closed when candidate filesystem status cannot be read', async (t) => {
+  const root = path.join(__dirname, 'static')
+  let allowedPathCalls = 0
+  const fastifyStaticWithStatFailure = proxyquire('../', {
+    'node:fs/promises': {
+      async stat () {
+        const error = new Error('file status failed')
+        error.code = 'EACCES'
+        throw error
+      },
+      async readdir (parent) {
+        const entries = await fs.promises.readdir(parent)
+        return entries.filter(entry => entry !== 'index.css')
+      }
+    }
+  })
+
+  const fastify = Fastify()
+  t.after(() => fastify.close())
+  fastify.register(fastifyStaticWithStatFailure, {
+    root,
+    allowedPath () {
+      allowedPathCalls++
+      return true
+    }
+  })
+
+  const response = await fastify.inject('/index.css')
+  t.assert.deepStrictEqual(response.statusCode, 403)
+  t.assert.deepStrictEqual(allowedPathCalls, 0)
+})
+
+test('fails closed when exact filesystem spelling cannot be verified', async (t) => {
+  const root = path.join(__dirname, 'static')
+  let allowedPathCalls = 0
+  const fastifyStaticWithReadFailure = proxyquire('../', {
+    'node:fs/promises': {
+      async readdir (parent) {
+        if (parent === root) {
+          const error = new Error('directory read failed')
+          error.code = 'EACCES'
+          throw error
+        }
+        return fs.promises.readdir(parent)
+      },
+      stat: fs.promises.stat
+    }
+  })
+
+  const fastify = Fastify()
+  t.after(() => fastify.close())
+  fastify.register(fastifyStaticWithReadFailure, {
+    root,
+    allowedPath () {
+      allowedPathCalls++
+      return true
+    }
+  })
+
+  const response = await fastify.inject('/index.css')
+  t.assert.deepStrictEqual(response.statusCode, 403)
+  t.assert.deepStrictEqual(allowedPathCalls, 0)
+})
+
+test('allowedPath preserves an absolute sendFile path without a configured root', async (t) => {
+  let allowedPathCalls = 0
+  const fastify = Fastify()
+  t.after(() => fastify.close())
+  fastify.register(fastifyStatic, {
+    serve: false,
+    allowedPath () {
+      allowedPathCalls++
+      return true
+    }
+  })
+  fastify.get('/send-file', (_request, reply) => {
+    reply.sendFile(path.join(__dirname, 'static', 'index.css'))
+  })
+
+  const response = await fastify.inject('/send-file')
+  t.assert.deepStrictEqual(response.statusCode, 200)
+  t.assert.deepStrictEqual(allowedPathCalls, 1)
+})
+
+test('skips spelling validation outside route-guard and allowedPath boundaries', async (t) => {
+  const fastifyStaticWithUnexpectedValidation = proxyquire('../', {
+    'node:fs/promises': {
+      async readdir () {
+        throw new Error('path spelling validation should not run')
+      },
+      async stat () {
+        throw new Error('path spelling validation should not run')
+      }
+    }
+  })
+
+  await t.test('wildcard false fixed routes', async (t) => {
+    const fastify = Fastify()
+    t.after(() => fastify.close())
+    fastify.register(fastifyStaticWithUnexpectedValidation, {
+      root: path.join(__dirname, 'static'),
+      wildcard: false
+    })
+
+    const response = await fastify.inject('/index.css')
+    t.assert.deepStrictEqual(response.statusCode, 200)
+  })
+
+  await t.test('sendFile without allowedPath', async (t) => {
+    const fastify = Fastify()
+    t.after(() => fastify.close())
+    fastify.register(fastifyStaticWithUnexpectedValidation, {
+      root: path.join(__dirname, 'static'),
+      serve: false
+    })
+    fastify.get('/send-file', (_request, reply) => reply.sendFile('index.css'))
+
+    const response = await fastify.inject('/send-file')
+    t.assert.deepStrictEqual(response.statusCode, 200)
+  })
+})
+
+test('serves an exact-spelled symbolic-link path with wildcard routing', async (t) => {
+  const fastify = Fastify()
+  t.after(() => fastify.close())
+  fastify.register(fastifyStatic, {
+    root: path.join(__dirname, 'static-symbolic-link')
+  })
+
+  const response = await fastify.inject('/dir/symlink/subdir/subdir/index.html')
+  t.assert.deepStrictEqual(response.statusCode, 200)
 })
 
 test('does not serve static files with backslash separators that bypass route guards on Windows', async (t) => {
