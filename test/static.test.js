@@ -1685,7 +1685,7 @@ test('with fastify-compress', { timeout: 60000 }, async t => {
   await fastify.listen({ port: 0 })
 
   await t.test('deflate', async function (t) {
-    t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+    t.plan(4 + GENERIC_RESPONSE_CHECK_COUNT)
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/index.html', {
       headers: {
@@ -1695,16 +1695,18 @@ test('with fastify-compress', { timeout: 60000 }, async t => {
     t.assert.ok(response.ok)
     t.assert.deepStrictEqual(response.status, 200)
     t.assert.deepStrictEqual(response.headers.get('content-encoding'), 'deflate')
+    t.assert.deepStrictEqual(await response.text(), indexContent)
     genericResponseChecks(t, response)
   })
 
   await t.test('gzip', async function (t) {
-    t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+    t.plan(4 + GENERIC_RESPONSE_CHECK_COUNT)
 
     const response = await fetch('http://localhost:' + fastify.server.address().port + '/index.html')
     t.assert.ok(response.ok)
     t.assert.deepStrictEqual(response.status, 200)
     t.assert.deepStrictEqual(response.headers.get('content-encoding'), 'gzip')
+    t.assert.deepStrictEqual(await response.text(), indexContent)
     genericResponseChecks(t, response)
   })
 })
