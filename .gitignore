@@ -150,3 +150,6 @@ yarn.lock
 
 #tap files
 .tap/
+
+# AI
+.pi
