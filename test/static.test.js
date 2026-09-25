@@ -4364,6 +4364,54 @@ test('serves distinct exact-case paths on a case-sensitive filesystem', async (t
   t.assert.deepStrictEqual(readdirCalls, 0)
 })
 
+test('avoids directory scans on an emulated case-sensitive filesystem', async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'fastify-static-case-sensitive-'))
+  fs.mkdirSync(path.join(root, 'deep'))
+  fs.writeFileSync(path.join(root, 'deep', 'secret.txt'), 'secret')
+  fs.writeFileSync(path.join(root, '123'), 'case invariant')
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+
+  async function caseSensitiveStat (candidate, options) {
+    const relative = path.relative(root, candidate)
+    if (relative !== '') {
+      let parent = root
+      for (const segment of relative.split(path.sep)) {
+        if (!fs.readdirSync(parent).includes(segment)) {
+          const error = new Error('path does not use exact filesystem spelling')
+          error.code = 'ENOENT'
+          throw error
+        }
+        parent = path.join(parent, segment)
+      }
+    }
+    return fs.promises.stat(candidate, options)
+  }
+
+  let readdirCalls = 0
+  const fastifyStaticWithoutDirectoryScans = proxyquire('../', {
+    'node:fs/promises': {
+      async readdir (directory) {
+        readdirCalls++
+        return fs.promises.readdir(directory)
+      },
+      stat: caseSensitiveStat
+    }
+  })
+  const fastify = Fastify()
+  t.after(() => fastify.close())
+  fastify.register(fastifyStaticWithoutDirectoryScans, { root })
+
+  const exact = await fastify.inject('/deep/secret.txt')
+  t.assert.deepStrictEqual(exact.statusCode, 200)
+
+  const caseInvariant = await fastify.inject('/123')
+  t.assert.deepStrictEqual(caseInvariant.statusCode, 200)
+
+  const missing = await fastify.inject('/deep/missing.txt')
+  t.assert.deepStrictEqual(missing.statusCode, 404)
+  t.assert.deepStrictEqual(readdirCalls, 0)
+})
+
 test('caches case-insensitive directory entries and invalidates them after changes', async (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'fastify-static-case-cache-'))
   fs.writeFileSync(path.join(root, 'foo.txt'), 'foo')
