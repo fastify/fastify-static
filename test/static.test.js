@@ -1182,7 +1182,7 @@ test('allowedPath option - request', async (t) => {
 })
 
 test('download', async (t) => {
-  t.plan(6)
+  t.plan(7)
 
   const pluginOptions = {
     root: path.join(__dirname, '/static'),
@@ -1195,6 +1195,10 @@ test('download', async (t) => {
 
   fastify.get('/foo/bar', function (_req, reply) {
     reply.download('/index.html')
+  })
+
+  fastify.get('/foo/bar/relative', function (_req, reply) {
+    reply.download('index.html')
   })
 
   fastify.get('/foo/bar/change', function (_req, reply) {
@@ -1251,6 +1255,17 @@ test('download', async (t) => {
     t.assert.ok(response.ok)
     t.assert.deepStrictEqual(response.headers.get('content-disposition'), 'attachment; filename=index.html')
     t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.text(), indexContent)
+    genericResponseChecks(t, response)
+  })
+
+  await t.test('reply.download() with a relative file path uses the registered root', async t => {
+    t.plan(4 + GENERIC_RESPONSE_CHECK_COUNT)
+
+    const response = await fetch('http://localhost:' + fastify.server.address().port + '/foo/bar/relative')
+    t.assert.ok(response.ok)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(response.headers.get('content-disposition'), 'attachment; filename=index.html')
     t.assert.deepStrictEqual(await response.text(), indexContent)
     genericResponseChecks(t, response)
   })

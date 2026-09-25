@@ -127,7 +127,7 @@ async function fastifyStatic (fastify, opts) {
           this.request,
           this,
           filePath,
-          root,
+          root || sendOptions.root,
           0,
           opts,
           undefined,
