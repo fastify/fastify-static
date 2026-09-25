@@ -4332,10 +4332,21 @@ test('serves distinct exact-case paths on a case-sensitive filesystem', async (t
   fs.mkdirSync(path.join(root, 'DEEP'))
   fs.writeFileSync(path.join(root, 'deep', 'secret.txt'), 'lowercase')
   fs.writeFileSync(path.join(root, 'DEEP', 'secret.txt'), 'uppercase')
+  fs.writeFileSync(path.join(root, '123'), 'case invariant')
 
+  let readdirCalls = 0
+  const fastifyStaticWithoutDirectoryScans = proxyquire('../', {
+    'node:fs/promises': {
+      async readdir (directory) {
+        readdirCalls++
+        return fs.promises.readdir(directory)
+      },
+      stat: fs.promises.stat
+    }
+  })
   const fastify = Fastify()
   t.after(() => fastify.close())
-  fastify.register(fastifyStatic, { root })
+  fastify.register(fastifyStaticWithoutDirectoryScans, { root })
 
   const lowercase = await fastify.inject('/deep/secret.txt')
   t.assert.deepStrictEqual(lowercase.statusCode, 200)
@@ -4344,21 +4355,93 @@ test('serves distinct exact-case paths on a case-sensitive filesystem', async (t
   const uppercase = await fastify.inject('/DEEP/secret.txt')
   t.assert.deepStrictEqual(uppercase.statusCode, 200)
   t.assert.deepStrictEqual(uppercase.body, 'uppercase')
+
+  const caseInvariant = await fastify.inject('/123')
+  t.assert.deepStrictEqual(caseInvariant.statusCode, 200)
+
+  const missing = await fastify.inject('/deep/missing.txt')
+  t.assert.deepStrictEqual(missing.statusCode, 404)
+  t.assert.deepStrictEqual(readdirCalls, 0)
+})
+
+test('caches case-insensitive directory entries and invalidates them after changes', async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'fastify-static-case-cache-'))
+  fs.writeFileSync(path.join(root, 'foo.txt'), 'foo')
+  fs.writeFileSync(path.join(root, 'bar.txt'), 'bar')
+  fs.writeFileSync(path.join(root, 'ä'), 'unicode')
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+
+  function emulateCaseFold (candidate) {
+    if (candidate === root || fs.existsSync(candidate)) {
+      return candidate
+    }
+
+    const parent = path.dirname(candidate)
+    if (parent !== root) {
+      return candidate
+    }
+
+    const name = path.basename(candidate)
+    const actualName = fs.readdirSync(parent).find(entry => entry.toLowerCase() === name.toLowerCase())
+    return actualName === undefined ? candidate : path.join(parent, actualName)
+  }
+
+  let readdirCalls = 0
+  const fastifyStaticWithCaseFold = proxyquire('../', {
+    'node:fs/promises': {
+      async readdir (directory) {
+        readdirCalls++
+        await new Promise(resolve => setImmediate(resolve))
+        return fs.promises.readdir(directory)
+      },
+      stat (candidate, options) {
+        return fs.promises.stat(emulateCaseFold(candidate), options)
+      }
+    }
+  })
+
+  const fastify = Fastify()
+  t.after(() => fastify.close())
+  fastify.register(fastifyStaticWithCaseFold, { root })
+
+  const [foo, bar] = await Promise.all([
+    fastify.inject('/foo.txt'),
+    fastify.inject('/bar.txt')
+  ])
+  t.assert.deepStrictEqual(foo.statusCode, 200)
+  t.assert.deepStrictEqual(bar.statusCode, 200)
+  t.assert.deepStrictEqual(readdirCalls, 1)
+
+  const unicodeAlias = await fastify.inject(encodeURI('/Ä'))
+  t.assert.deepStrictEqual(unicodeAlias.statusCode, 403)
+  t.assert.deepStrictEqual(readdirCalls, 1)
+
+  fs.renameSync(path.join(root, 'foo.txt'), path.join(root, 'baz.txt'))
+  const future = new Date(Date.now() + 10_000)
+  fs.utimesSync(root, future, future)
+
+  const baz = await fastify.inject('/baz.txt')
+  t.assert.deepStrictEqual(baz.statusCode, 200)
+  t.assert.deepStrictEqual(readdirCalls, 2)
+
+  const alias = await fastify.inject('/BAZ.TXT')
+  t.assert.deepStrictEqual(alias.statusCode, 403)
+  t.assert.deepStrictEqual(readdirCalls, 2)
 })
 
 test('rejects emulated filesystem case aliases', async (t) => {
   const realPromises = fs.promises
   const segmentAliases = new Map([
-    ['DEEP', 'deep'],
-    ['INDEX.CSS', 'index.css'],
-    ['FOO.html', 'foo.html'],
-    ['ALL-THREE.html.br', 'all-three.html.br'],
-    ['GZIP-ONLY.html.gz', 'gzip-only.html.gz']
+    ['deep', 'deep'],
+    ['index.css', 'index.css'],
+    ['foo.html', 'foo.html'],
+    ['all-three.html.br', 'all-three.html.br'],
+    ['gzip-only.html.gz', 'gzip-only.html.gz']
   ])
   const emulateCaseFold = (candidate) => {
     const parsed = path.parse(candidate)
     const segments = candidate.slice(parsed.root.length).split(path.sep)
-    return path.join(parsed.root, ...segments.map(segment => segmentAliases.get(segment) ?? segment))
+    return path.join(parsed.root, ...segments.map(segment => segmentAliases.get(segment.toLowerCase()) ?? segment))
   }
 
   // This stat stub emulates only the case-folding lookup of a
@@ -4558,10 +4641,11 @@ test('extension spelling verification handles candidate status races', async (t)
   const root = path.join(__dirname, 'static')
 
   function pluginWithExtensionStatError (code) {
+    let candidateCalls = 0
     return proxyquire('../', {
       'node:fs/promises': {
         async stat (candidate) {
-          if (candidate === path.join(root, 'foo.html')) {
+          if (candidate === path.join(root, 'foo.html') && ++candidateCalls > 1) {
             const error = new Error('extension status failed')
             error.code = code
             throw error
@@ -4658,7 +4742,12 @@ test('fails closed when exact filesystem spelling cannot be verified', async (t)
         }
         return fs.promises.readdir(parent)
       },
-      stat: fs.promises.stat
+      stat (candidate, options) {
+        if (candidate === path.join(root, 'Index.css')) {
+          candidate = path.join(root, 'index.css')
+        }
+        return fs.promises.stat(candidate, options)
+      }
     }
   })
 
@@ -4675,6 +4764,35 @@ test('fails closed when exact filesystem spelling cannot be verified', async (t)
   const response = await fastify.inject('/index.css')
   t.assert.deepStrictEqual(response.statusCode, 403)
   t.assert.deepStrictEqual(allowedPathCalls, 0)
+})
+
+test('a directory that disappears during spelling validation is left for send to resolve', async (t) => {
+  const root = path.join(__dirname, 'static')
+  const fastifyStaticWithMissingRead = proxyquire('../', {
+    'node:fs/promises': {
+      async readdir (parent) {
+        if (parent === root) {
+          const error = new Error('directory disappeared')
+          error.code = 'ENOENT'
+          throw error
+        }
+        return fs.promises.readdir(parent)
+      },
+      stat (candidate, options) {
+        if (candidate === path.join(root, 'Index.css')) {
+          candidate = path.join(root, 'index.css')
+        }
+        return fs.promises.stat(candidate, options)
+      }
+    }
+  })
+
+  const fastify = Fastify()
+  t.after(() => fastify.close())
+  fastify.register(fastifyStaticWithMissingRead, { root })
+
+  const response = await fastify.inject('/index.css')
+  t.assert.deepStrictEqual(response.statusCode, 200)
 })
 
 test('allowedPath validates a POSIX-style absolute sendFile path without a configured root on Windows', {
