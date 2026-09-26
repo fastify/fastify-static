@@ -38,6 +38,7 @@ function contentDisposition (filename) {
 
 /** @type {import("fastify").FastifyPluginAsync<import("./types").FastifyStaticOptions>} */
 async function fastifyStatic (fastify, opts) {
+  const pathSpellingCache = new Map()
   const suppressWarning = opts.suppressWarning ?? false
   if (opts.serve !== false || opts.root !== undefined) {
     opts.root = normalizeRoot(opts.root)
@@ -304,7 +305,7 @@ async function fastifyStatic (fastify, opts) {
 
     let basePathSpellingStatus
     if (validatePathSpelling && !isWindowsFilesystemPath) {
-      basePathSpellingStatus = (await getPathSpellingStatus(pathname, options.root)).status
+      basePathSpellingStatus = (await getPathSpellingStatus(pathname, options.root, pathSpellingCache)).status
       if (basePathSpellingStatus === 'alias' || basePathSpellingStatus === 'unverifiable') {
         return reply.send(forbiddenPathError())
       }
@@ -349,7 +350,8 @@ async function fastifyStatic (fastify, opts) {
       const pathSpellingStatus = await getSendPathSpellingStatus(
         pathnameForSend,
         options.root,
-        options.extensions
+        options.extensions,
+        pathSpellingCache
       )
       if (pathSpellingStatus === 'alias' || pathSpellingStatus === 'unverifiable') {
         return reply.send(forbiddenPathError())
@@ -686,9 +688,10 @@ function isNonCanonicalPathname (pathname) {
 /**
  * @param {string} pathname
  * @param {*} root
+ * @param {Map<string, { version: string, entries: Promise<Set<string>> }>} cache
  * @returns {Promise<{ status: 'exact'|'missing'|'alias'|'unverifiable' }>}
  */
-async function getPathSpellingStatus (pathname, root) {
+async function getPathSpellingStatus (pathname, root, cache) {
   if (typeof root !== 'string') {
     return { status: 'exact' }
   }
@@ -697,37 +700,125 @@ async function getPathSpellingStatus (pathname, root) {
   let parent = root
 
   for (const segment of segments) {
+    const candidate = path.join(parent, segment)
+    let candidateError
+    try {
+      await stat(candidate)
+    } catch (error) {
+      if (isMissingPathError(error)) {
+        return { status: 'missing' }
+      }
+      candidateError = error
+    }
+
+    // If an ASCII case variant does not resolve, this directory distinguishes
+    // case and the successful candidate lookup proves the spelling is exact.
+    // Segments without ASCII letters need no lookup unless they contain
+    // non-ASCII characters, whose filesystem case rules are not portable.
+    const caseVariant = getCaseVariant(segment)
+    if (candidateError === undefined && caseVariant === segment) {
+      parent = candidate
+      continue
+    }
+
+    if (candidateError === undefined && caseVariant !== undefined) {
+      try {
+        await stat(path.join(parent, caseVariant))
+      } catch (error) {
+        if (isMissingPathError(error)) {
+          parent = candidate
+          continue
+        }
+      }
+    }
+
     let entries
     try {
-      entries = await readdir(parent)
+      entries = await getDirectoryEntries(parent, cache)
     } catch (error) {
       return { status: isMissingPathError(error) ? 'missing' : 'unverifiable' }
     }
 
-    if (!entries.includes(segment)) {
-      const candidate = path.join(root, ...segments)
-      try {
-        await stat(candidate)
-        return { status: 'alias' }
-      } catch (error) {
-        return { status: isMissingPathError(error) ? 'missing' : 'unverifiable' }
-      }
+    if (!entries.has(segment)) {
+      return { status: candidateError === undefined ? 'alias' : 'unverifiable' }
     }
 
-    parent = path.join(parent, segment)
+    parent = candidate
   }
 
   return { status: 'exact' }
 }
 
 /**
+ * @param {string} segment
+ * @returns {string|undefined}
+ */
+function getCaseVariant (segment) {
+  let hasNonAsciiCharacter = false
+
+  for (let index = 0; index < segment.length; index++) {
+    const characterCode = segment.charCodeAt(index)
+    if (characterCode >= 65 && characterCode <= 90) {
+      return segment.slice(0, index) + String.fromCharCode(characterCode + 32) + segment.slice(index + 1)
+    }
+    if (characterCode >= 97 && characterCode <= 122) {
+      return segment.slice(0, index) + String.fromCharCode(characterCode - 32) + segment.slice(index + 1)
+    }
+    hasNonAsciiCharacter ||= characterCode > 127
+  }
+
+  return hasNonAsciiCharacter ? undefined : segment
+}
+
+/**
+ * @param {string} directory
+ * @param {Map<string, { version: string, entries: Promise<Set<string>> }>} cache
+ * @returns {Promise<Set<string>>}
+ */
+async function getDirectoryEntries (directory, cache) {
+  let version
+  try {
+    const metadata = await stat(directory, { bigint: true })
+    version = [
+      metadata.dev,
+      metadata.ino,
+      metadata.size,
+      metadata.mtimeNs ?? metadata.mtimeMs,
+      metadata.ctimeNs ?? metadata.ctimeMs
+    ].join(':')
+  } catch {
+    return new Set(await readdir(directory))
+  }
+
+  // Only directories with ambiguous case behavior reach this cache. Validate
+  // their listing against directory metadata and share in-flight reads.
+  const cached = cache.get(directory)
+  if (cached?.version === version) {
+    return cached.entries
+  }
+
+  const entries = readdir(directory).then(names => new Set(names))
+  cache.set(directory, { version, entries })
+
+  try {
+    return await entries
+  } catch (error) {
+    if (cache.get(directory)?.entries === entries) {
+      cache.delete(directory)
+    }
+    throw error
+  }
+}
+
+/**
  * @param {string} pathname
  * @param {*} root
  * @param {*} extensions
+ * @param {Map<string, { version: string, entries: Promise<Set<string>> }>} cache
  * @returns {Promise<'exact'|'missing'|'alias'|'unverifiable'>}
  */
-async function getSendPathSpellingStatus (pathname, root, extensions) {
-  let result = await getPathSpellingStatus(pathname, root)
+async function getSendPathSpellingStatus (pathname, root, extensions, cache) {
+  let result = await getPathSpellingStatus(pathname, root, cache)
   if (result.status !== 'missing' || pathname.endsWith('/') || path.posix.extname(pathname)) {
     return result.status
   }
@@ -738,7 +829,7 @@ async function getSendPathSpellingStatus (pathname, root, extensions) {
 
   for (const extension of extensionList) {
     const extensionPathname = `${pathname}.${extension}`
-    result = await getPathSpellingStatus(extensionPathname, root)
+    result = await getPathSpellingStatus(extensionPathname, root, cache)
     if (result.status === 'missing') {
       continue
     }
