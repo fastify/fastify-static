@@ -754,11 +754,10 @@ async function getPathSpellingStatus (pathname, root, cache) {
  * @returns {string}
  */
 function getCaseVariant (segment) {
-  return segment.replace(/[A-Za-z]/u, character =>
-    character === character.toLowerCase()
-      ? character.toUpperCase()
-      : character.toLowerCase()
-  )
+  return segment.replace(/[A-Za-z]/u, character => {
+    const lowerCaseCharacter = character.toLowerCase()
+    return character === lowerCaseCharacter ? character.toUpperCase() : lowerCaseCharacter
+  })
 }
 
 /**
