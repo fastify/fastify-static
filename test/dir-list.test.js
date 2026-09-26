@@ -17,9 +17,9 @@ const helper = {
     const fastify = Fastify()
     fastify.register(fastifyStatic, options)
     t.after(() => fastify.close())
-    await fastify.listen({ port: 0 })
+    const address = await fastify.listen({ port: 0, host: '127.0.0.1' })
     fastify.server.unref()
-    await f('http://localhost:' + fastify.server.address().port)
+    await f(address)
   },
   rawRequest: async function (baseUrl, route) {
     const url = new URL(baseUrl)
@@ -503,6 +503,50 @@ test('dir list json format - extended info', async t => {
   })
 })
 
+test('dir list json format - render', async t => {
+  t.plan(1)
+
+  const options = {
+    root: path.join(__dirname, '/static'),
+    prefix: '/public',
+    prefixAvoidTrailingSlash: true,
+    list: {
+      format: 'json',
+      names: ['index', 'index.json', '/'],
+      render (dirs, files) {
+        return {
+          dirs: dirs.map(dir => dir.name),
+          images: files
+            .filter(file => file.name.endsWith('.jpg'))
+            .map(file => ({ name: file.name, href: file.href }))
+        }
+      }
+    }
+  }
+  const route = '/public/shallow/'
+  const content = {
+    dirs: ['empty'],
+    images: [
+      {
+        name: 'sample.jpg',
+        href: '/public/shallow/sample.jpg'
+      }
+    ]
+  }
+
+  await helper.arrange(t, options, async (url) => {
+    await t.test(route, async t => {
+      t.plan(4)
+
+      const response = await fetch(url + route)
+      t.assert.ok(response.ok)
+      t.assert.deepStrictEqual(response.status, 200)
+      t.assert.deepStrictEqual(await response.json(), content)
+      t.assert.ok(response.headers.get('content-type').includes('application/json'))
+    })
+  })
+})
+
 test('json format with url parameter format', async t => {
   t.plan(12)
 
@@ -512,8 +556,15 @@ test('json format with url parameter format', async t => {
     index: false,
     list: {
       format: 'json',
-      render () {
-        return 'html'
+      render (dirs, files, format) {
+        if (format === 'html') {
+          return 'html'
+        }
+
+        return {
+          dirs: dirs.map(dir => dir.name),
+          files: files.map(file => file.name)
+        }
       }
     }
   }
