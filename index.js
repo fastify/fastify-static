@@ -716,12 +716,12 @@ async function getPathSpellingStatus (pathname, root, cache) {
     // Segments without ASCII letters need no lookup unless they contain
     // non-ASCII characters, whose filesystem case rules are not portable.
     const caseVariant = getCaseVariant(segment)
-    if (candidateError === undefined && caseVariant === segment && isAscii(segment)) {
+    if (candidateError === undefined && caseVariant === segment) {
       parent = candidate
       continue
     }
 
-    if (candidateError === undefined && caseVariant !== segment) {
+    if (candidateError === undefined && caseVariant !== undefined) {
       try {
         await stat(path.join(parent, caseVariant))
       } catch (error) {
@@ -751,21 +751,23 @@ async function getPathSpellingStatus (pathname, root, cache) {
 
 /**
  * @param {string} segment
- * @returns {string}
+ * @returns {string|undefined}
  */
 function getCaseVariant (segment) {
-  return segment.replace(/[A-Za-z]/u, character => {
-    const lowerCaseCharacter = character.toLowerCase()
-    return character === lowerCaseCharacter ? character.toUpperCase() : lowerCaseCharacter
-  })
-}
+  let hasNonAsciiCharacter = false
 
-/**
- * @param {string} value
- * @returns {boolean}
- */
-function isAscii (value) {
-  return Buffer.byteLength(value) === value.length
+  for (let index = 0; index < segment.length; index++) {
+    const characterCode = segment.charCodeAt(index)
+    if (characterCode >= 65 && characterCode <= 90) {
+      return segment.slice(0, index) + String.fromCharCode(characterCode + 32) + segment.slice(index + 1)
+    }
+    if (characterCode >= 97 && characterCode <= 122) {
+      return segment.slice(0, index) + String.fromCharCode(characterCode - 32) + segment.slice(index + 1)
+    }
+    hasNonAsciiCharacter ||= characterCode > 127
+  }
+
+  return hasNonAsciiCharacter ? undefined : segment
 }
 
 /**
