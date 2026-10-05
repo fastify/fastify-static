@@ -5353,3 +5353,32 @@ test('register with wildcard false and globIgnore', async t => {
     await response.text()
   })
 })
+
+test('serves files with # or ? in their names', async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'fastify-static-reserved-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  const files = { 'a#b.txt': '/a%23b.txt', '100%#.txt': '/100%25%23.txt' }
+  // `?` is not allowed in Windows file names
+  if (process.platform !== 'win32') {
+    files['a?b.txt'] = '/a%3Fb.txt'
+  }
+  for (const name of Object.keys(files)) {
+    fs.writeFileSync(path.join(root, name), name)
+  }
+  fs.writeFileSync(path.join(root, 'a%23b.txt'), 'literal')
+
+  const fastify = Fastify()
+  t.after(() => fastify.close())
+  fastify.register(fastifyStatic, { root, prefix: '/public' })
+
+  for (const [name, urlPath] of Object.entries(files)) {
+    const response = await fastify.inject('/public' + urlPath)
+    t.assert.deepStrictEqual(response.statusCode, 200)
+    t.assert.deepStrictEqual(response.body, name)
+  }
+
+  // `%25` still decodes to a literal `%`, and only once
+  const literal = await fastify.inject('/public/a%2523b.txt')
+  t.assert.deepStrictEqual(literal.statusCode, 200)
+  t.assert.deepStrictEqual(literal.body, 'literal')
+})
