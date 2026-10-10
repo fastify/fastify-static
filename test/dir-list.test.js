@@ -4,6 +4,7 @@
 
 const fs = require('node:fs')
 const http = require('node:http')
+const os = require('node:os')
 const path = require('node:path')
 const { test } = require('node:test')
 const Fastify = require('fastify')
@@ -366,6 +367,36 @@ test('dir list href nested structure', async t => {
         t.assert.deepStrictEqual(response2.status, 200)
       })
     }
+  })
+})
+
+test('dir list html format - href encodes # in file names', async t => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'fastify-static-dir-list-hash-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  fs.writeFileSync(path.join(root, 'a#b.txt'), 'hash')
+
+  const options = {
+    root,
+    prefix: '/public',
+    index: false,
+    list: {
+      format: 'html',
+      names: ['index'],
+      render (_dirs, files) {
+        return files[0].href
+      }
+    }
+  }
+
+  await helper.arrange(t, options, async (url) => {
+    const response = await fetch(url + '/public/index')
+    t.assert.deepStrictEqual(response.status, 200)
+    const href = await response.text()
+    t.assert.deepStrictEqual(href, '/public/a%23b.txt')
+
+    const file = await fetch(url + href)
+    t.assert.deepStrictEqual(file.status, 200)
+    t.assert.deepStrictEqual(await file.text(), 'hash')
   })
 })
 
