@@ -204,8 +204,9 @@ async function fastifyStatic (fastify, opts) {
           setUpHeadAndGet(routeOpts, route, `/${file}`, rootPath)
 
           const key = path.posix.basename(route)
-          if (indexes.has(key) && !indexDirs.has(key)) {
-            indexDirs.set(path.posix.dirname(route), rootPath)
+          const dir = path.posix.dirname(route)
+          if (indexes.has(key) && !indexDirs.has(dir)) {
+            indexDirs.set(dir, rootPath)
           }
         }
       }
