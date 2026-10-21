@@ -4,6 +4,7 @@
 
 const fs = require('node:fs')
 const http = require('node:http')
+const os = require('node:os')
 const path = require('node:path')
 const { test } = require('node:test')
 const Fastify = require('fastify')
@@ -366,6 +367,63 @@ test('dir list href nested structure', async t => {
         t.assert.deepStrictEqual(response2.status, 200)
       })
     }
+  })
+})
+
+test('dir list html format - href encodes # and ? in file and directory names', async t => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'fastify-static-dir-list-hash-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  // `?` is not allowed in Windows file names
+  const posix = process.platform !== 'win32'
+  const files = { 'a#b.txt': '/public/a%23b.txt' }
+  if (posix) {
+    files['a?b.txt'] = '/public/a%3Fb.txt'
+  }
+  const dir = posix ? 'd#?x' : 'd#x'
+  const dirHref = posix ? '/public/d%23%3Fx' : '/public/d%23x'
+  for (const name of Object.keys(files)) {
+    fs.writeFileSync(path.join(root, name), name)
+  }
+  fs.mkdirSync(path.join(root, dir))
+  fs.writeFileSync(path.join(root, dir, 'c#d.txt'), 'nested')
+
+  const options = {
+    root,
+    prefix: '/public',
+    index: false,
+    list: {
+      format: 'html',
+      names: ['index'],
+      render (dirs, files) {
+        return JSON.stringify({
+          dirs: dirs.map(entry => entry.href),
+          files: files.map(entry => entry.href).sort()
+        })
+      }
+    }
+  }
+
+  await helper.arrange(t, options, async (url) => {
+    const response = await fetch(url + '/public/index')
+    t.assert.deepStrictEqual(response.status, 200)
+    const listing = JSON.parse(await response.text())
+    t.assert.deepStrictEqual(listing.dirs, [dirHref])
+    t.assert.deepStrictEqual(listing.files, Object.values(files).sort())
+
+    for (const [name, href] of Object.entries(files)) {
+      const file = await fetch(url + href)
+      t.assert.deepStrictEqual(file.status, 200)
+      t.assert.deepStrictEqual(await file.text(), name)
+    }
+
+    const nested = await fetch(url + dirHref + '/index')
+    t.assert.deepStrictEqual(nested.status, 200)
+    const nestedListing = JSON.parse(await nested.text())
+    t.assert.deepStrictEqual(nestedListing.files, [dirHref + '/c%23d.txt'])
+
+    const file = await fetch(url + nestedListing.files[0])
+    t.assert.deepStrictEqual(file.status, 200)
+    t.assert.deepStrictEqual(await file.text(), 'nested')
   })
 })
 

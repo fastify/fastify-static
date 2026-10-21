@@ -23,6 +23,7 @@ const endForwardSlashRegex = /\/$/u
 const asteriskRegex = /\*/gu
 const dotDotSegmentRegex = /(?:^|[\\/])\.\.(?:[\\/]|$)/u
 const leadingDotDotSegmentRegex = /^\/?\.\.(?:[\\/]|$)/u
+const encodedHashOrQuestionMarkRegex = /%(?:23|3f)/giu
 
 const supportedEncodings = ['br', 'gzip', 'deflate']
 send.mime.default_type = 'application/octet-stream'
@@ -959,8 +960,8 @@ function getPathnameForSend (url, matchRoutePrefix) {
   }
 
   try {
-    const decodedUrlPathname = decodeURI(url.slice(0, pathnameEnd))
-    const decodedPathname = decodeURI(pathname)
+    const decodedUrlPathname = decodePathname(url.slice(0, pathnameEnd))
+    const decodedPathname = decodePathname(pathname)
 
     // Check the full raw URL path, because route params can consume a
     // dot-dot segment before the suffix is passed to @fastify/send.
@@ -980,6 +981,17 @@ function getPathnameForSend (url, matchRoutePrefix) {
   } catch {
 
   }
+}
+
+/**
+ * decodeURI() keeps `#` and `?` encoded, so a file with one of them in its
+ * name could never be served. Decode those two first: neither is `%`, so this
+ * cannot create a new escape sequence and the input is still decoded once.
+ * @param {string} pathname
+ * @returns {string}
+ */
+function decodePathname (pathname) {
+  return decodeURI(pathname.replace(encodedHashOrQuestionMarkRegex, decodeURIComponent))
 }
 
 /**
