@@ -24,6 +24,7 @@ const asteriskRegex = /\*/gu
 const dotDotSegmentRegex = /(?:^|[\\/])\.\.(?:[\\/]|$)/u
 const leadingDotDotSegmentRegex = /^\/?\.\.(?:[\\/]|$)/u
 const encodedHashOrQuestionMarkRegex = /%(?:23|3f)/giu
+const finalPathDenied = Symbol('finalPathDenied')
 
 const supportedEncodings = ['br', 'gzip', 'deflate']
 send.mime.default_type = 'application/octet-stream'
@@ -68,7 +69,8 @@ async function fastifyStatic (fastify, opts) {
     immutable: opts.immutable,
     index: opts.index,
     lastModified: opts.lastModified,
-    maxAge: opts.maxAge
+    maxAge: opts.maxAge,
+    onFile: opts.onFile
   }
 
   let prefix = opts.prefix ??= '/'
@@ -110,7 +112,7 @@ async function fastifyStatic (fastify, opts) {
         opts,
         undefined,
         allowedPath !== undefined
-      )
+      ).catch((error) => this.send(error))
       return this
     })
 
@@ -133,7 +135,7 @@ async function fastifyStatic (fastify, opts) {
           opts,
           undefined,
           allowedPath !== undefined
-        )
+        ).catch((error) => this.send(error))
 
         return this
       }
@@ -162,7 +164,7 @@ async function fastifyStatic (fastify, opts) {
             return reply.callNotFound()
           }
 
-          pumpSendToReply(
+          return pumpSendToReply(
             req,
             reply,
             pathname,
@@ -274,6 +276,7 @@ async function fastifyStatic (fastify, opts) {
     const pathnameOrig = pathname
     const normalizedPathname = normalizeRequestPathname(pathname)
     const options = Object.assign({}, sendOptions, pumpOptions)
+    const callerOnFile = options.onFile
 
     if (rootPath) {
       if (Array.isArray(rootPath)) {
@@ -361,14 +364,50 @@ async function fastifyStatic (fastify, opts) {
       return reply.callNotFound()
     }
 
+    if (allowedPath && (callerOnFile === undefined || typeof callerOnFile === 'function')) {
+      options.onFile = async function authorizeFinalPath (selectedPath, selectedStat) {
+        let logicalPath = selectedPath
+        const encodingExtension = encodingExtensionMap[encoding]
+        if (encodingExtension && logicalPath.endsWith(encodingExtension)) {
+          logicalPath = logicalPath.slice(0, -encodingExtension.length)
+        }
+
+        const finalPathname = getFinalPathname(
+          logicalPath,
+          options.root,
+          normalizedPathname.startsWith('/')
+        )
+        if (
+          finalPathname === undefined ||
+          (finalPathname !== normalizedPathname && !allowedPath(finalPathname, options.root, request))
+        ) {
+          throw finalPathDenied
+        }
+
+        if (callerOnFile) {
+          await callerOnFile(selectedPath, selectedStat)
+        }
+      }
+    }
+
     // `send(..., path, ...)` will URI-decode path so we pass an encoded path here
+    let sendResult
+    try {
+      sendResult = await send(request.raw, encodeURI(pathnameForSend), options)
+    } catch (error) {
+      if (error === finalPathDenied) {
+        return reply.callNotFound()
+      }
+      throw error
+    }
+
     const {
       statusCode,
       headers,
       stream,
       type,
       metadata
-    } = await send(request.raw, encodeURI(pathnameForSend), options)
+    } = sendResult
     switch (type) {
       case 'directory': {
         const path = metadata.path
@@ -657,6 +696,33 @@ function normalizeRequestPathname (pathname) {
   }
 
   return path.posix.normalize(pathname)
+}
+
+/**
+ * Convert the absolute path selected by @fastify/send back to the pathname
+ * style used by allowedPath.
+ *
+ * @param {string} selectedPath
+ * @param {string|undefined} root
+ * @param {boolean} leadingSlash
+ * @returns {string|undefined}
+ */
+function getFinalPathname (selectedPath, root, leadingSlash) {
+  if (root === undefined) {
+    return selectedPath
+  }
+
+  const relativePath = path.relative(path.resolve(root), selectedPath)
+  if (
+    relativePath === '..' ||
+    relativePath.startsWith('..' + path.sep) ||
+    path.isAbsolute(relativePath)
+  ) {
+    return
+  }
+
+  const posixPath = relativePath.split(path.sep).join(path.posix.sep)
+  return leadingSlash ? '/' + posixPath : posixPath
 }
 
 /**
