@@ -217,6 +217,24 @@ The following options are also supported and will be passed directly to the
 - [`maxAge`](https://www.npmjs.com/package/@fastify/send#maxage)
 - [`onFile`](https://www.npmjs.com/package/@fastify/send#onfile)
 
+#### `dotfiles`
+
+Default: `'ignore'`
+
+How files and directories whose name begins with a dot (`.env`, `.git`, `.npmrc`, `.well-known`, ...) are treated. This option is passed through to [`@fastify/send`](https://www.npmjs.com/package/@fastify/send#dotfiles):
+
+- `'allow'` - No special treatment; dotfiles are served like any other file.
+- `'deny'` - Return a `403` for any request for a dotfile.
+- `'ignore'` - Treat the dotfile as if it does not exist and return a `404`. **This is the default.**
+
+> [!NOTE]
+> The default (`'ignore'`) matches the `@fastify/send` and `serve-static`
+> defaults. Dotfiles — and files inside hidden directories such as
+> `/.well-known/...` — are served only if you opt in with `dotfiles: 'allow'`.
+> This protects sensitive files such as `.env`, `.htpasswd` or `.git/config`
+> that may be left in the static root. If you serve `/.well-known/...` (for
+> example for ACME or PGP discovery), set `dotfiles: 'allow'` explicitly.
+
 These options can be altered when calling `reply.sendFile('filename.html', options)` or `reply.sendFile('filename.html', 'otherfilename.html', options)` on each response.
 
 `onFile(path, stat)` receives the selected file's absolute path and file system statistics. It may return a promise, which is awaited before response processing and streaming begin. A thrown error or rejected promise aborts the operation and is handled by Fastify's error pipeline. When `allowedPath` is configured, final-path authorization runs first; denied files do not invoke `onFile`.

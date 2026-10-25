@@ -181,6 +181,7 @@ test('dir list, custom options', async t => {
     root: path.join(__dirname, '/static'),
     prefix: '/public',
     index: false,
+    dotfiles: 'allow',
     list: true
   }
 
@@ -206,6 +207,7 @@ test('dir list, custom options with empty array index', async t => {
     root: path.join(__dirname, '/static'),
     prefix: '/public',
     index: [],
+    dotfiles: 'allow',
     list: true
   }
 
@@ -277,6 +279,7 @@ test('dir list html format', async t => {
     root: path.join(__dirname, '/static'),
     prefix: '/public',
     index: false,
+    dotfiles: 'allow',
     list: {
       format: 'html',
       names: ['index', 'index.htm'],
@@ -568,6 +571,7 @@ test('json format with url parameter format', async t => {
     root: path.join(__dirname, '/static'),
     prefix: '/public',
     index: false,
+    dotfiles: 'allow',
     list: {
       format: 'json',
       render () {
@@ -606,6 +610,7 @@ test('json format with url parameter format and without render option', async t 
     root: path.join(__dirname, '/static'),
     prefix: '/public',
     index: false,
+    dotfiles: 'allow',
     list: {
       format: 'json'
     }
@@ -640,6 +645,7 @@ test('html format with url parameter format', async t => {
     root: path.join(__dirname, '/static'),
     prefix: '/public',
     index: false,
+    dotfiles: 'allow',
     list: {
       format: 'html',
       render () {
