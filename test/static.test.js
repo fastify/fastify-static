@@ -3269,6 +3269,25 @@ test('if dotfiles are properly served according to plugin options', async (t) =>
   })
 })
 
+test('dotfiles are ignored by default', async (t) => {
+  t.plan(2)
+  const fastify = Fastify()
+
+  fastify.register(fastifyStatic, {
+    root: path.join(__dirname, 'static'),
+    prefix: '/static/'
+  })
+
+  t.after(() => fastify.close())
+
+  await fastify.listen({ port: 0 })
+  fastify.server.unref()
+
+  const response = await fetch('http://localhost:' + fastify.server.address().port + '/static/.example')
+  t.assert.ok(!response.ok)
+  t.assert.deepStrictEqual(response.status, 404)
+})
+
 test('register with failing glob handler', async (t) => {
   const fastifyStatic = proxyquire.noCallThru()('../', {
     glob: function globStub (_pattern, _options, cb) {
@@ -4393,6 +4412,7 @@ test('should serve files into hidden dir with wildcard `false`', async (t) => {
   const pluginOptions = {
     root: path.join(__dirname, '/static-hidden'),
     wildcard: false,
+    dotfiles: 'allow',
     serveDotFiles: true
   }
   const fastify = Fastify()
@@ -4437,7 +4457,8 @@ test('should serve files into hidden dir without wildcard option', async (t) => 
   t.plan(8)
 
   const pluginOptions = {
-    root: path.join(__dirname, '/static-hidden')
+    root: path.join(__dirname, '/static-hidden'),
+    dotfiles: 'allow'
   }
   const fastify = Fastify()
   fastify.register(fastifyStatic, pluginOptions)
