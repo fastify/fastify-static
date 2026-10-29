@@ -2767,6 +2767,25 @@ test('register with wildcard false and alternative index', async t => {
   })
 })
 
+test('register with wildcard false and multiple roots preserves directory index priority', async t => {
+  t.plan(1)
+
+  const fastify = Fastify()
+  fastify.register(fastifyStatic, {
+    root: [path.join(__dirname, '/static'), path.join(__dirname, '/static2')],
+    wildcard: false,
+    index: ['foobar.html', 'index.html']
+  })
+
+  t.after(() => fastify.close())
+
+  await fastify.listen({ port: 0 })
+  fastify.server.unref()
+
+  const response = await fetch('http://localhost:' + fastify.server.address().port + '/')
+  t.assert.deepStrictEqual(await response.text(), foobarContent)
+})
+
 test('register /static with wildcard false and alternative index', async t => {
   t.plan(10)
 
