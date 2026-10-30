@@ -2644,6 +2644,30 @@ test('register with wildcard string on multiple root paths', async (t) => {
   await t.assert.rejects(fastify.listen({ port: 0 }))
 })
 
+test('register with wildcard false on multiple root paths serves the first found index', async (t) => {
+  const firstRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'fastify-static-index-first-'))
+  const secondRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'fastify-static-index-second-'))
+  t.after(() => fs.rmSync(firstRoot, { recursive: true, force: true }))
+  t.after(() => fs.rmSync(secondRoot, { recursive: true, force: true }))
+
+  fs.mkdirSync(path.join(firstRoot, 'sub'))
+  fs.mkdirSync(path.join(secondRoot, 'sub'))
+  fs.writeFileSync(path.join(firstRoot, 'sub', 'index.htm'), 'from root1')
+  fs.writeFileSync(path.join(secondRoot, 'sub', 'index.html'), 'from root2')
+
+  const fastify = Fastify()
+  fastify.register(fastifyStatic, {
+    root: [firstRoot, secondRoot],
+    wildcard: false,
+    index: ['index.htm', 'index.html']
+  })
+  t.after(() => fastify.close())
+
+  const response = await fastify.inject('/sub/')
+  t.assert.deepStrictEqual(response.statusCode, 200)
+  t.assert.deepStrictEqual(response.body, 'from root1')
+})
+
 test('register with wildcard false and alternative index', async t => {
   t.plan(10)
 
