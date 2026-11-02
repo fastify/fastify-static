@@ -16,7 +16,8 @@ const errors = require('./lib/errors')
 const {
   FST_STATIC_INVALID_OPTION,
   FST_STATIC_INVALID_OPTION_VALUE,
-  FST_STATIC_INVALID_REDIRECT_URL
+  FST_STATIC_INVALID_REDIRECT_URL,
+  FST_STATIC_FORBIDDEN_PATH
 } = errors
 
 const endForwardSlashRegex = /\/$/u
@@ -677,13 +678,10 @@ function getContentType (path) {
 }
 
 /**
- * @returns {Error & { status?: number, statusCode?: number }}
+ * @returns {Error & { code: string, statusCode: number }}
  */
 function forbiddenPathError () {
-  const error = new Error('Forbidden')
-  error.status = 403
-  error.statusCode = 403
-  return error
+  return new FST_STATIC_FORBIDDEN_PATH()
 }
 
 /**

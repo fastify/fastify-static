@@ -1077,10 +1077,11 @@ test('allowedPath option - pathname is normalized before filtering', async (t) =
   })
 
   await t.test('//foobar.html forbidden (non-canonical path)', async (t) => {
-    t.plan(1 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
+    t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
 
     const response = await rawRequest(address, '//foobar.html')
     t.assert.deepStrictEqual(response.statusCode, 403)
+    t.assert.deepStrictEqual(JSON.parse(response.body).code, 'FST_STATIC_FORBIDDEN_PATH')
     genericErrorResponseChecks(t, response)
   })
 
