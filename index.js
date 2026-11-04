@@ -444,7 +444,7 @@ async function fastifyStatic (fastify, opts) {
             )
           }
 
-          reply.callNotFound()
+          return reply.callNotFound()
         }
         break
       }
