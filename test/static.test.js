@@ -713,6 +713,27 @@ test('not found responses can be customized with fastify.setNotFoundHandler()', 
   })
 })
 
+test('setNotFoundHandler() can sendFile for a directory without an index file', async t => {
+  t.plan(3)
+
+  const fastify = Fastify()
+
+  fastify.register(fastifyStatic, {
+    root: path.join(__dirname, '/static')
+  })
+
+  fastify.setNotFoundHandler(function notFoundHandler (request, reply) {
+    return reply.sendFile('index.html')
+  })
+
+  t.after(() => fastify.close())
+
+  const response = await fastify.inject({ method: 'GET', url: '/deep' })
+  t.assert.deepStrictEqual(response.statusCode, 200)
+  t.assert.deepStrictEqual(response.headers['content-type'], 'text/html; charset=utf-8')
+  t.assert.deepStrictEqual(response.body, indexContent)
+})
+
 test('fastify.setNotFoundHandler() is called for dotfiles when send is configured to ignore dotfiles', async t => {
   t.plan(1)
 
