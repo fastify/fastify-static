@@ -484,6 +484,22 @@ async function fastifyStatic (fastify, opts) {
             return
           }
 
+          // try the remaining encodings, then the uncompressed file, in this
+          // root before moving on to the next root
+          if (encoding) {
+            checkedEncodings.add(encoding)
+            return pumpSendToReply(
+              request,
+              reply,
+              pathnameOrig,
+              rootPath,
+              rootPathOffset,
+              pumpOptions,
+              checkedEncodings,
+              validatePathSpelling
+            )
+          }
+
           // root paths left to try?
           if (Array.isArray(rootPath) && rootPathOffset < (rootPath.length - 1)) {
             return pumpSendToReply(
@@ -494,20 +510,6 @@ async function fastifyStatic (fastify, opts) {
               rootPathOffset + 1,
               pumpOptions,
               undefined,
-              validatePathSpelling
-            )
-          }
-
-          if (opts.preCompressed && !checkedEncodings.has(encoding)) {
-            checkedEncodings.add(encoding)
-            return pumpSendToReply(
-              request,
-              reply,
-              pathnameOrig,
-              rootPath,
-              rootPathOffset,
-              pumpOptions,
-              checkedEncodings,
               validatePathSpelling
             )
           }
