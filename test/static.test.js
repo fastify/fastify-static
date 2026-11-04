@@ -4514,6 +4514,34 @@ test(
 )
 
 test(
+  'will serve un-compressed files from the first root with multi-root and preCompressed as true',
+  async (t) => {
+    const pluginOptions = {
+      root: [path.join(__dirname, '/static-pre-compressed'), path.join(__dirname, '/static')],
+      preCompressed: true
+    }
+
+    const fastify = Fastify()
+
+    fastify.register(fastifyStatic, pluginOptions)
+    t.after(() => fastify.close())
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: 'uncompressed.html',
+      headers: {
+        'accept-encoding': 'gzip, deflate, br'
+      }
+    })
+
+    genericResponseChecks(t, response)
+    t.assert.deepStrictEqual(response.statusCode, 200)
+    t.assert.deepStrictEqual(response.headers['content-encoding'], undefined)
+    t.assert.deepStrictEqual(response.body, uncompressedStatic)
+  }
+)
+
+test(
   'converts URL to path',
   async (t) => {
     t.plan(2 + GENERIC_RESPONSE_CHECK_COUNT)
