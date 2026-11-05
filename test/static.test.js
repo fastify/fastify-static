@@ -2666,6 +2666,29 @@ test('register with wildcard string on multiple root paths', async (t) => {
   await t.assert.rejects(fastify.listen({ port: 0 }))
 })
 
+test('register with wildcard false on multiple roots preserves directory index route priority', async (t) => {
+  t.plan(3 + GENERIC_RESPONSE_CHECK_COUNT)
+
+  const pluginOptions = {
+    root: [path.join(__dirname, '/static'), path.join(__dirname, '/static2')],
+    wildcard: false,
+    index: ['foobar.html', 'index.html']
+  }
+  const fastify = Fastify()
+  fastify.register(fastifyStatic, pluginOptions)
+
+  t.after(() => fastify.close())
+
+  await fastify.listen({ port: 0 })
+  fastify.server.unref()
+
+  const response = await fetch('http://localhost:' + fastify.server.address().port + '/')
+  t.assert.ok(response.ok)
+  t.assert.deepStrictEqual(response.status, 200)
+  t.assert.deepStrictEqual(await response.text(), foobarContent)
+  genericResponseChecks(t, response)
+})
+
 test('register with wildcard false and alternative index', async t => {
   t.plan(10)
 
