@@ -105,6 +105,15 @@ expect<FastifyStaticOptions>()
   .type.toBeAssignableFrom({
     root: '',
     list: {
+      format: 'json' as const,
+      render: () => ({ custom: [] })
+    }
+  })
+
+expect<FastifyStaticOptions>()
+  .type.toBeAssignableFrom({
+    root: '',
+    list: {
       format: 'html' as const,
       render: () => ''
     }
