@@ -2192,7 +2192,7 @@ test('register with wildcard false and multiple roots preserves directory index 
   fastify.register(fastifyStatic, {
     root: [path.join(__dirname, '/static'), path.join(__dirname, '/static2')],
     wildcard: false,
-    index: ['foobar.html', 'index.html']
+    index: ['foobar.html', 'bar.html']
   })
 
   t.after(() => fastify.close())
