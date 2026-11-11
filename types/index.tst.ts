@@ -106,7 +106,7 @@ expect<FastifyStaticOptions>()
     root: '',
     list: {
       format: 'json' as const,
-      render: () => ({ custom: [] })
+      renderJson: () => ({ custom: [] })
     }
   })
 
@@ -115,7 +115,8 @@ expect<FastifyStaticOptions>()
     root: '',
     list: {
       format: 'html' as const,
-      render: () => ''
+      render: () => '',
+      renderJson: () => ({ custom: [] })
     }
   })
 

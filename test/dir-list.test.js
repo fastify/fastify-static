@@ -561,7 +561,7 @@ test('dir list json format - extended info', async t => {
   })
 })
 
-test('dir list json format - render', async t => {
+test('dir list json format - renderJson', async t => {
   t.plan(1)
 
   const options = {
@@ -571,7 +571,7 @@ test('dir list json format - render', async t => {
     list: {
       format: 'json',
       names: ['index', 'index.json', '/'],
-      render (dirs, files) {
+      renderJson (dirs, files) {
         return {
           dirs: dirs.map(dir => dir.name),
           images: files
@@ -605,7 +605,7 @@ test('dir list json format - render', async t => {
   })
 })
 
-test('dir list json format - render returns serialized string', async t => {
+test('dir list json format - renderJson returns serialized string', async t => {
   t.plan(1)
 
   const options = {
@@ -615,7 +615,7 @@ test('dir list json format - render returns serialized string', async t => {
     list: {
       format: 'json',
       names: ['index', 'index.json', '/'],
-      render (dirs, files) {
+      renderJson (dirs, files) {
         return JSON.stringify({
           dirs: dirs.map(dir => dir.name),
           files: files.map(file => file.name)
@@ -646,15 +646,8 @@ test('json format with url parameter format', async t => {
     index: false,
     list: {
       format: 'json',
-      render (dirs, files, format) {
-        if (format === 'html') {
-          return 'html'
-        }
-
-        return {
-          dirs: dirs.map(dir => dir.name),
-          files: files.map(file => file.name)
-        }
+      render () {
+        return 'html'
       }
     }
   }
@@ -678,6 +671,50 @@ test('json format with url parameter format', async t => {
     t.assert.ok(response3.ok)
     t.assert.deepStrictEqual(response3.status, 200)
     t.assert.deepStrictEqual(await response3.json(), jsonContent)
+    t.assert.ok(response3.headers.get('content-type').includes('application/json'))
+  })
+})
+
+test('json format with both render and renderJson', async t => {
+  t.plan(12)
+
+  const options = {
+    root: path.join(__dirname, '/static'),
+    prefix: '/public',
+    index: false,
+    list: {
+      format: 'json',
+      render () {
+        return 'html'
+      },
+      renderJson (dirs, files) {
+        return {
+          dirs: dirs.map(dir => dir.name),
+          files: files.map(file => file.name)
+        }
+      }
+    }
+  }
+  const route = '/public/'
+  const customJsonContent = { dirs: ['deep', 'shallow'], files: ['.example', '100%.txt', 'a .md', 'foo.html', 'foobar.html', 'index.css', 'index.html'] }
+
+  await helper.arrange(t, options, async (url) => {
+    const response = await fetch(url + route)
+    t.assert.ok(response.ok)
+    t.assert.deepStrictEqual(response.status, 200)
+    t.assert.deepStrictEqual(await response.json(), customJsonContent)
+    t.assert.ok(response.headers.get('content-type').includes('application/json'))
+
+    const response2 = await fetch(url + route + '?format=html')
+    t.assert.ok(response2.ok)
+    t.assert.deepStrictEqual(response2.status, 200)
+    t.assert.deepStrictEqual(await response2.text(), 'html')
+    t.assert.ok(response2.headers.get('content-type').includes('text/html'))
+
+    const response3 = await fetch(url + route + '?format=json')
+    t.assert.ok(response3.ok)
+    t.assert.deepStrictEqual(response3.status, 200)
+    t.assert.deepStrictEqual(await response3.json(), customJsonContent)
     t.assert.ok(response3.headers.get('content-type').includes('application/json'))
   })
 })
