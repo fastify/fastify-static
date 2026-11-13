@@ -41,21 +41,28 @@ declare namespace fastifyStatic {
     (dirs: ListDir[], files: ListFile[]): string;
   }
 
+  export interface ListJsonRender {
+    (dirs: ListDir[], files: ListFile[]): unknown;
+  }
+
   export interface ListOptions {
     names?: string[];
     extendedFolderInfo?: boolean;
     jsonFormat?: 'names' | 'extended';
+    renderJson?: ListJsonRender;
   }
 
   export interface ListOptionsJsonFormat extends ListOptions {
     format: 'json';
     // Required when the URL parameter `format=html` exists
     render?: ListRender;
+    renderJson?: ListJsonRender;
   }
 
   export interface ListOptionsHtmlFormat extends ListOptions {
     format: 'html';
     render: ListRender;
+    renderJson?: ListJsonRender;
   }
 
   // Passed on to `send`
