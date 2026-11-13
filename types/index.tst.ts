@@ -5,6 +5,7 @@ import { expect } from 'tstyche'
 import * as fastifyStaticStar from '..'
 import fastifyStatic, {
   type FastifyStaticOptions,
+  type SendOptions,
   fastifyStatic as fastifyStaticNamed
 } from '..'
 
@@ -42,6 +43,10 @@ const options: FastifyStaticOptions = {
   index: ['1'],
   lastModified: true,
   maxAge: '',
+  onFile: async (path, stat) => {
+    expect(path).type.toBe<string>()
+    expect(stat).type.toBe<Stats>()
+  },
   prefix: '',
   prefixAvoidTrailingSlash: false,
   root: '',
@@ -61,7 +66,10 @@ const options: FastifyStaticOptions = {
     expect(stat).type.toBe<Stats>()
   },
   preCompressed: false,
-  allowedPath: (_pathName: string, _root: string, _request: FastifyRequest) => {
+  allowedPath: (pathName, root, request) => {
+    expect(pathName).type.toBe<string>()
+    expect(root).type.toBe<string | undefined>()
+    expect(request).type.toBe<FastifyRequest>()
     return true
   },
   constraints: {
@@ -71,6 +79,10 @@ const options: FastifyStaticOptions = {
   logLevel: 'warn',
   suppressWarning: true
 }
+
+expect<SendOptions['onFile']>().type.toBe<
+  ((path: string, stat: Stats) => void | Promise<void>) | undefined
+>()
 
 expect<FastifyStaticOptions>()
   .type.toBeAssignableFrom({
@@ -152,6 +164,24 @@ appWithHttp2
 
     appWithHttp2.get('/download/3', (_request, reply) => {
       reply.download('some-file-name', 'some-filename', { contentType: false })
+    })
+
+    appWithHttp2.get('/on-file', (_request, reply) => {
+      reply.sendFile('some-file-name', {
+        onFile: (path, stat) => {
+          expect(path).type.toBe<string>()
+          expect(stat).type.toBe<Stats>()
+        }
+      })
+    })
+
+    appWithHttp2.get('/download/on-file', (_request, reply) => {
+      reply.download('some-file-name', {
+        async onFile (path, stat) {
+          expect(path).type.toBe<string>()
+          expect(stat).type.toBe<Stats>()
+        }
+      })
     })
   })
 

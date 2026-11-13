@@ -713,6 +713,27 @@ test('not found responses can be customized with fastify.setNotFoundHandler()', 
   })
 })
 
+test('setNotFoundHandler() can sendFile for a directory without an index file', async t => {
+  t.plan(3)
+
+  const fastify = Fastify()
+
+  fastify.register(fastifyStatic, {
+    root: path.join(__dirname, '/static')
+  })
+
+  fastify.setNotFoundHandler(function notFoundHandler (request, reply) {
+    return reply.sendFile('index.html')
+  })
+
+  t.after(() => fastify.close())
+
+  const response = await fastify.inject({ method: 'GET', url: '/deep' })
+  t.assert.deepStrictEqual(response.statusCode, 200)
+  t.assert.deepStrictEqual(response.headers['content-type'], 'text/html; charset=utf-8')
+  t.assert.deepStrictEqual(response.body, indexContent)
+})
+
 test('fastify.setNotFoundHandler() is called for dotfiles when send is configured to ignore dotfiles', async t => {
   t.plan(1)
 
@@ -1077,10 +1098,11 @@ test('allowedPath option - pathname is normalized before filtering', async (t) =
   })
 
   await t.test('//foobar.html forbidden (non-canonical path)', async (t) => {
-    t.plan(1 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
+    t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
 
     const response = await rawRequest(address, '//foobar.html')
     t.assert.deepStrictEqual(response.statusCode, 403)
+    t.assert.deepStrictEqual(JSON.parse(response.body).code, 'FST_STATIC_FORBIDDEN_PATH')
     genericErrorResponseChecks(t, response)
   })
 
@@ -1145,6 +1167,588 @@ test('allowedPath option - request subtree checks use normalized pathname', asyn
     t.assert.deepStrictEqual(response.statusCode, 403)
     genericErrorResponseChecks(t, response)
   })
+})
+
+test('allowedPath option - final index and extension paths use the selecting root', async (t) => {
+  const firstRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'fastify-static-first-'))
+  const secondRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'fastify-static-second-'))
+  t.after(() => fs.rmSync(firstRoot, { recursive: true, force: true }))
+  t.after(() => fs.rmSync(secondRoot, { recursive: true, force: true }))
+
+  fs.mkdirSync(path.join(secondRoot, 'allowed'))
+  fs.mkdirSync(path.join(secondRoot, 'denied'))
+  fs.writeFileSync(path.join(secondRoot, 'allowed', 'index.alt'), 'allowed index')
+  fs.writeFileSync(path.join(secondRoot, 'denied', 'index.alt'), 'denied index')
+  fs.writeFileSync(path.join(secondRoot, 'extension-allowed.two'), 'allowed extension')
+  fs.writeFileSync(path.join(secondRoot, 'extension-denied.two'), 'denied extension')
+  fs.writeFileSync(path.join(secondRoot, 'direct.txt'), 'direct')
+
+  let calls = []
+  const fastify = Fastify()
+  fastify.register(fastifyStatic, {
+    root: [firstRoot, secondRoot],
+    index: ['missing.html', 'index.alt'],
+    extensions: ['one', 'two'],
+    redirect: true,
+    allowedPath (pathname, root, request) {
+      calls.push([pathname, root, request.method])
+      return pathname !== '/direct.txt' &&
+        pathname !== '/denied/index.alt' &&
+        pathname !== '/extension-denied.two'
+    }
+  })
+  t.after(() => fastify.close())
+
+  let response = await fastify.inject('/direct.txt')
+  t.assert.strictEqual(response.statusCode, 404)
+  t.assert.deepStrictEqual(calls, [['/direct.txt', firstRoot, 'GET']])
+
+  calls = []
+  response = await fastify.inject('/denied/')
+  t.assert.strictEqual(response.statusCode, 404)
+  t.assert.deepStrictEqual(calls, [
+    ['/denied/', firstRoot, 'GET'],
+    ['/denied/', secondRoot, 'GET'],
+    ['/denied/index.alt', secondRoot, 'GET']
+  ])
+
+  calls = []
+  response = await fastify.inject('/extension-denied')
+  t.assert.strictEqual(response.statusCode, 404)
+  t.assert.deepStrictEqual(calls, [
+    ['/extension-denied', firstRoot, 'GET'],
+    ['/extension-denied', secondRoot, 'GET'],
+    ['/extension-denied.two', secondRoot, 'GET']
+  ])
+
+  calls = []
+  response = await fastify.inject('/allowed/')
+  t.assert.strictEqual(response.statusCode, 200)
+  t.assert.strictEqual(response.body, 'allowed index')
+  t.assert.deepStrictEqual(calls, [
+    ['/allowed/', firstRoot, 'GET'],
+    ['/allowed/', secondRoot, 'GET'],
+    ['/allowed/index.alt', secondRoot, 'GET']
+  ])
+
+  calls = []
+  response = await fastify.inject({ method: 'HEAD', url: '/extension-allowed' })
+  t.assert.strictEqual(response.statusCode, 200)
+  t.assert.strictEqual(response.body, '')
+  t.assert.deepStrictEqual(calls, [
+    ['/extension-allowed', firstRoot, 'HEAD'],
+    ['/extension-allowed', secondRoot, 'HEAD'],
+    ['/extension-allowed.two', secondRoot, 'HEAD']
+  ])
+
+  calls = []
+  response = await fastify.inject('/allowed')
+  t.assert.strictEqual(response.statusCode, 301)
+  t.assert.strictEqual(response.headers.location, '/allowed/')
+  t.assert.deepStrictEqual(calls, [
+    ['/allowed', firstRoot, 'GET'],
+    ['/allowed', secondRoot, 'GET']
+  ])
+})
+
+test('allowedPath option - default index is authorized after directory recursion', async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'fastify-static-default-index-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  fs.mkdirSync(path.join(root, 'dir'))
+  fs.writeFileSync(path.join(root, 'dir', 'index.html'), 'denied index')
+
+  let calls = []
+  const fastify = Fastify()
+  fastify.register(fastifyStatic, {
+    root,
+    allowedPath (pathname, selectedRoot, request) {
+      calls.push([pathname, selectedRoot, request.method])
+      return pathname !== '/dir/index.html'
+    }
+  })
+  t.after(() => fastify.close())
+
+  for (const method of ['GET', 'HEAD']) {
+    for (const url of ['/dir/', '/dir']) {
+      calls = []
+      const response = await fastify.inject({ method, url })
+      t.assert.strictEqual(response.statusCode, 404)
+
+      const expectedPaths = url.endsWith('/')
+        ? ['/dir/', '/dir/index.html']
+        : ['/dir', '/dir/', '/dir/index.html']
+      t.assert.deepStrictEqual(calls, expectedPaths.map(pathname => [pathname, root, method]))
+    }
+  }
+})
+
+test('allowedPath option - wildcard false authorizes final index paths', async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'fastify-static-routes-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  fs.mkdirSync(path.join(root, 'blocked'))
+  fs.writeFileSync(path.join(root, 'blocked', 'index.custom'), 'blocked')
+
+  const calls = []
+  const fastify = Fastify()
+  fastify.register(fastifyStatic, {
+    root,
+    wildcard: false,
+    index: ['missing.html', 'index.custom'],
+    allowedPath (pathname, selectedRoot) {
+      calls.push([pathname, selectedRoot])
+      return pathname !== '/blocked/index.custom'
+    }
+  })
+  t.after(() => fastify.close())
+
+  const response = await fastify.inject('/blocked/')
+  const normalizedRoot = root.split(path.win32.sep).join(path.posix.sep) + '/'
+  t.assert.strictEqual(response.statusCode, 404)
+  t.assert.deepStrictEqual(calls, [
+    ['/blocked/', normalizedRoot],
+    ['/blocked/index.custom', normalizedRoot]
+  ])
+})
+
+test('allowedPath option - sendFile and download authorize relative aliases', async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'fastify-static-helpers-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  fs.writeFileSync(path.join(root, 'send.html'), 'send')
+  fs.writeFileSync(path.join(root, 'download.html'), 'download')
+
+  const calls = []
+  const fastify = Fastify()
+  fastify.register(fastifyStatic, {
+    serve: false,
+    root,
+    allowedPath (pathname, selectedRoot) {
+      calls.push([pathname, selectedRoot])
+      return !pathname.endsWith('download.html')
+    }
+  })
+  fastify.get('/send', (_request, reply) => reply.sendFile('send', { extensions: ['html'] }))
+  fastify.get('/download', (_request, reply) => reply.download('download', { extensions: ['html'] }))
+  t.after(() => fastify.close())
+
+  let response = await fastify.inject('/send')
+  t.assert.strictEqual(response.statusCode, 200)
+  t.assert.strictEqual(response.body, 'send')
+  t.assert.deepStrictEqual(calls, [
+    ['send', root],
+    ['send.html', root]
+  ])
+
+  calls.length = 0
+  response = await fastify.inject('/download')
+  t.assert.strictEqual(response.statusCode, 404)
+  t.assert.deepStrictEqual(calls, [
+    ['download', root],
+    ['download.html', root]
+  ])
+})
+
+test('allowedPath option - preserves and awaits per-call onFile after final authorization', { timeout: 5000 }, async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'fastify-static-on-file-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  fs.writeFileSync(path.join(root, 'allowed.html'), 'allowed')
+  fs.writeFileSync(path.join(root, 'denied.html'), 'denied')
+
+  let events = []
+  let selectedStat
+  const onFileStarted = Promise.withResolvers()
+  const onFileGate = Promise.withResolvers()
+  const fastify = Fastify()
+  fastify.register(fastifyStatic, {
+    serve: false,
+    root,
+    allowedPath (pathname) {
+      events.push(['allowedPath', pathname])
+      return pathname !== 'denied.html'
+    }
+  })
+  fastify.get('/allowed', (_request, reply) => reply.sendFile('allowed', {
+    extensions: ['html'],
+    async onFile (selectedPath, stat) {
+      events.push(['onFile:start', selectedPath])
+      onFileStarted.resolve()
+      await onFileGate.promise
+      selectedStat = stat
+      events.push(['onFile:end', selectedPath])
+    }
+  }))
+  fastify.get('/denied', (_request, reply) => reply.sendFile('denied', {
+    extensions: ['html'],
+    onFile (selectedPath) {
+      events.push(['onFile', selectedPath])
+    }
+  }))
+  t.after(() => fastify.close())
+
+  const selectedPath = path.join(root, 'allowed.html')
+  let responseSettled = false
+  const pendingResponse = fastify.inject('/allowed')
+  pendingResponse.then(
+    () => { responseSettled = true },
+    () => { responseSettled = true }
+  )
+  try {
+    await onFileStarted.promise
+    await Promise.resolve()
+    t.assert.strictEqual(responseSettled, false)
+    t.assert.deepStrictEqual(events, [
+      ['allowedPath', 'allowed'],
+      ['allowedPath', 'allowed.html'],
+      ['onFile:start', selectedPath]
+    ])
+  } finally {
+    onFileGate.resolve()
+  }
+
+  let response = await pendingResponse
+  t.assert.strictEqual(response.statusCode, 200)
+  t.assert.strictEqual(response.body, 'allowed')
+  t.assert.ok(selectedStat.isFile())
+  t.assert.deepStrictEqual(events, [
+    ['allowedPath', 'allowed'],
+    ['allowedPath', 'allowed.html'],
+    ['onFile:start', selectedPath],
+    ['onFile:end', selectedPath]
+  ])
+
+  events = []
+  response = await fastify.inject('/denied')
+  t.assert.strictEqual(response.statusCode, 404)
+  t.assert.deepStrictEqual(events, [
+    ['allowedPath', 'denied'],
+    ['allowedPath', 'denied.html']
+  ])
+})
+
+test('allowedPath option - registration onFile and per-call overrides run after final authorization', async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'fastify-static-on-file-success-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  fs.writeFileSync(path.join(root, 'registration.html'), 'registration')
+  fs.writeFileSync(path.join(root, 'override.html'), 'override')
+
+  let events = []
+  const fastify = Fastify()
+  fastify.register(fastifyStatic, {
+    serve: false,
+    root,
+    allowedPath (pathname) {
+      events.push(['allowedPath', pathname])
+      return true
+    },
+    onFile (selectedPath) {
+      events.push(['registration onFile', selectedPath])
+    }
+  })
+  fastify.get('/registration', (_request, reply) => {
+    return reply.sendFile('registration', { extensions: ['html'] })
+  })
+  fastify.get('/override', (_request, reply) => {
+    return reply.sendFile('override', {
+      extensions: ['html'],
+      onFile (selectedPath) {
+        events.push(['per-call onFile', selectedPath])
+      }
+    })
+  })
+  t.after(() => fastify.close())
+
+  let response = await fastify.inject('/registration')
+  t.assert.strictEqual(response.statusCode, 200)
+  t.assert.strictEqual(response.body, 'registration')
+  t.assert.deepStrictEqual(events, [
+    ['allowedPath', 'registration'],
+    ['allowedPath', 'registration.html'],
+    ['registration onFile', path.join(root, 'registration.html')]
+  ])
+
+  events = []
+  response = await fastify.inject('/override')
+  t.assert.strictEqual(response.statusCode, 200)
+  t.assert.strictEqual(response.body, 'override')
+  t.assert.deepStrictEqual(events, [
+    ['allowedPath', 'override'],
+    ['allowedPath', 'override.html'],
+    ['per-call onFile', path.join(root, 'override.html')]
+  ])
+})
+
+test('allowedPath option - sends per-call onFile errors through Fastify', { timeout: 5000 }, async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'fastify-static-on-file-error-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  fs.writeFileSync(path.join(root, 'file.html'), 'file')
+
+  const cases = [
+    { route: '/send-file-thrown', helper: 'sendFile', async: false, statusCode: 551 },
+    { route: '/send-file-rejected', helper: 'sendFile', async: true, statusCode: 552 },
+    { route: '/download-thrown', helper: 'download', async: false, statusCode: 553 },
+    { route: '/download-rejected', helper: 'download', async: true, statusCode: 554 }
+  ].map(testCase => ({
+    ...testCase,
+    error: new Error(`${testCase.helper} ${testCase.async ? 'rejected' : 'thrown'}`),
+    body: `${testCase.helper} error handled`
+  }))
+  const casesByRoute = new Map(cases.map(testCase => [testCase.route, testCase]))
+
+  const fastify = Fastify()
+  fastify.setErrorHandler((error, request, reply) => {
+    const testCase = casesByRoute.get(request.url)
+    t.assert.strictEqual(error, testCase.error)
+    reply.code(testCase.statusCode).send(testCase.body)
+  })
+  fastify.register(fastifyStatic, {
+    serve: false,
+    root,
+    allowedPath () {
+      return true
+    }
+  })
+
+  for (const testCase of cases) {
+    fastify.get(testCase.route, (_request, reply) => {
+      const onFile = testCase.async
+        ? () => Promise.reject(testCase.error)
+        : () => { throw testCase.error }
+      return reply[testCase.helper]('file.html', { onFile })
+    })
+  }
+  t.after(() => fastify.close())
+
+  for (const testCase of cases) {
+    const response = await fastify.inject(testCase.route)
+    t.assert.strictEqual(response.statusCode, testCase.statusCode)
+    t.assert.strictEqual(response.body, testCase.body)
+  }
+})
+
+test('registration onFile errors from wildcard routes use the Fastify error pipeline', { timeout: 5000 }, async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'fastify-static-wildcard-on-file-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  fs.writeFileSync(path.join(root, 'file.html'), 'file')
+
+  const callbackError = new Error('registration onFile error')
+  const fastify = Fastify()
+  fastify.setErrorHandler((error, _request, reply) => {
+    t.assert.strictEqual(error, callbackError)
+    reply.code(555).send('wildcard error handled')
+  })
+  fastify.register(fastifyStatic, {
+    root,
+    async onFile () {
+      throw callbackError
+    }
+  })
+  t.after(() => fastify.close())
+
+  const response = await fastify.inject('/file.html')
+  t.assert.strictEqual(response.statusCode, 555)
+  t.assert.strictEqual(response.body, 'wildcard error handled')
+})
+
+test('onFile must be a function after registration and per-call options are merged', { timeout: 5000 }, async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'fastify-static-invalid-on-file-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  fs.writeFileSync(path.join(root, 'file.html'), 'file')
+
+  for (const testCase of [
+    { registrationOnFile: null, perCallOnFile: undefined },
+    { registrationOnFile: () => {}, perCallOnFile: 'invalid' }
+  ]) {
+    const fastify = Fastify()
+    fastify.setErrorHandler((error, _request, reply) => {
+      t.assert.ok(error instanceof TypeError)
+      t.assert.strictEqual(error.message, 'onFile option must be a function')
+      reply.code(556).send('invalid onFile')
+    })
+    fastify.register(fastifyStatic, {
+      serve: false,
+      root,
+      allowedPath () {
+        return true
+      },
+      onFile: testCase.registrationOnFile
+    })
+    fastify.get('/', (_request, reply) => {
+      const options = testCase.perCallOnFile === undefined
+        ? undefined
+        : { onFile: testCase.perCallOnFile }
+      return reply.sendFile('file.html', options)
+    })
+
+    const response = await fastify.inject('/')
+    t.assert.strictEqual(response.statusCode, 556)
+    t.assert.strictEqual(response.body, 'invalid onFile')
+    await fastify.close()
+  }
+})
+
+test('invalid onFile is hidden by early denials', async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'fastify-static-invalid-on-file-denied-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  fs.writeFileSync(path.join(root, 'file.html'), 'file')
+
+  const deniedFastify = Fastify()
+  deniedFastify.register(fastifyStatic, {
+    serve: false,
+    root,
+    allowedPath () {
+      return false
+    },
+    onFile: 'invalid'
+  })
+  deniedFastify.get('/', (_request, reply) => reply.sendFile('file.html'))
+  t.after(() => deniedFastify.close())
+
+  let response = await deniedFastify.inject('/')
+  t.assert.strictEqual(response.statusCode, 404)
+
+  const rootlessFastify = Fastify()
+  rootlessFastify.register(fastifyStatic, {
+    serve: false,
+    onFile: 'invalid'
+  })
+  rootlessFastify.get('/', (_request, reply) => reply.sendFile('relative.html'))
+  t.after(() => rootlessFastify.close())
+
+  response = await rootlessFastify.inject('/')
+  t.assert.strictEqual(response.statusCode, 404)
+})
+
+test('allowedPath option - rootless sendFile preserves absolute alias paths', async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'fastify-static-rootless-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  const requestedPath = path.join(root, 'rootless')
+  const finalPath = requestedPath + '.html'
+  fs.writeFileSync(finalPath, 'rootless')
+
+  const calls = []
+  const fastify = Fastify()
+  fastify.register(fastifyStatic, {
+    serve: false,
+    allowedPath (pathname, selectedRoot) {
+      calls.push([pathname, selectedRoot])
+      return true
+    }
+  })
+  fastify.get('/', (_request, reply) => reply.sendFile(requestedPath, { extensions: ['html'] }))
+  t.after(() => fastify.close())
+
+  const response = await fastify.inject('/')
+  t.assert.strictEqual(response.statusCode, 200)
+  t.assert.strictEqual(response.body, 'rootless')
+  t.assert.deepStrictEqual(calls, [
+    [requestedPath, undefined],
+    [finalPath, undefined]
+  ])
+})
+
+test('allowedPath option - precompressed indexes use logical paths and selecting roots', async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'fastify-static-compressed-index-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+
+  const cases = [
+    { directory: 'brotli', suffix: '.br' },
+    { directory: 'gzip', suffix: '.gz' },
+    { directory: 'deflate', suffix: '.deflate' },
+    { directory: 'uncompressed', suffix: '' }
+  ]
+  for (const testCase of cases) {
+    const directory = path.join(root, testCase.directory)
+    fs.mkdirSync(directory)
+    fs.writeFileSync(path.join(directory, 'index.html'), 'index')
+    if (testCase.suffix) {
+      fs.writeFileSync(path.join(directory, 'index.html' + testCase.suffix), 'compressed index')
+    }
+  }
+
+  let calls = []
+  const fastify = Fastify()
+  fastify.register(fastifyStatic, {
+    root,
+    preCompressed: true,
+    allowedPath (pathname, selectedRoot) {
+      calls.push([pathname, selectedRoot])
+      return !pathname.endsWith('/index.html')
+    }
+  })
+  t.after(() => fastify.close())
+
+  for (const testCase of cases) {
+    calls = []
+    const requestedPath = `/${testCase.directory}/`
+    const finalPath = `${requestedPath}index.html`
+    const response = await fastify.inject({
+      url: requestedPath,
+      headers: { 'accept-encoding': 'br, gzip, deflate' }
+    })
+
+    t.assert.strictEqual(response.statusCode, 404)
+    t.assert.ok(calls.length > 1)
+    t.assert.ok(calls.slice(0, -1).every(([pathname, selectedRoot]) => {
+      return pathname === requestedPath && selectedRoot === root
+    }))
+    t.assert.deepStrictEqual(calls.at(-1), [finalPath, root])
+    t.assert.ok(calls.every(([pathname]) => !/\.(?:br|gz|deflate)$/u.test(pathname)))
+  }
+})
+
+test('allowedPath option - errors for final paths are preserved', async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'fastify-static-error-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  fs.mkdirSync(path.join(root, 'alias'))
+  fs.writeFileSync(path.join(root, 'alias', 'index.custom'), 'alias')
+
+  const callbackError = new Error('allowedPath final error')
+  const fastify = Fastify()
+  fastify.setErrorHandler((error, _request, reply) => {
+    t.assert.strictEqual(error, callbackError)
+    reply.code(555).send('preserved')
+  })
+  fastify.register(fastifyStatic, {
+    root,
+    wildcard: false,
+    index: ['index.custom'],
+    allowedPath (pathname) {
+      if (pathname === '/alias/index.custom') {
+        throw callbackError
+      }
+      return true
+    }
+  })
+  t.after(() => fastify.close())
+
+  const response = await fastify.inject('/alias/')
+  t.assert.strictEqual(response.statusCode, 555)
+  t.assert.strictEqual(response.body, 'preserved')
+})
+
+test('allowedPath option - selected paths outside the root fail closed', async (t) => {
+  const root = path.join(__dirname, 'static')
+  const outsidePath = path.join(__dirname, 'static2', 'bar.html')
+  const sendStub = async function sendStub (_request, _pathname, options) {
+    await options.onFile(outsidePath, fs.statSync(outsidePath))
+  }
+  const fastifyStaticWithOutsideSelection = proxyquire('../', {
+    '@fastify/send': sendStub
+  })
+
+  let allowedPathCalls = 0
+  const fastify = Fastify()
+  fastify.register(fastifyStaticWithOutsideSelection, {
+    root,
+    allowedPath () {
+      allowedPathCalls++
+      return true
+    }
+  })
+  t.after(() => fastify.close())
+
+  const response = await fastify.inject('/index.html')
+  t.assert.strictEqual(response.statusCode, 404)
+  t.assert.strictEqual(allowedPathCalls, 1)
 })
 
 test('allowedPath option - request', async (t) => {
@@ -3951,6 +4555,34 @@ test(
 )
 
 test(
+  'will serve un-compressed files from the first root with multi-root and preCompressed as true',
+  async (t) => {
+    const pluginOptions = {
+      root: [path.join(__dirname, '/static-pre-compressed'), path.join(__dirname, '/static')],
+      preCompressed: true
+    }
+
+    const fastify = Fastify()
+
+    fastify.register(fastifyStatic, pluginOptions)
+    t.after(() => fastify.close())
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: 'uncompressed.html',
+      headers: {
+        'accept-encoding': 'gzip, deflate, br'
+      }
+    })
+
+    genericResponseChecks(t, response)
+    t.assert.deepStrictEqual(response.statusCode, 200)
+    t.assert.deepStrictEqual(response.headers['content-encoding'], undefined)
+    t.assert.deepStrictEqual(response.body, uncompressedStatic)
+  }
+)
+
+test(
   'converts URL to path',
   async (t) => {
     t.plan(2 + GENERIC_RESPONSE_CHECK_COUNT)
@@ -5371,4 +6003,33 @@ test('register with wildcard false and globIgnore', async t => {
     t.assert.deepStrictEqual(response.status, 404)
     await response.text()
   })
+})
+
+test('serves files with # or ? in their names', async (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'fastify-static-reserved-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  const files = { 'a#b.txt': '/a%23b.txt', '100%#.txt': '/100%25%23.txt' }
+  // `?` is not allowed in Windows file names
+  if (process.platform !== 'win32') {
+    files['a?b.txt'] = '/a%3Fb.txt'
+  }
+  for (const name of Object.keys(files)) {
+    fs.writeFileSync(path.join(root, name), name)
+  }
+  fs.writeFileSync(path.join(root, 'a%23b.txt'), 'literal')
+
+  const fastify = Fastify()
+  t.after(() => fastify.close())
+  fastify.register(fastifyStatic, { root, prefix: '/public' })
+
+  for (const [name, urlPath] of Object.entries(files)) {
+    const response = await fastify.inject('/public' + urlPath)
+    t.assert.deepStrictEqual(response.statusCode, 200)
+    t.assert.deepStrictEqual(response.body, name)
+  }
+
+  // `%25` still decodes to a literal `%`, and only once
+  const literal = await fastify.inject('/public/a%2523b.txt')
+  t.assert.deepStrictEqual(literal.statusCode, 200)
+  t.assert.deepStrictEqual(literal.body, 'literal')
 })

@@ -16,13 +16,16 @@ const errors = require('./lib/errors')
 const {
   FST_STATIC_INVALID_OPTION,
   FST_STATIC_INVALID_OPTION_VALUE,
-  FST_STATIC_INVALID_REDIRECT_URL
+  FST_STATIC_INVALID_REDIRECT_URL,
+  FST_STATIC_FORBIDDEN_PATH
 } = errors
 
 const endForwardSlashRegex = /\/$/u
 const asteriskRegex = /\*/gu
 const dotDotSegmentRegex = /(?:^|[\\/])\.\.(?:[\\/]|$)/u
 const leadingDotDotSegmentRegex = /^\/?\.\.(?:[\\/]|$)/u
+const encodedHashOrQuestionMarkRegex = /%(?:23|3f)/giu
+const finalPathDenied = Symbol('finalPathDenied')
 
 const supportedEncodings = ['br', 'gzip', 'deflate']
 send.mime.default_type = 'application/octet-stream'
@@ -67,7 +70,8 @@ async function fastifyStatic (fastify, opts) {
     immutable: opts.immutable,
     index: opts.index,
     lastModified: opts.lastModified,
-    maxAge: opts.maxAge
+    maxAge: opts.maxAge,
+    onFile: opts.onFile
   }
 
   let prefix = opts.prefix ??= '/'
@@ -109,7 +113,7 @@ async function fastifyStatic (fastify, opts) {
         opts,
         undefined,
         allowedPath !== undefined
-      )
+      ).catch((error) => this.send(error))
       return this
     })
 
@@ -132,7 +136,7 @@ async function fastifyStatic (fastify, opts) {
           opts,
           undefined,
           allowedPath !== undefined
-        )
+        ).catch((error) => this.send(error))
 
         return this
       }
@@ -161,7 +165,7 @@ async function fastifyStatic (fastify, opts) {
             return reply.callNotFound()
           }
 
-          pumpSendToReply(
+          return pumpSendToReply(
             req,
             reply,
             pathname,
@@ -274,6 +278,7 @@ async function fastifyStatic (fastify, opts) {
     const pathnameOrig = pathname
     const normalizedPathname = normalizeRequestPathname(pathname)
     const options = Object.assign({}, sendOptions, pumpOptions)
+    const callerOnFile = options.onFile
 
     if (rootPath) {
       if (Array.isArray(rootPath)) {
@@ -361,14 +366,50 @@ async function fastifyStatic (fastify, opts) {
       return reply.callNotFound()
     }
 
+    if (allowedPath && (callerOnFile === undefined || typeof callerOnFile === 'function')) {
+      options.onFile = async function authorizeFinalPath (selectedPath, selectedStat) {
+        let logicalPath = selectedPath
+        const encodingExtension = encodingExtensionMap[encoding]
+        if (encodingExtension && logicalPath.endsWith(encodingExtension)) {
+          logicalPath = logicalPath.slice(0, -encodingExtension.length)
+        }
+
+        const finalPathname = getFinalPathname(
+          logicalPath,
+          options.root,
+          normalizedPathname.startsWith('/')
+        )
+        if (
+          finalPathname === undefined ||
+          (finalPathname !== normalizedPathname && !allowedPath(finalPathname, options.root, request))
+        ) {
+          throw finalPathDenied
+        }
+
+        if (callerOnFile) {
+          await callerOnFile(selectedPath, selectedStat)
+        }
+      }
+    }
+
     // `send(..., path, ...)` will URI-decode path so we pass an encoded path here
+    let sendResult
+    try {
+      sendResult = await send(request.raw, encodeURI(pathnameForSend), options)
+    } catch (error) {
+      if (error === finalPathDenied) {
+        return reply.callNotFound()
+      }
+      throw error
+    }
+
     const {
       statusCode,
       headers,
       stream,
       type,
       metadata
-    } = await send(request.raw, encodeURI(pathnameForSend), options)
+    } = sendResult
     switch (type) {
       case 'directory': {
         const path = metadata.path
@@ -405,7 +446,7 @@ async function fastifyStatic (fastify, opts) {
             )
           }
 
-          reply.callNotFound()
+          return reply.callNotFound()
         }
         break
       }
@@ -445,6 +486,22 @@ async function fastifyStatic (fastify, opts) {
             return
           }
 
+          // try the remaining encodings, then the uncompressed file, in this
+          // root before moving on to the next root
+          if (encoding) {
+            checkedEncodings.add(encoding)
+            return pumpSendToReply(
+              request,
+              reply,
+              pathnameOrig,
+              rootPath,
+              rootPathOffset,
+              pumpOptions,
+              checkedEncodings,
+              validatePathSpelling
+            )
+          }
+
           // root paths left to try?
           if (Array.isArray(rootPath) && rootPathOffset < (rootPath.length - 1)) {
             return pumpSendToReply(
@@ -455,20 +512,6 @@ async function fastifyStatic (fastify, opts) {
               rootPathOffset + 1,
               pumpOptions,
               undefined,
-              validatePathSpelling
-            )
-          }
-
-          if (opts.preCompressed && !checkedEncodings.has(encoding)) {
-            checkedEncodings.add(encoding)
-            return pumpSendToReply(
-              request,
-              reply,
-              pathnameOrig,
-              rootPath,
-              rootPathOffset,
-              pumpOptions,
-              checkedEncodings,
               validatePathSpelling
             )
           }
@@ -638,13 +681,10 @@ function getContentType (path) {
 }
 
 /**
- * @returns {Error & { status?: number, statusCode?: number }}
+ * @returns {Error & { code: string, statusCode: number }}
  */
 function forbiddenPathError () {
-  const error = new Error('Forbidden')
-  error.status = 403
-  error.statusCode = 403
-  return error
+  return new FST_STATIC_FORBIDDEN_PATH()
 }
 
 /**
@@ -657,6 +697,33 @@ function normalizeRequestPathname (pathname) {
   }
 
   return path.posix.normalize(pathname)
+}
+
+/**
+ * Convert the absolute path selected by @fastify/send back to the pathname
+ * style used by allowedPath.
+ *
+ * @param {string} selectedPath
+ * @param {string|undefined} root
+ * @param {boolean} leadingSlash
+ * @returns {string|undefined}
+ */
+function getFinalPathname (selectedPath, root, leadingSlash) {
+  if (root === undefined) {
+    return selectedPath
+  }
+
+  const relativePath = path.relative(path.resolve(root), selectedPath)
+  if (
+    relativePath === '..' ||
+    relativePath.startsWith('..' + path.sep) ||
+    path.isAbsolute(relativePath)
+  ) {
+    return
+  }
+
+  const posixPath = relativePath.split(path.sep).join(path.posix.sep)
+  return leadingSlash ? '/' + posixPath : posixPath
 }
 
 /**
@@ -960,8 +1027,8 @@ function getPathnameForSend (url, matchRoutePrefix) {
   }
 
   try {
-    const decodedUrlPathname = decodeURI(url.slice(0, pathnameEnd))
-    const decodedPathname = decodeURI(pathname)
+    const decodedUrlPathname = decodePathname(url.slice(0, pathnameEnd))
+    const decodedPathname = decodePathname(pathname)
 
     // Check the full raw URL path, because route params can consume a
     // dot-dot segment before the suffix is passed to @fastify/send.
@@ -981,6 +1048,17 @@ function getPathnameForSend (url, matchRoutePrefix) {
   } catch {
 
   }
+}
+
+/**
+ * decodeURI() keeps `#` and `?` encoded, so a file with one of them in its
+ * name could never be served. Decode those two first: neither is `%`, so this
+ * cannot create a new escape sequence and the input is still decoded once.
+ * @param {string} pathname
+ * @returns {string}
+ */
+function decodePathname (pathname) {
+  return decodeURI(pathname.replace(encodedHashOrQuestionMarkRegex, decodeURIComponent))
 }
 
 /**

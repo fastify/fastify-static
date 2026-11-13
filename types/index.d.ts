@@ -70,6 +70,7 @@ declare namespace fastifyStatic {
     index?: string[] | string | false;
     lastModified?: boolean;
     maxAge?: string | number;
+    onFile?: (path: string, stat: Stats) => void | Promise<void>;
     serveDotFiles?: boolean;
   }
 
@@ -100,7 +101,7 @@ declare namespace fastifyStatic {
       list?: boolean | ListOptionsJsonFormat | ListOptionsHtmlFormat;
       allowedPath?: (
         pathName: string,
-        root: string,
+        root: string | undefined,
         request: FastifyRequest
       ) => boolean;
       /**

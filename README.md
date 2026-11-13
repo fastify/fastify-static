@@ -215,8 +215,29 @@ The following options are also supported and will be passed directly to the
 - [`index`](https://www.npmjs.com/package/@fastify/send#index)
 - [`lastModified`](https://www.npmjs.com/package/@fastify/send#lastmodified)
 - [`maxAge`](https://www.npmjs.com/package/@fastify/send#maxage)
+- [`onFile`](https://www.npmjs.com/package/@fastify/send#onfile)
+
+#### `dotfiles`
+
+Default: `'allow'`
+
+How files and directories whose name begins with a dot (`.env`, `.git`, `.npmrc`, `.well-known`, ...) are treated. This option is passed through to [`@fastify/send`](https://www.npmjs.com/package/@fastify/send#dotfiles):
+
+- `'allow'` - No special treatment; dotfiles are served like any other file. **This is the default.**
+- `'deny'` - Return a `403` for any request for a dotfile.
+- `'ignore'` - Treat the dotfile as if it does not exist and return a `404`.
+
+> [!NOTE]
+> The default here (`'allow'`) deliberately differs from the `@fastify/send`
+> and `serve-static` defaults (`'ignore'`). Dotfiles are served unless you
+> opt out. If your static root may contain sensitive files such as `.env`,
+> `.htpasswd` or `.git/config`, set `dotfiles: 'ignore'` (or `'deny'`)
+> explicitly. This default also means `/.well-known/...` is served without
+> extra configuration.
 
 These options can be altered when calling `reply.sendFile('filename.html', options)` or `reply.sendFile('filename.html', 'otherfilename.html', options)` on each response.
+
+`onFile(path, stat)` receives the selected file's absolute path and file system statistics. It may return a promise, which is awaited before response processing and streaming begin. A thrown error or rejected promise aborts the operation and is handled by Fastify's error pipeline. When `allowedPath` is configured, final-path authorization runs first; denied files do not invoke `onFile`.
 
 #### `redirect`
 
@@ -254,10 +275,10 @@ when using the `wildcard: false` option.
 
 Default: `(pathName, root, request) => true`
 
-This function filters served files. Accepted `pathName` values are normalized before the callback runs; non-canonical forms such as `//file`, `/./file`, and `/path//file` are rejected. A root-relative filesystem alias that resolves a candidate with different letter casing is rejected before that candidate is authorized or served. Using the request object, complex path authentication is possible.
-Returning `true` serves the file; returning `false` calls Fastify's 404 handler.
+This function filters served files. It runs for the normalized requested `pathName` and may run again when index or extension resolution selects a different final logical path. Final paths use the same leading-slash or relative style as the requested path and are relative to the `root` that selected the file. When `sendFile` is called with an absolute path and no root, `root` is `undefined` and requested and final paths remain absolute. Non-canonical forms such as `//file`, `/./file`, and `/path//file` are rejected. A root-relative filesystem alias that resolves a candidate with different letter casing is rejected before that candidate is authorized or served. Using the request object, complex path authentication is possible.
+Returning `true` from every invocation serves the file; returning `false` for either the requested or final path calls Fastify's 404 handler.
 
-When using `preCompressed: true`, `allowedPath` receives the requested path rather than the selected `.br` or `.gz` variant; see the `preCompressed` note below before using extension-based access rules.
+When using `preCompressed: true`, `.br`, `.gz`, and `.deflate` representations are authorized as their logical uncompressed path. For example, a selected compressed index is authorized as `/dir/index.html`, not `/dir/index.html.br`; see the `preCompressed` note below before using extension-based access rules.
 
 #### `index`
 
@@ -478,7 +499,7 @@ First, try to send the brotli encoded asset (if supported by `Accept-Encoding` h
 
 When `preCompressed` is enabled the response includes `Vary: Accept-Encoding`, because the served variant is selected from the request `Accept-Encoding` header. This applies even when the uncompressed file is sent as a fallback, so that shared caches do not return the wrong variant to clients with a different `Accept-Encoding`.
 
-> ⚠ Warning: `allowedPath` is evaluated against the requested path rather than the selected pre-compressed variant. A request for `/file.txt` can serve `/file.txt.gz` or `/file.txt.br` when the client accepts that encoding, even if direct requests to `.gz` or `.br` files are denied by `allowedPath`. Treat pre-compressed files as public alternate encodings of the same asset: keep restricted compressed files outside the served root, disable `preCompressed`, or deny the base path too.
+> ⚠ Warning: `allowedPath` evaluates pre-compressed variants as their logical uncompressed paths. A request for `/file.txt` can serve `/file.txt.gz`, `/file.txt.br`, or `/file.txt.deflate` when the client accepts that encoding, without separately authorizing the compression suffix. Treat pre-compressed files as alternate encodings of the same asset and apply access rules to the logical path.
 
 Assume this structure with the compressed asset as a sibling of the uncompressed counterpart:
 
@@ -554,6 +575,7 @@ The following errors may be thrown by the plugin:
 | FST_STATIC_INVALID_OPTION_VALUE    | Option provided with unsupported type.                  |
 | FST_STATIC_MULTIROOT_LIST_CONFLICT | Multi `root` and `list` option cannot be used together. |
 | FST_STATIC_INVALID_REDIRECT_URL    | Cannot redirect to the provided URL.                    |
+| FST_STATIC_FORBIDDEN_PATH          | The request path is not allowed.                        |
 
 ### Payload `stream.path`
 
