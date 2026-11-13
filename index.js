@@ -235,6 +235,12 @@ async function fastifyStatic (fastify, opts) {
    * @return {Promise<boolean>}
    */
   async function sendDirectoryList (reply, pathname) {
+    // never list a directory whose path contains a dotfile segment when
+    // dotfiles are denied or ignored: the 403/404 from send must stand
+    if (opts.dotfiles !== 'allow' && containsDotFile(pathname)) {
+      return false
+    }
+
     const dir = dirList.path(opts.root, pathname)
     // Defense in depth: non-canonical / ".." paths are rejected before send,
     // so this null branch is no longer exercised via HTTP. Keep it anyway.
@@ -1065,6 +1071,16 @@ function decodePathname (pathname) {
  * @param {string} url
  * @return {string}
  */
+/**
+ * Whether any segment of a URL pathname is a dotfile (`.foo`), mirroring
+ * `@fastify/send`'s check (`.` alone is not a dotfile).
+ * @param {string} pathname
+ * @return {boolean}
+ */
+function containsDotFile (pathname) {
+  return pathname.split('/').some((s) => s.length > 1 && s[0] === '.')
+}
+
 function getRedirectUrl (url) {
   let i = 0
   // we detect how many slash before a valid path
