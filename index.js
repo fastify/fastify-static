@@ -232,12 +232,12 @@ async function fastifyStatic (fastify, opts) {
   /**
    * @param {import("fastify").FastifyReply} reply
    * @param {string} pathname
+   * @param {string} dotfiles
    * @return {Promise<boolean>}
    */
-  async function sendDirectoryList (reply, pathname) {
-    // never list a directory whose path contains a dotfile segment when
-    // dotfiles are denied or ignored: the 403/404 from send must stand
-    if (opts.dotfiles !== 'allow' && containsDotFile(pathname)) {
+  async function sendDirectoryList (reply, pathname, dotfiles) {
+    // Keep send's dotfile denial intact; its 403 is not a missing index.
+    if (dotfiles !== 'allow' && containsDotFile(pathname)) {
       return false
     }
 
@@ -255,7 +255,7 @@ async function fastifyStatic (fastify, opts) {
       options: opts.list,
       route: pathname,
       prefix,
-      dotfiles: opts.dotfiles
+      dotfiles
     }).catch((err) => reply.send(err))
 
     return true
@@ -426,7 +426,7 @@ async function fastifyStatic (fastify, opts) {
             options: opts.list,
             route: pathname,
             prefix,
-            dotfiles: opts.dotfiles
+            dotfiles: options.dotfiles
           }).catch((err) => reply.send(err))
         }
 
@@ -462,7 +462,7 @@ async function fastifyStatic (fastify, opts) {
           (!options.index || !options.index.length) &&
           pathnameForSend[pathnameForSend.length - 1] === '/'
         ) {
-          if (opts.list && await sendDirectoryList(reply, pathname)) {
+          if (opts.list && await sendDirectoryList(reply, pathname, options.dotfiles)) {
             return
           }
         }
@@ -488,7 +488,7 @@ async function fastifyStatic (fastify, opts) {
           }
 
           // if file exists, send real file, otherwise send dir list if name match
-          if (opts.list && dirList.handle(pathname, opts.list) && await sendDirectoryList(reply, pathname)) {
+          if (opts.list && dirList.handle(pathname, opts.list) && await sendDirectoryList(reply, pathname, options.dotfiles)) {
             return
           }
 
@@ -1068,10 +1068,6 @@ function decodePathname (pathname) {
 }
 
 /**
- * @param {string} url
- * @return {string}
- */
-/**
  * Whether any segment of a URL pathname is a dotfile (`.foo`), mirroring
  * `@fastify/send`'s check (`.` alone is not a dotfile).
  * @param {string} pathname
@@ -1081,6 +1077,10 @@ function containsDotFile (pathname) {
   return pathname.split('/').some((s) => s.length > 1 && s[0] === '.')
 }
 
+/**
+ * @param {string} url
+ * @return {string}
+ */
 function getRedirectUrl (url) {
   let i = 0
   // we detect how many slash before a valid path
