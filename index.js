@@ -16,7 +16,8 @@ const errors = require('./lib/errors')
 const {
   FST_STATIC_INVALID_OPTION,
   FST_STATIC_INVALID_OPTION_VALUE,
-  FST_STATIC_INVALID_REDIRECT_URL
+  FST_STATIC_INVALID_REDIRECT_URL,
+  FST_STATIC_FORBIDDEN_PATH
 } = errors
 
 const endForwardSlashRegex = /\/$/u
@@ -207,8 +208,9 @@ async function fastifyStatic (fastify, opts) {
           setUpHeadAndGet(routeOpts, route, `/${file}`, rootPath)
 
           const key = path.posix.basename(route)
-          if (indexes.has(key) && !indexDirs.has(key)) {
-            indexDirs.set(path.posix.dirname(route), rootPath)
+          const dir = path.posix.dirname(route)
+          if (indexes.has(key) && !indexDirs.has(dir)) {
+            indexDirs.set(dir, rootPath)
           }
         }
       }
@@ -230,9 +232,15 @@ async function fastifyStatic (fastify, opts) {
   /**
    * @param {import("fastify").FastifyReply} reply
    * @param {string} pathname
+   * @param {string} dotfiles
    * @return {Promise<boolean>}
    */
-  async function sendDirectoryList (reply, pathname) {
+  async function sendDirectoryList (reply, pathname, dotfiles) {
+    // Keep send's dotfile denial intact; its 403 is not a missing index.
+    if (dotfiles !== 'allow' && containsDotFile(pathname)) {
+      return false
+    }
+
     const dir = dirList.path(opts.root, pathname)
     // Defense in depth: non-canonical / ".." paths are rejected before send,
     // so this null branch is no longer exercised via HTTP. Keep it anyway.
@@ -247,7 +255,7 @@ async function fastifyStatic (fastify, opts) {
       options: opts.list,
       route: pathname,
       prefix,
-      dotfiles: opts.dotfiles
+      dotfiles
     }).catch((err) => reply.send(err))
 
     return true
@@ -418,7 +426,7 @@ async function fastifyStatic (fastify, opts) {
             options: opts.list,
             route: pathname,
             prefix,
-            dotfiles: opts.dotfiles
+            dotfiles: options.dotfiles
           }).catch((err) => reply.send(err))
         }
 
@@ -444,7 +452,7 @@ async function fastifyStatic (fastify, opts) {
             )
           }
 
-          reply.callNotFound()
+          return reply.callNotFound()
         }
         break
       }
@@ -454,7 +462,7 @@ async function fastifyStatic (fastify, opts) {
           (!options.index || !options.index.length) &&
           pathnameForSend[pathnameForSend.length - 1] === '/'
         ) {
-          if (opts.list && await sendDirectoryList(reply, pathname)) {
+          if (opts.list && await sendDirectoryList(reply, pathname, options.dotfiles)) {
             return
           }
         }
@@ -480,8 +488,24 @@ async function fastifyStatic (fastify, opts) {
           }
 
           // if file exists, send real file, otherwise send dir list if name match
-          if (opts.list && dirList.handle(pathname, opts.list) && await sendDirectoryList(reply, pathname)) {
+          if (opts.list && dirList.handle(pathname, opts.list) && await sendDirectoryList(reply, pathname, options.dotfiles)) {
             return
+          }
+
+          // try the remaining encodings, then the uncompressed file, in this
+          // root before moving on to the next root
+          if (encoding) {
+            checkedEncodings.add(encoding)
+            return pumpSendToReply(
+              request,
+              reply,
+              pathnameOrig,
+              rootPath,
+              rootPathOffset,
+              pumpOptions,
+              checkedEncodings,
+              validatePathSpelling
+            )
           }
 
           // root paths left to try?
@@ -494,20 +518,6 @@ async function fastifyStatic (fastify, opts) {
               rootPathOffset + 1,
               pumpOptions,
               undefined,
-              validatePathSpelling
-            )
-          }
-
-          if (opts.preCompressed && !checkedEncodings.has(encoding)) {
-            checkedEncodings.add(encoding)
-            return pumpSendToReply(
-              request,
-              reply,
-              pathnameOrig,
-              rootPath,
-              rootPathOffset,
-              pumpOptions,
-              checkedEncodings,
               validatePathSpelling
             )
           }
@@ -677,13 +687,10 @@ function getContentType (path) {
 }
 
 /**
- * @returns {Error & { status?: number, statusCode?: number }}
+ * @returns {Error & { code: string, statusCode: number }}
  */
 function forbiddenPathError () {
-  const error = new Error('Forbidden')
-  error.status = 403
-  error.statusCode = 403
-  return error
+  return new FST_STATIC_FORBIDDEN_PATH()
 }
 
 /**
@@ -1058,6 +1065,16 @@ function getPathnameForSend (url, matchRoutePrefix) {
  */
 function decodePathname (pathname) {
   return decodeURI(pathname.replace(encodedHashOrQuestionMarkRegex, decodeURIComponent))
+}
+
+/**
+ * Whether any segment of a URL pathname is a dotfile (`.foo`), mirroring
+ * `@fastify/send`'s check (`.` alone is not a dotfile).
+ * @param {string} pathname
+ * @return {boolean}
+ */
+function containsDotFile (pathname) {
+  return pathname.split('/').some((s) => s.length > 1 && s[0] === '.')
 }
 
 /**

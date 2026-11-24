@@ -575,6 +575,7 @@ The following errors may be thrown by the plugin:
 | FST_STATIC_INVALID_OPTION_VALUE    | Option provided with unsupported type.                  |
 | FST_STATIC_MULTIROOT_LIST_CONFLICT | Multi `root` and `list` option cannot be used together. |
 | FST_STATIC_INVALID_REDIRECT_URL    | Cannot redirect to the provided URL.                    |
+| FST_STATIC_FORBIDDEN_PATH          | The request path is not allowed.                        |
 
 ### Payload `stream.path`
 

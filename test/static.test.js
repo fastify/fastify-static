@@ -713,6 +713,27 @@ test('not found responses can be customized with fastify.setNotFoundHandler()', 
   })
 })
 
+test('setNotFoundHandler() can sendFile for a directory without an index file', async t => {
+  t.plan(3)
+
+  const fastify = Fastify()
+
+  fastify.register(fastifyStatic, {
+    root: path.join(__dirname, '/static')
+  })
+
+  fastify.setNotFoundHandler(function notFoundHandler (request, reply) {
+    return reply.sendFile('index.html')
+  })
+
+  t.after(() => fastify.close())
+
+  const response = await fastify.inject({ method: 'GET', url: '/deep' })
+  t.assert.deepStrictEqual(response.statusCode, 200)
+  t.assert.deepStrictEqual(response.headers['content-type'], 'text/html; charset=utf-8')
+  t.assert.deepStrictEqual(response.body, indexContent)
+})
+
 test('fastify.setNotFoundHandler() is called for dotfiles when send is configured to ignore dotfiles', async t => {
   t.plan(1)
 
@@ -1077,10 +1098,11 @@ test('allowedPath option - pathname is normalized before filtering', async (t) =
   })
 
   await t.test('//foobar.html forbidden (non-canonical path)', async (t) => {
-    t.plan(1 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
+    t.plan(2 + GENERIC_ERROR_RESPONSE_CHECK_COUNT)
 
     const response = await rawRequest(address, '//foobar.html')
     t.assert.deepStrictEqual(response.statusCode, 403)
+    t.assert.deepStrictEqual(JSON.parse(response.body).code, 'FST_STATIC_FORBIDDEN_PATH')
     genericErrorResponseChecks(t, response)
   })
 
@@ -2765,6 +2787,25 @@ test('register with wildcard false and alternative index', async t => {
     t.assert.deepStrictEqual(response.status, 200)
     t.assert.deepStrictEqual(await response.json(), { hello: 'world' })
   })
+})
+
+test('register with wildcard false and multiple roots preserves directory index priority', async t => {
+  t.plan(1)
+
+  const fastify = Fastify()
+  fastify.register(fastifyStatic, {
+    root: [path.join(__dirname, '/static'), path.join(__dirname, '/static2')],
+    wildcard: false,
+    index: ['foobar.html', 'bar.html']
+  })
+
+  t.after(() => fastify.close())
+
+  await fastify.listen({ port: 0 })
+  fastify.server.unref()
+
+  const response = await fetch('http://localhost:' + fastify.server.address().port + '/')
+  t.assert.deepStrictEqual(await response.text(), foobarContent)
 })
 
 test('register /static with wildcard false and alternative index', async t => {
@@ -4531,6 +4572,34 @@ test(
     genericResponseChecks(t, response)
     t.assert.deepStrictEqual(response.statusCode, 200)
     t.assert.deepStrictEqual(response.body, foobarContent)
+  }
+)
+
+test(
+  'will serve un-compressed files from the first root with multi-root and preCompressed as true',
+  async (t) => {
+    const pluginOptions = {
+      root: [path.join(__dirname, '/static-pre-compressed'), path.join(__dirname, '/static')],
+      preCompressed: true
+    }
+
+    const fastify = Fastify()
+
+    fastify.register(fastifyStatic, pluginOptions)
+    t.after(() => fastify.close())
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: 'uncompressed.html',
+      headers: {
+        'accept-encoding': 'gzip, deflate, br'
+      }
+    })
+
+    genericResponseChecks(t, response)
+    t.assert.deepStrictEqual(response.statusCode, 200)
+    t.assert.deepStrictEqual(response.headers['content-encoding'], undefined)
+    t.assert.deepStrictEqual(response.body, uncompressedStatic)
   }
 )
 
