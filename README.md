@@ -219,21 +219,21 @@ The following options are also supported and will be passed directly to the
 
 #### `dotfiles`
 
-Default: `'allow'`
+Default: `'ignore'`
 
 How files and directories whose name begins with a dot (`.env`, `.git`, `.npmrc`, `.well-known`, ...) are treated. This option is passed through to [`@fastify/send`](https://www.npmjs.com/package/@fastify/send#dotfiles):
 
-- `'allow'` - No special treatment; dotfiles are served like any other file. **This is the default.**
+- `'allow'` - No special treatment; dotfiles are served like any other file.
 - `'deny'` - Return a `403` for any request for a dotfile.
-- `'ignore'` - Treat the dotfile as if it does not exist and return a `404`.
+- `'ignore'` - Treat the dotfile as if it does not exist and return a `404`. **This is the default.**
 
 > [!NOTE]
-> The default here (`'allow'`) deliberately differs from the `@fastify/send`
-> and `serve-static` defaults (`'ignore'`). Dotfiles are served unless you
-> opt out. If your static root may contain sensitive files such as `.env`,
-> `.htpasswd` or `.git/config`, set `dotfiles: 'ignore'` (or `'deny'`)
-> explicitly. This default also means `/.well-known/...` is served without
-> extra configuration.
+> The default (`'ignore'`) matches the `@fastify/send` and `serve-static`
+> defaults. Dotfiles — and files inside hidden directories such as
+> `/.well-known/...` — are served only if you opt in with `dotfiles: 'allow'`.
+> This protects sensitive files such as `.env`, `.htpasswd` or `.git/config`
+> that may be left in the static root. If you serve `/.well-known/...` (for
+> example for ACME or PGP discovery), set `dotfiles: 'allow'` explicitly.
 
 These options can be altered when calling `reply.sendFile('filename.html', options)` or `reply.sendFile('filename.html', 'otherfilename.html', options)` on each response.
 

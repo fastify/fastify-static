@@ -181,6 +181,7 @@ test('dir list, custom options', async t => {
     root: path.join(__dirname, '/static'),
     prefix: '/public',
     index: false,
+    dotfiles: 'allow',
     list: true
   }
 
@@ -206,6 +207,7 @@ test('dir list, custom options with empty array index', async t => {
     root: path.join(__dirname, '/static'),
     prefix: '/public',
     index: [],
+    dotfiles: 'allow',
     list: true
   }
 
@@ -277,6 +279,7 @@ test('dir list html format', async t => {
     root: path.join(__dirname, '/static'),
     prefix: '/public',
     index: false,
+    dotfiles: 'allow',
     list: {
       format: 'html',
       names: ['index', 'index.htm'],
@@ -644,6 +647,7 @@ test('json format with url parameter format', async t => {
     root: path.join(__dirname, '/static'),
     prefix: '/public',
     index: false,
+    dotfiles: 'allow',
     list: {
       format: 'json',
       render () {
@@ -726,6 +730,7 @@ test('json format with url parameter format and without render option', async t 
     root: path.join(__dirname, '/static'),
     prefix: '/public',
     index: false,
+    dotfiles: 'allow',
     list: {
       format: 'json'
     }
@@ -760,6 +765,7 @@ test('html format with url parameter format', async t => {
     root: path.join(__dirname, '/static'),
     prefix: '/public',
     index: false,
+    dotfiles: 'allow',
     list: {
       format: 'html',
       render () {
@@ -962,6 +968,81 @@ test('dir list with dotfiles ignore option', async t => {
       t.assert.deepStrictEqual(await response.json(), content)
     })
   })
+})
+
+test('dir list does not list dot-directories when dotfiles are denied or ignored', async t => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'fastify-static-dotdir-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  fs.mkdirSync(path.join(root, '.secret', 'nested'), { recursive: true })
+  fs.mkdirSync(path.join(root, 'sub', '.hidden'), { recursive: true })
+  fs.writeFileSync(path.join(root, '.secret', 'key.pem'), 'key')
+  fs.writeFileSync(path.join(root, '.secret', 'nested', 'dump.sql'), 'dump')
+  fs.writeFileSync(path.join(root, 'sub', '.hidden', 'file.txt'), 'file')
+
+  const routes = ['/.secret/', '/.secret/nested/', '/sub/.hidden/', '/%2esecret/']
+  const variants = [
+    { dotfiles: 'deny', list: true, statusCode: 403 },
+    { dotfiles: 'deny', list: true, index: false, statusCode: 403 },
+    { dotfiles: 'deny', list: { names: ['index', '/'] }, statusCode: 403 },
+    { dotfiles: 'deny', list: { format: 'html', render: () => 'listing' }, statusCode: 403 },
+    { dotfiles: 'ignore', list: true, statusCode: 404 },
+    { dotfiles: 'ignore', list: { names: ['index', '/'] }, statusCode: 404 }
+  ]
+
+  for (const { statusCode, ...variant } of variants) {
+    const fastify = Fastify()
+    fastify.register(fastifyStatic, { root, ...variant })
+    t.after(() => fastify.close())
+
+    for (const route of routes) {
+      const response = await fastify.inject(route)
+      t.assert.deepStrictEqual(response.statusCode, statusCode, `${JSON.stringify(variant.dotfiles)} ${route}`)
+      t.assert.ok(!response.body.includes('key.pem'))
+      t.assert.ok(!response.body.includes('dump.sql'))
+      t.assert.ok(!response.body.includes('file.txt'))
+      t.assert.ok(!response.body.includes('listing'))
+    }
+  }
+
+  const fastify = Fastify()
+  fastify.register(fastifyStatic, { root, dotfiles: 'allow', list: true, index: false })
+  t.after(() => fastify.close())
+  const response = await fastify.inject('/.secret/')
+  t.assert.deepStrictEqual(response.statusCode, 200)
+  t.assert.deepStrictEqual(response.json(), { dirs: ['nested'], files: ['key.pem'] })
+})
+
+test('dir list uses per-response dotfiles option for dot-directories', async t => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'fastify-static-dotdir-override-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  fs.mkdirSync(path.join(root, '.secret', 'nested'), { recursive: true })
+  fs.writeFileSync(path.join(root, '.secret', 'key.pem'), 'key')
+  fs.writeFileSync(path.join(root, '.secret', 'nested', 'dump.sql'), 'dump')
+
+  for (const { configured, override, statusCode } of [
+    { configured: 'allow', override: 'deny', statusCode: 403 },
+    { configured: 'allow', override: 'ignore', statusCode: 404 },
+    { configured: 'deny', override: 'allow', statusCode: 200 }
+  ]) {
+    const fastify = Fastify()
+    fastify.register(fastifyStatic, { root, serve: false, dotfiles: configured, index: false, list: true })
+    fastify.get('/file', (_request, reply) => reply.sendFile('/.secret/', { dotfiles: override }))
+    fastify.get('/nested', (_request, reply) => reply.sendFile('/.secret/nested/', { dotfiles: override }))
+    t.after(() => fastify.close())
+
+    for (const route of ['/file', '/nested']) {
+      const response = await fastify.inject(route)
+      t.assert.deepStrictEqual(response.statusCode, statusCode, `${configured} overridden with ${override}: ${route}`)
+      if (statusCode === 200) {
+        t.assert.deepStrictEqual(response.json(), route === '/file'
+          ? { dirs: ['nested'], files: ['key.pem'] }
+          : { dirs: [], files: ['dump.sql'] })
+      } else {
+        t.assert.ok(!response.body.includes('key.pem'))
+        t.assert.ok(!response.body.includes('dump.sql'))
+      }
+    }
+  }
 })
 
 test('dir list error', async t => {

@@ -57,7 +57,7 @@ async function fastifyStatic (fastify, opts) {
     throw invalidDirListOpts
   }
 
-  opts.dotfiles ??= 'allow'
+  opts.dotfiles ??= 'ignore'
 
   const sendOptions = {
     root: opts.root,
@@ -208,8 +208,9 @@ async function fastifyStatic (fastify, opts) {
           setUpHeadAndGet(routeOpts, route, `/${file}`, rootPath)
 
           const key = path.posix.basename(route)
-          if (indexes.has(key) && !indexDirs.has(key)) {
-            indexDirs.set(path.posix.dirname(route), rootPath)
+          const dir = path.posix.dirname(route)
+          if (indexes.has(key) && !indexDirs.has(dir)) {
+            indexDirs.set(dir, rootPath)
           }
         }
       }
@@ -231,9 +232,15 @@ async function fastifyStatic (fastify, opts) {
   /**
    * @param {import("fastify").FastifyReply} reply
    * @param {string} pathname
+   * @param {string} dotfiles
    * @return {Promise<boolean>}
    */
-  async function sendDirectoryList (reply, pathname) {
+  async function sendDirectoryList (reply, pathname, dotfiles) {
+    // Keep send's dotfile denial intact; its 403 is not a missing index.
+    if (dotfiles !== 'allow' && containsDotFile(pathname)) {
+      return false
+    }
+
     const dir = dirList.path(opts.root, pathname)
     // Defense in depth: non-canonical / ".." paths are rejected before send,
     // so this null branch is no longer exercised via HTTP. Keep it anyway.
@@ -248,7 +255,7 @@ async function fastifyStatic (fastify, opts) {
       options: opts.list,
       route: pathname,
       prefix,
-      dotfiles: opts.dotfiles
+      dotfiles
     }).catch((err) => reply.send(err))
 
     return true
@@ -419,7 +426,7 @@ async function fastifyStatic (fastify, opts) {
             options: opts.list,
             route: pathname,
             prefix,
-            dotfiles: opts.dotfiles
+            dotfiles: options.dotfiles
           }).catch((err) => reply.send(err))
         }
 
@@ -455,7 +462,7 @@ async function fastifyStatic (fastify, opts) {
           (!options.index || !options.index.length) &&
           pathnameForSend[pathnameForSend.length - 1] === '/'
         ) {
-          if (opts.list && await sendDirectoryList(reply, pathname)) {
+          if (opts.list && await sendDirectoryList(reply, pathname, options.dotfiles)) {
             return
           }
         }
@@ -481,7 +488,7 @@ async function fastifyStatic (fastify, opts) {
           }
 
           // if file exists, send real file, otherwise send dir list if name match
-          if (opts.list && dirList.handle(pathname, opts.list) && await sendDirectoryList(reply, pathname)) {
+          if (opts.list && dirList.handle(pathname, opts.list) && await sendDirectoryList(reply, pathname, options.dotfiles)) {
             return
           }
 
@@ -1058,6 +1065,16 @@ function getPathnameForSend (url, matchRoutePrefix) {
  */
 function decodePathname (pathname) {
   return decodeURI(pathname.replace(encodedHashOrQuestionMarkRegex, decodeURIComponent))
+}
+
+/**
+ * Whether any segment of a URL pathname is a dotfile (`.foo`), mirroring
+ * `@fastify/send`'s check (`.` alone is not a dotfile).
+ * @param {string} pathname
+ * @return {boolean}
+ */
+function containsDotFile (pathname) {
+  return pathname.split('/').some((s) => s.length > 1 && s[0] === '.')
 }
 
 /**
