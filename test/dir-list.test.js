@@ -700,7 +700,7 @@ test('json format with both render and renderJson', async t => {
     }
   }
   const route = '/public/'
-  const customJsonContent = { dirs: ['deep', 'shallow'], files: ['.example', '100%.txt', 'a .md', 'foo.html', 'foobar.html', 'index.css', 'index.html'] }
+  const customJsonContent = { dirs: ['deep', 'shallow'], files: ['100%.txt', 'a .md', 'foo.html', 'foobar.html', 'index.css', 'index.html'] }
 
   await helper.arrange(t, options, async (url) => {
     const response = await fetch(url + route)
