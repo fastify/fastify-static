@@ -334,6 +334,8 @@ Default: `json`
 Options: `html`, `json`
 
 Directory list can be in `html` format; in that case, `list.render` function is required.
+To customize directory list in `json` format, provide a `list.renderJson` function.
+When `list.renderJson` is omitted, the JSON response is controlled by `list.jsonFormat`.
 
 This option can be overridden by the URL parameter `format`. Options are `html` and `json`.
 
